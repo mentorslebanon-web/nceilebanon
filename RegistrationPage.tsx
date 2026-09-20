@@ -1,423 +1,313 @@
-import React, { useState } from 'react';
-import { PageId, Guild } from '../types';
-import { INDUSTRY_GUILDS } from '../data/ecosystemData';
-import { 
-  Terminal, 
-  ShieldCheck, 
-  Lock, 
-  Key, 
-  Code2, 
-  Play, 
-  ArrowLeft, 
-  Copy, 
-  Check, 
-  Server, 
-  Sparkles, 
-  Cpu, 
-  CheckCircle2,
-  ExternalLink,
-  Layers,
-  Database
-} from 'lucide-react';
+import { MemberDirectoryItem, VettingSubmission } from '../types';
 
-interface GuildsDeveloperPageProps {
-  onNavigate: (page: PageId) => void;
-  onOpenMatcher: () => void;
-  onOpenGetAccess: () => void;
-}
+export const SEED_YELLOW_PAGES_MEMBERS: MemberDirectoryItem[] = [
+  {
+    id: "mem_maan_01",
+    name: "Maan El-Khatib",
+    title: "Chief AI Architect & Ecosystem Lead",
+    organization: "NCEI Lebanon / AlKhawarizmi Solutions",
+    initials: "MK",
+    role: "AI Researcher",
+    sector: "Enterprise AI",
+    location: "Beirut Central District, Lebanon",
+    phone: "+961 70 939 779",
+    email: "maan@961ai.network",
+    website: "https://961ai.network",
+    linkedin: "linkedin.com/in/maan-elkhatib",
+    skills: ["Multi-Agent Architecture", "RAG Pipelines", "Arabic NLP", "Sovereign AI", "Vector DBs"],
+    bio: "Pioneering sovereign multi-agent RAG fabrics, Arabic jurisprudence LLMs, and emergency public health systems across Lebanon and the Levant.",
+    badge: "Guild Lead",
+    tier: "Penthouse / VIP",
+    hourlyRate: "$175/hr",
+    status: "Available",
+    projectsCount: 38,
+    rating: 4.98,
+    dateJoined: "January 2024",
+    featured: true,
+    approved: true
+  },
+  {
+    id: "mem_nour_02",
+    name: "Dr. Nour Al-Hajj",
+    title: "Head of Computational Genomics & Healthcare AI",
+    organization: "American University of Beirut Medical Center (AUBMC)",
+    initials: "NH",
+    role: "AI Researcher",
+    sector: "HealthTech",
+    location: "Hamra, Beirut, Lebanon",
+    phone: "+961 1 350 000",
+    email: "nour.hajj@aubmc.edu.lb",
+    website: "https://aubmc.edu.lb",
+    skills: ["Clinical NLP", "HIPAA Data Cooperatives", "FHIR Standards", "Bio-Informatics"],
+    bio: "Specializing in zero-PII medical knowledge indexing and federated learning protocols for Lebanese healthcare providers.",
+    badge: "NCEI Verified",
+    tier: "Scholar",
+    hourlyRate: "$140/hr",
+    status: "Available",
+    projectsCount: 19,
+    rating: 4.95,
+    dateJoined: "March 2024",
+    featured: true,
+    approved: true
+  },
+  {
+    id: "mem_karim_03",
+    name: "Karim Boulos",
+    title: "Venture Partner & FinTech Strategist",
+    organization: "Levant Capital Syndicate",
+    initials: "KB",
+    role: "Venture Investor",
+    sector: "FinTech",
+    location: "Achrafieh, Beirut, Lebanon",
+    phone: "+961 71 228 901",
+    email: "karim@levantcapital.vc",
+    website: "https://levantcapital.vc",
+    skills: ["BDL Circular 158/165 Compliance", "Cross-Border Escrows", "DeFi Bridges", "Angel Syndication"],
+    bio: "Advising regional high-growth fintechs on monetary sovereignty, BDL compliance, and private credit structuring for local exporters.",
+    badge: "Angel Syndicate",
+    tier: "Penthouse / VIP",
+    hourlyRate: "$220/hr",
+    status: "In Consultation",
+    projectsCount: 44,
+    rating: 4.92,
+    dateJoined: "February 2024",
+    featured: true,
+    approved: true
+  },
+  {
+    id: "mem_sarah_04",
+    name: "Sarah Tabbara",
+    title: "Lead Multi-Agent Systems Engineer",
+    organization: "Ballish Workspace / 961AI",
+    initials: "ST",
+    role: "Software Architect",
+    sector: "Enterprise AI",
+    location: "Tripoli, North Lebanon",
+    phone: "+961 76 450 119",
+    email: "sarah.tabbara@ballish.ai",
+    skills: ["LangGraph", "LlamaIndex", "Distributed Inference", "vLLM", "Docker Swarm"],
+    bio: "Architect of high-concurrency tool-calling supervisor meshes and sub-millisecond Milvus hybrid vector index caches.",
+    badge: "NCEI Verified",
+    tier: "Scholar",
+    hourlyRate: "$95/hr",
+    status: "Available",
+    projectsCount: 26,
+    rating: 4.97,
+    dateJoined: "April 2024",
+    featured: false,
+    approved: true
+  },
+  {
+    id: "mem_ziad_05",
+    name: "Ziad Mouawad",
+    title: "Founder & CEO",
+    organization: "LogisticsIQ Levant",
+    initials: "ZM",
+    role: "Founder",
+    sector: "Logistics",
+    location: "Dbayeh, Mount Lebanon",
+    phone: "+961 4 542 800",
+    email: "ziad@logisticsiq.me",
+    website: "https://logisticsiq.me",
+    skills: ["Dynamic Route AI", "Cold-Chain Telemetry", "Supply Chain Optimization", "Border Clearing APIs"],
+    bio: "Modernizing freight routing and micro-warehousing across Beirut Port, Tripoli SEZ, and regional Levantine overland lanes.",
+    badge: "Founding Member",
+    tier: "Penthouse / VIP",
+    hourlyRate: "$150/hr",
+    status: "Available",
+    projectsCount: 15,
+    rating: 4.88,
+    dateJoined: "January 2024",
+    featured: true,
+    approved: true
+  },
+  {
+    id: "mem_layla_06",
+    name: "Layla Choucair, Esq.",
+    title: "Managing Partner & Legal Tech Architect",
+    organization: "Choucair & Associates / Al-Hakam",
+    initials: "LC",
+    role: "Ecosystem Mentor",
+    sector: "LegalTech",
+    location: "Badaro, Beirut, Lebanon",
+    phone: "+961 1 385 410",
+    email: "layla@choucairlaw.com",
+    skills: ["Lebanese Commercial Code", "AI Intellectual Property", "Arabic Statute RAG", "Data Sovereignty"],
+    bio: "Lead legal researcher for the Al-Hakam bilingual jurisprudence database, guiding founders through sovereign IP patents.",
+    badge: "GovTech Fellow",
+    tier: "Scholar",
+    hourlyRate: "$180/hr",
+    status: "Available",
+    projectsCount: 31,
+    rating: 4.99,
+    dateJoined: "May 2024",
+    featured: false,
+    approved: true
+  },
+  {
+    id: "mem_hadi_07",
+    name: "Hadi Kanso",
+    title: "Senior Full-Stack & Smart Contract Auditor",
+    organization: "Freelance / 961 Escrow Hub",
+    initials: "HK",
+    role: "Freelance Consultant",
+    sector: "GovTech",
+    location: "Saida, South Lebanon",
+    phone: "+961 7 724 339",
+    email: "hadi.kanso@security-audit.me",
+    skills: ["Red Teaming", "Rust", "Zero-Knowledge Proofs", "TypeScript", "Penetration Testing"],
+    bio: "Top-ranked security auditor in the 961AI Red Teaming roster, specializing in adversarial prompt defense and Escrow smart vaults.",
+    badge: "NCEI Verified",
+    tier: "Public",
+    hourlyRate: "$85/hr",
+    status: "Available",
+    projectsCount: 22,
+    rating: 4.91,
+    dateJoined: "June 2024",
+    featured: false,
+    approved: true
+  },
+  {
+    id: "mem_maya_08",
+    name: "Maya Geagea",
+    title: "Director of EdTech & Workforce Transformation",
+    organization: "zappcademy.xyz",
+    initials: "MG",
+    role: "Ecosystem Mentor",
+    sector: "EdTech",
+    location: "Jounieh, Keserwan, Lebanon",
+    phone: "+961 9 931 205",
+    email: "maya@zappcademy.xyz",
+    website: "https://zappcademy.xyz",
+    skills: ["AI Upskilling", "Youth Mentorship", "Curriculum Architecture", "Grant Syndication"],
+    bio: "Spearheading national workforce upskilling for 3,000+ university graduates across Lebanese universities in prompt engineering and autonomous agents.",
+    badge: "Guild Lead",
+    tier: "Scholar",
+    hourlyRate: "$110/hr",
+    status: "Available",
+    projectsCount: 28,
+    rating: 4.96,
+    dateJoined: "February 2024",
+    featured: true,
+    approved: true
+  },
+  // Additional 96 verified national directory members to support 100+ entities directory virtualization
+  ...Array.from({ length: 96 }, (_, i) => {
+    const idx = i + 9;
+    const names = [
+      "Dr. Ziad Khoury", "Nadine Chammas", "Elie Nassar", "Samira Gemayel", "Tarek Mansour", 
+      "Layla Kassir", "Georges Abi Rached", "Hiba Sfeir", "Walid Haddad", "Rania Aoun",
+      "Fadi Tannous", "Dima Barakat", "Charbel Salameh", "Sarah Daher", "Marwan Sleiman",
+      "Nour Traboulsi", "Rami Ghosn", "Celine Atallah", "Jad Maalouf", "Christelle Eid",
+      "Bassam Chahine", "Zeina Hajj", "Karim Cortas", "Yasmina Azar", "Marc Matar",
+      "Lara Boustany", "Wassim Fayad", "Rima Kanaan", "Sami Mouawad", "Nour Farhat",
+      "Zahi Abou-Jaoude", "Mirna Touma", "Rabih Rahme", "Nathalie Najjar", "Ibrahim Zeidan",
+      "Carla Safi", "Fouad Merhi", "Dalia Chidiac", "Tony Boueri", "Maya Alamuddin",
+      "Kamal Sfeir", "Joelle Sawaya", "Ghassan Rizk", "Tala Oueida", "Pierre Choueiri",
+      "Nour Houri", "Patrick Khairallah", "Soraya Helou", "Elias Tabbal", "Rita Keyrouz"
+    ];
+    const name = names[i % names.length] + (i >= names.length ? ` (Team ${Math.floor(i / names.length) + 1})` : '');
+    const initials = name.split(' ').filter(w => !w.startsWith('(') && !w.startsWith('Dr.')).slice(0, 2).map(w => w[0]).join('');
+    
+    const roles: MemberDirectoryItem['role'][] = ['Founder', 'AI Researcher', 'Software Architect', 'Ecosystem Mentor', 'Venture Investor', 'Freelance Consultant'];
+    const sectors: MemberDirectoryItem['sector'][] = ['Enterprise AI', 'FinTech', 'HealthTech', 'GovTech', 'Logistics', 'LegalTech', 'EdTech'];
+    const locations = ['Beirut', 'Tripoli', 'Mount Lebanon', 'Saida', 'Diaspora / GCC'];
+    
+    const role = roles[i % roles.length];
+    const sector = sectors[(i * 3) % sectors.length];
+    const location = locations[(i * 2) % locations.length];
 
-export const GuildsDeveloperPage: React.FC<GuildsDeveloperPageProps> = ({
-  onNavigate,
-  onOpenMatcher,
-  onOpenGetAccess
-}) => {
-  const [activeTab, setActiveTab] = useState<'guilds' | 'developer'>('guilds');
-  const [selectedSdk, setSelectedSdk] = useState<'python' | 'javascript'>('python');
-  const [copiedKey, setCopiedKey] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
-  
-  // Playground State
-  const [playgroundPrompt, setPlaygroundPrompt] = useState('Analyze loan default risk against BDL Circular 158 parameters for micro-retailer');
-  const [playgroundModel, setPlaygroundModel] = useState('961-agent-supervisor-v2');
-  const [isRunningPlayground, setIsRunningPlayground] = useState(false);
-  const [playgroundResult, setPlaygroundResult] = useState<string | null>(null);
+    const orgs = [
+      'CedarsAI Labs', 'Beirut Vector Hub', 'AUB Computational Lab', 'LAU High Performance Group',
+      'USJ Data Ethics Unit', 'Berytech Scale', 'Levant Sovereign AI', 'Almouwaten Core',
+      'Phoenicia FinTech', 'Tripoli Mina Hub', 'Byblos RAG Technologies', 'Diaspora Venture Angels',
+      'Digital Levant Consult', 'Saida Maritime Logistics AI', 'AUBMC Health Informatics', 'SmartGov Lebanon'
+    ];
+    const org = orgs[i % orgs.length];
 
-  const unifiedApiKey = "961_live_sk_846487332453_mena_fintech_secure_node";
+    const skillsBank = [
+      ['RAG Architectures', 'Vector Search', 'Python', 'FastAPI'],
+      ['LLM Fine-Tuning', 'Arabic NLP', 'PyTorch', 'Transformers'],
+      ['HIPAA Compliance', 'Clinical NLP', 'FHIR Protocols', 'Zero-PII'],
+      ['FinTech', 'Smart Contracts', 'BDL Circular 165', 'Escrow Systems'],
+      ['Civic Pipelines', 'n8n Automations', 'PostgreSQL', 'Docker'],
+      ['Computer Vision', 'Edge Computing', 'YOLOv10', 'Robotics'],
+      ['Venture Modeling', 'SAFE Notes', 'Angel Syndicates', 'M&A'],
+      ['Red Teaming', 'Prompt Defense', 'Penetration Testing', 'Cybersecurity']
+    ];
+    const skills = skillsBank[i % skillsBank.length];
 
-  const handleCopyKey = () => {
-    navigator.clipboard?.writeText(unifiedApiKey);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
-  };
+    const badges: MemberDirectoryItem['badge'][] = ['NCEI Verified', 'Guild Lead', 'Founding Member', 'Angel Syndicate', 'GovTech Fellow'];
+    const badge = badges[i % badges.length];
 
-  const pythonSnippet = `from z961ai import NetworkClient, AgentSupervisor
+    const rates = ['$95/hr', '$120/hr', '$150/hr', '$180/hr', '$220/hr', '$80/hr', 'Inquire'];
+    const hourlyRate = rates[i % rates.length];
 
-# Initialize unified client across multi-agent fabric
-client = NetworkClient(api_key="${unifiedApiKey}")
+    return {
+      id: `mem_dynamic_${String(idx).padStart(3, '0')}`,
+      name,
+      title: `${role === 'Founder' ? 'Co-Founder & CEO' : role === 'AI Researcher' ? 'Principal Scientist' : role === 'Software Architect' ? 'Lead Systems Architect' : role === 'Venture Investor' ? 'General Partner' : 'Senior Specialist'}`,
+      organization: org,
+      initials: initials || 'LB',
+      role,
+      sector,
+      location,
+      phone: `+961 ${70 + (i % 8)} ${(100000 + i * 8321).toString().slice(0, 6)}`,
+      email: `${name.toLowerCase().replace(/[^a-z]/g, '.')}@${org.toLowerCase().replace(/[^a-z]/g, '')}.lb`,
+      website: `https://${org.toLowerCase().replace(/[^a-z]/g, '')}.lb`,
+      skills,
+      bio: `Building sovereign Lebanese ${sector} solutions with a focus on verified ${skills[0]} and scalable regional enterprise architectures.`,
+      badge,
+      tier: (i % 3 === 0 ? 'Penthouse / VIP' : i % 2 === 0 ? 'Scholar' : 'Public') as MemberDirectoryItem['tier'],
+      hourlyRate,
+      status: (i % 7 === 0 ? 'Busy' : 'Available') as MemberDirectoryItem['status'],
+      projectsCount: 8 + (i * 3) % 45,
+      rating: Math.round((4.80 + (i % 20) * 0.01) * 100) / 100,
+      dateJoined: `2024-0${1 + (i % 9)}`,
+      featured: i % 11 === 0,
+      approved: true
+    };
+  })
+];
 
-# Connect to the FinTech Jargon-Tuned model
-agent = client.agents.load(
-    agent_id="mena-financial-risk-v2",
-    sandbox_mode=True # Dry-run without draining production credits
-)
-
-response = agent.run(
-    prompt="${playgroundPrompt}",
-    temperature=0.2,
-    grounding=["al-hakam-statutes", "marketpulse-index"]
-)
-
-print(response.output)
-print(f"PII Status: {response.pii_masked} | Citations: {len(response.citations)}")`;
-
-  const jsSnippet = `import { NetworkClient } from '@961ai/sdk';
-
-// Unified API initialization for Node.js / Browser
-const client = new NetworkClient({
-  apiKey: "${unifiedApiKey}",
-  cluster: "beirut-central"
-});
-
-async function executeAgent() {
-  const response = await client.agents.run({
-    agentId: "mena-financial-risk-v2",
-    prompt: "${playgroundPrompt}",
-    sandbox: true, // Dry-run mode
-    stream: false
-  });
-
-  console.log("Supervisor Response:", response.output);
-  console.log("Tokens consumed (Dry-Run): 0 credits");
-}
-
-executeAgent();`;
-
-  const currentSnippet = selectedSdk === 'python' ? pythonSnippet : jsSnippet;
-
-  const handleCopyCode = () => {
-    navigator.clipboard?.writeText(currentSnippet);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const handleRunPlayground = () => {
-    setIsRunningPlayground(true);
-    setPlaygroundResult(null);
-
-    setTimeout(() => {
-      setIsRunningPlayground(false);
-      setPlaygroundResult(
-        JSON.stringify({
-          status: "SUCCESS (SANDBOX DRY-RUN)",
-          supervisor: playgroundModel,
-          groundingNodes: ["Al-Hakam Legal Database", "CapitalIssuesIQ Forex Feed", "Levant Data Cooperative"],
-          complianceVerification: "PASSED: Basel III & BDL Circular 158/165 (Zero-PII Applied)",
-          executionTrace: [
-            { step: 1, agent: "TokenGatekeeper", latencyMs: 24, piiMasked: true },
-            { step: 2, agent: "RAGHybridRetriever", latencyMs: 142, matches: 8 },
-            { step: 3, agent: "SynthesizerNode", latencyMs: 280, factualScore: "99.2%" }
-          ],
-          inferenceCreditsBilled: 0.00,
-          output: "Borrower risk categorized as MODERATE (Score: 68/100). Micro-retailer exhibits resilient local cash flow with export receivables. Recommended collateral structure aligns with Circular 158 reserve protections."
-        }, null, 2)
-      );
-    }, 850);
-  };
-
-  return (
-    <div className="min-h-screen bg-white py-8 sm:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-200">
-          <button
-            onClick={() => onNavigate('home')}
-            className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-500 hover:text-cyan-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Ecosystem Overview</span>
-          </button>
-
-          <div className="text-xs font-mono text-slate-400">
-            SECTIONS 04 & 05 // SPECIALIZED ACCESS & DEVELOPER POWER
-          </div>
-        </div>
-
-        {/* Page Header */}
-        <div className="pt-8 pb-6 space-y-3 max-w-4xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
-            <Terminal className="w-3.5 h-3.5 text-cyan-600" />
-            <span>SPECIALIZED ACCESS & BUILDER INFRASTRUCTURE</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-            Industry Services Guilds & The Developer Nexus
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Governed micro-consortiums with pre-configured regulatory frameworks and federated learning, alongside low-level API keys and drop-in SDKs built for high-velocity software architects.
-          </p>
-        </div>
-
-        {/* Module Switcher Tabs */}
-        <div className="flex border-b border-slate-200 gap-6 mb-8 text-sm font-bold">
-          <button
-            onClick={() => setActiveTab('guilds')}
-            className={`pb-3 flex items-center space-x-2 transition-all border-b-2 ${
-              activeTab === 'guilds'
-                ? 'border-cyan-600 text-cyan-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>4. Industry Services Guilds ("Get Access" Gateway)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('developer')}
-            className={`pb-3 flex items-center space-x-2 transition-all border-b-2 ${
-              activeTab === 'developer'
-                ? 'border-cyan-600 text-cyan-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Terminal className="w-4 h-4" />
-            <span>5. The Developer Nexus (APIs, SDKs & Playground)</span>
-          </button>
-        </div>
-
-        {/* TAB 1: INDUSTRY SERVICES GUILDS */}
-        {activeTab === 'guilds' && (
-          <div className="space-y-8 animate-in fade-in duration-150">
-            {/* Value explainer banner */}
-            <div className="p-6 rounded-2xl bg-slate-950 text-white border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-md">
-              <div className="space-y-2 max-w-2xl">
-                <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-500/30">
-                  <Lock className="w-3 h-3" />
-                  <span>GOVERNED DATA COOPERATIVES</span>
-                </div>
-                <h3 className="text-lg font-bold">
-                  Moving Beyond General Networking into Governed Vertical Sandboxes
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Click the dedicated <strong>"Get Access"</strong> button on any Guild to initiate the institutional vetting process for exclusive Data Cooperatives (for secure federated learning) and pre-configured Regulatory Sandboxes (HIPAA, GDPR).
-                </p>
-              </div>
-
-              <button
-                id="guilds-page-get-access-hero"
-                onClick={onOpenGetAccess}
-                className="px-5 py-3 rounded-xl text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition-colors shrink-0 shadow-sm flex items-center space-x-2"
-              >
-                <Lock className="w-4 h-4 text-slate-950" />
-                <span>Initiate "Get Access" Vetting</span>
-              </button>
-            </div>
-
-            {/* Guilds Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {INDUSTRY_GUILDS.map((guild) => (
-                <div
-                  key={guild.id}
-                  className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-cyan-400 transition-all flex flex-col justify-between space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-800 border border-slate-200">
-                        {guild.sector}
-                      </span>
-                      <span className="text-[10px] font-mono text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200 font-bold">
-                        {guild.status}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-extrabold text-slate-950">{guild.name}</h3>
-                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                        {guild.description}
-                      </p>
-                    </div>
-
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-                      <div className="text-[10px] font-mono uppercase text-slate-400 font-bold">Regulatory Framework</div>
-                      <div className="font-semibold text-slate-800">{guild.regulatoryStandard}</div>
-                      <div className="text-slate-500 text-[11px] pt-1">
-                        <strong>Cooperative:</strong> {guild.dataCooperativeName}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="text-[10px] font-mono uppercase text-slate-500 font-bold">Sandbox Features & Tooling</div>
-                      <div className="space-y-1">
-                        {guild.sandboxFeatures.map((feat, i) => (
-                          <div key={i} className="flex items-center space-x-2 text-xs text-slate-700">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                            <span>{feat}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <div className="text-[11px] font-mono text-slate-500">
-                      <strong>{guild.membersCount}</strong> Verified Peers
-                    </div>
-
-                    <button
-                      onClick={onOpenGetAccess}
-                      className="px-3.5 py-2 rounded-lg text-xs font-bold text-white bg-slate-950 hover:bg-slate-800 transition-colors flex items-center space-x-1"
-                    >
-                      <span>Get Access</span>
-                      <Lock className="w-3 h-3 text-cyan-400" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: THE DEVELOPER NEXUS */}
-        {activeTab === 'developer' && (
-          <div className="space-y-8 animate-in fade-in duration-150">
-            {/* Unified API Key Generator Strip */}
-            <div className="p-6 rounded-2xl border border-slate-200 bg-slate-50 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <Key className="w-4 h-4 text-cyan-600" />
-                    <h3 className="text-sm font-bold text-slate-900 uppercase font-mono">
-                      Unified API Key (Single Token Multi-Model)
-                    </h3>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Access foundation models, RAG pipelines, and supervisor agent fabrics through a single unified bearer key.
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 rounded-xl bg-white border border-slate-300 font-mono text-xs text-slate-800 truncate max-w-xs">
-                    {unifiedApiKey}
-                  </div>
-                  <button
-                    onClick={handleCopyKey}
-                    className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-colors shrink-0 flex items-center space-x-1"
-                  >
-                    {copiedKey ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* SDK Code Snippets & Drop-in Libraries */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Code Viewer */}
-              <div className="lg:col-span-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => setSelectedSdk('python')}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
-                        selectedSdk === 'python' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      Python SDK (pip install z961ai)
-                    </button>
-                    <button
-                      onClick={() => setSelectedSdk('javascript')}
-                      className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
-                        selectedSdk === 'javascript' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      JavaScript / TS (npm i @961ai/sdk)
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={handleCopyCode}
-                    className="text-xs text-slate-500 hover:text-slate-800 flex items-center space-x-1"
-                  >
-                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
-                  </button>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 font-mono text-xs overflow-x-auto leading-relaxed max-h-[380px]">
-                  <pre>{currentSnippet}</pre>
-                </div>
-              </div>
-
-              {/* Right: The Playground Environment */}
-              <div className="lg:col-span-6 space-y-4">
-                <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div className="flex items-center space-x-2">
-                      <Play className="w-4 h-4 text-cyan-600 fill-cyan-600" />
-                      <h3 className="text-sm font-bold text-slate-900">The "Playground" Sandbox</h3>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      0 Credits Consumed (Dry-Run)
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Target Supervisor Agent Model:
-                    </label>
-                    <select
-                      value={playgroundModel}
-                      onChange={(e) => setPlaygroundModel(e.target.value)}
-                      className="w-full text-xs font-mono px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-hidden"
-                    >
-                      <option value="961-agent-supervisor-v2">961-agent-supervisor-v2 (Multi-Agent Multi-RAG)</option>
-                      <option value="al-hakam-legal-arabic-v1">al-hakam-legal-arabic-v1 (Jurisprudence Cross-Encoder)</option>
-                      <option value="almouwaten-civic-pii-v3">almouwaten-civic-pii-v3 (Government Masked Sandbox)</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Input Dry-Run Prompt:
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={playgroundPrompt}
-                      onChange={(e) => setPlaygroundPrompt(e.target.value)}
-                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-hidden focus:border-cyan-500 bg-white"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleRunPlayground}
-                    disabled={isRunningPlayground}
-                    className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center justify-center space-x-2 shadow-xs disabled:opacity-50"
-                  >
-                    {isRunningPlayground ? (
-                      <>
-                        <Cpu className="w-4 h-4 text-cyan-400 animate-spin" />
-                        <span>Dry-running through sandboxed agent pipeline...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 text-cyan-400 fill-cyan-400" />
-                        <span>Run Dry-Run Sandbox Call</span>
-                      </>
-                    )}
-                  </button>
-
-                  {playgroundResult && (
-                    <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                      <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">Execution Telemetry Output:</span>
-                      <div className="p-3 rounded-xl bg-slate-900 text-emerald-400 font-mono text-[11px] overflow-x-auto max-h-48">
-                        <pre>{playgroundResult}</pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+export const SEED_VETTING_APPLICATIONS: VettingSubmission[] = [
+  {
+    id: "vet_101",
+    name: "Rami Haddad",
+    email: "rami.h@cedarhealth.io",
+    organization: "Cedar Health Analytics",
+    guildId: "health-guild",
+    guildName: "Healthcare & Life Sciences Guild",
+    proposedUseCase: "Integrating oncology clinical trial synthetic datasets into private HIPAA sandbox.",
+    tierRequested: "Tier 2: Governed Regulatory Sandbox",
+    status: "Pending Review",
+    dateSubmitted: "2026-09-17",
+    allocatedCompute: "10,000 GPU-Tokens"
+  },
+  {
+    id: "vet_102",
+    name: "Yara Zein",
+    email: "yara@byblosfin.com",
+    organization: "Byblos Pay & Liquidity",
+    guildId: "fintech-guild",
+    guildName: "FinTech & Financial Services Guild",
+    proposedUseCase: "Testing micro-settlements under BDL Circular 165 with Levant Data Cooperative.",
+    tierRequested: "Tier 3: Exclusive Data Cooperative",
+    status: "Pending Review",
+    dateSubmitted: "2026-09-16",
+    allocatedCompute: "25,000 GPU-Tokens"
+  },
+  {
+    id: "vet_103",
+    name: "Antoine Saliba",
+    email: "antoine@jurislevant.ai",
+    organization: "JurisLevant AI",
+    guildId: "legal-guild",
+    guildName: "Legal Tech & Governance Guild",
+    proposedUseCase: "Arabic cross-encoder validation for commercial arbitration contracts in Lebanon.",
+    tierRequested: "Tier 2: Governed Regulatory Sandbox",
+    status: "Approved",
+    dateSubmitted: "2026-09-14",
+    allocatedCompute: "15,000 GPU-Tokens"
+  }
+];

@@ -1,651 +1,338 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { PageId, MemberDirectoryItem } from '../types';
-import { useNeuralWorker, VectorMatchResult } from '../utils/neuralWorker';
-import { 
-  Sparkles, 
-  GraduationCap, 
-  Briefcase, 
-  Flame, 
-  Building2, 
-  CheckCircle2, 
-  ArrowRight, 
-  Cpu, 
-  Radio, 
-  Database, 
-  Search, 
-  Share2, 
-  ShieldCheck, 
-  Users, 
-  Star, 
-  MapPin, 
-  MessageSquare, 
-  ExternalLink,
-  Zap,
-  Terminal,
-  CornerDownRight,
-  Filter,
-  Layers,
-  Activity
-} from 'lucide-react';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-interface NeuralMatcherPageProps {
-  onNavigate: (page: PageId) => void;
-  members: MemberDirectoryItem[];
-  onOpenRegister?: (tab?: 'signup' | 'signin' | 'sandbox') => void;
+export interface ToolingCategory {
+  category: string;
+  leadingTools: string;
+  coreFunctionality: string;
+  primaryUseCase: string;
 }
 
-export const NeuralMatcherPage: React.FC<NeuralMatcherPageProps> = ({
-  onNavigate,
-  members,
-  onOpenRegister
-}) => {
-  const [selectedRole, setSelectedRole] = useState<'scholar' | 'freelancer' | 'guru' | 'enterprise'>('scholar');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [activeVectorMatch, setActiveVectorMatch] = useState<string | null>(null);
+export interface CostDepreciationItem {
+  costCategory: string;
+  adjustedAmount: string;
+  baselineAmount: string;
+  change: string;
+  changePercent: number;
+  driver: string;
+}
 
-  const roleProfiles = {
-    scholar: {
-      id: 'scholar',
-      title: 'Scholar & AI Researcher',
-      subtitle: 'Pushing empirical frontiers in Arabic NLP, biomedical AI & distributed systems',
-      quote: 'Pushing the boundaries of sovereign science',
-      icon: GraduationCap,
-      color: 'border-cyan-500 bg-cyan-50/40 text-cyan-700',
-      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-      recommendedHubs: [
-        { name: 'NexusLM & Notebook Workspaces', desc: 'JupyterLab cluster with GPU acceleration', link: 'livenexus' as PageId },
-        { name: 'Al-Hakam Legal Corpus', desc: 'Bilingual Lebanese and MENA statutory dataset', link: 'competencies' as PageId },
-        { name: 'aicademy.online Scholar Network', desc: 'Cross-university research grant consortium', link: 'national-cv' as PageId }
-      ],
-      assignedChannel: '#scholars-lab & #model-architectures',
-      recommendedGuild: 'Data Cooperatives & Federated ML Sandbox',
-      computeAllocation: 'H100 Node Priority Queue & Token Subsidies (Up to 50k Tokens/mo)',
-      protocols: ['HIPAA / MoPH Clinical Grade', 'Differential Privacy & Zero-Knowledge Proofs'],
-      actionUrl: 'livenexus' as PageId,
-      actionLabel: 'Launch Research Sandbox',
-      targetRole: 'AI Researcher'
-    },
-    freelancer: {
-      id: 'freelancer',
-      title: 'Freelancer & Specialist Engineer',
-      subtitle: 'Building automated civic pipelines, n8n workflows & sovereign GovTech systems',
-      quote: 'Solving complex societal & municipal challenges',
-      icon: Briefcase,
-      color: 'border-emerald-500 bg-emerald-50/40 text-emerald-700',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-      recommendedHubs: [
-        { name: 'ALmouwateN Civic Sandboxes', desc: 'Municipal workflow automations & public square APIs', link: 'guilds-dev' as PageId },
-        { name: 'matchprenai.online Platform', desc: 'High-value enterprise contract matchmaking', link: 'startups' as PageId },
-        { name: 'VAMS Deployment Repositories', desc: 'Dockerized microservice templates for GovTech', link: 'architecture' as PageId }
-      ],
-      assignedChannel: '#public-square & Escrow Workflows',
-      recommendedGuild: 'GovTech & Public Administration Taskforce',
-      computeAllocation: 'Unified API Gateway Key + Free Sandbox Testing Quota',
-      protocols: ['OpenGov JSON Schemas', 'Smart-Contract Escrow Milestone Auditing'],
-      actionUrl: 'guilds-dev' as PageId,
-      actionLabel: 'Explore Open Bounties',
-      targetRole: 'Software Architect'
-    },
-    guru: {
-      id: 'guru',
-      title: 'Venture Guru & Founder',
-      subtitle: 'Scaling high-valuation AI SaaS startups, angel syndicates & regional capital',
-      quote: 'Transforming novel models into exponential ventures',
-      icon: Flame,
-      color: 'border-amber-500 bg-amber-50/40 text-amber-700',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
-      recommendedHubs: [
-        { name: '961 Combinator Dealroom', desc: 'Direct syndicate pitching to GCC & diaspora capital', link: 'startups' as PageId },
-        { name: 'Zrolodex Investor Network', desc: 'Curated angel directory and warm intros', link: 'yellow-pages' as PageId },
-        { name: 'RAWCOACH.AI Executive Portal', desc: 'Executive leadership mentoring and board alignment', link: 'leadership' as PageId }
-      ],
-      assignedChannel: '#gurus-penthouse (Encrypted Dealroom)',
-      recommendedGuild: 'FinTech, Web3 & Banking Intelligence Guild',
-      computeAllocation: 'Dedicated Cloud Run & Enterprise Vector Clusters with SLA',
-      protocols: ['Venture SAFE Agreements', 'SOC-2 Compliance Blueprints'],
-      actionUrl: 'startups' as PageId,
-      actionLabel: 'Access Dealroom & Pitching',
-      targetRole: 'Founder'
-    },
-    enterprise: {
-      id: 'enterprise',
-      title: 'Enterprise Partner & Institution',
-      subtitle: 'Deploying compliant enterprise RAG, institutional data lakes & sovereign stacks',
-      quote: 'Deploying zero-leakage enterprise infrastructure',
-      icon: Building2,
-      color: 'border-purple-500 bg-purple-50/40 text-purple-700',
-      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
-      recommendedHubs: [
-        { name: 'Enterprise Agent Workspace', desc: 'Multi-agent orchestration with audit logging', link: 'architecture' as PageId },
-        { name: 'Company Brain Builder', desc: 'Internal institutional knowledge graphs', link: 'competencies' as PageId },
-        { name: 'CapitalIssuesIQ Terminal', desc: 'Private market regulatory and financial intelligence', link: 'national-cv' as PageId }
-      ],
-      assignedChannel: '#enterprise-war-room (Restricted Access)',
-      recommendedGuild: 'Industry Services Guilds (HIPAA / GDPR / Basel III)',
-      computeAllocation: 'Zero-PII On-Premise Air-Gapped Clusters + Managed VPC',
-      protocols: ['Basel III & BDL Circular 158/165', 'MoPH Certified Health Protocols'],
-      actionUrl: 'competencies' as PageId,
-      actionLabel: 'View Enterprise Stacks',
-      targetRole: 'Ecosystem Mentor'
-    }
-  };
+export interface StartupCaseStudy {
+  id: string;
+  name: string;
+  founders: string;
+  foundedYear: string;
+  headline: string;
+  corporateStructure: {
+    title: string;
+    description: string;
+  }[];
+  gccExpansionStrategy: {
+    title: string;
+    description: string;
+  }[];
+  financialInfrastructure: {
+    title: string;
+    description: string;
+  }[];
+  flowchart: {
+    step: string;
+    label: string;
+    subtext: string;
+  }[];
+}
 
-  const samplePrompts = [
-    'Deploying clinical AI with AUBMC hospital data and HIPAA privacy',
-    'FinTech founder seeking seed funding & Basel III compliance mentors',
-    'GovTech engineer building automated municipal citizen services in Beirut',
-    'Machine learning scholar needing H100 compute subsidies for Arabic LLMs',
-    'Logistics startup looking for route optimization agent architecture'
-  ];
+export interface PolicyPaper {
+  id: string;
+  title: string;
+  subtitle: string;
+  publisher: string;
+  registryId: string;
+  date: string;
+  issue: string;
+  readTime: string;
+  abstract: string;
+  badge: string;
+  tags: string[];
+  keyMetrics: { label: string; value: string; subtext?: string }[];
+}
 
-  const currentProfile = roleProfiles[selectedRole];
+export const AI_COMPLIANCE_TOOLING: ToolingCategory[] = [
+  {
+    category: 'Enterprise AI Governance Platforms',
+    leadingTools: 'Credo AI, IBM watsonx.governance, Holistic AI',
+    coreFunctionality: 'End-to-end model inventory, risk mapping against EU AI Act/NIST, automated documentation, bias tracking.',
+    primaryUseCase: 'Enterprise procurement, board oversight, risk classification.'
+  },
+  {
+    category: 'Runtime Control & Agent Gateways',
+    leadingTools: 'Speakeasy, Runlayer, Obot Enterprise MCP Gateway',
+    coreFunctionality: 'Inline traffic monitoring, dynamic policy enforcement, session isolation, and Model Context Protocol (MCP) tool-access controls.',
+    primaryUseCase: 'Preventing data exfiltration, controlling autonomous agents, stopping shadow AI.'
+  },
+  {
+    category: 'AI-Powered GRC Automation',
+    leadingTools: 'Centraleyes, Vanta, 4CRisk.ai',
+    coreFunctionality: 'Continuous compliance monitoring, automated evidence collection, control mapping, ISO 42001 readiness.',
+    primaryUseCase: 'Scaling audit readiness without adding legal/GRC headcount.'
+  },
+  {
+    category: 'Regulatory Intelligence & Tracking',
+    leadingTools: 'Saidot, Trail, Compliance.ai',
+    coreFunctionality: 'Horizon scanning, deterministic risk classification, mapping codebases to evolving international laws.',
+    primaryUseCase: 'Keeping continuous delivery pipelines compliant with shifting legal texts.'
+  }
+];
 
-  // Dedicated WebWorker for offloading high-dimensional Cosine Similarity & Bilateral Skill Matrix
-  const {
-    dispatchMatch,
-    workerResult,
-    telemetry: workerTelemetry
-  } = useNeuralWorker(members);
+export const RUNWAY_DEPRECIATION_DATA: CostDepreciationItem[] = [
+  {
+    costCategory: 'Logistics & War Risk Freight',
+    baselineAmount: '$200,000',
+    adjustedAmount: '$300,000',
+    change: '+50.0%',
+    changePercent: 50.0,
+    driver: 'Red Sea supply bottlenecks, war-risk marine insurance, flight rerouting surcharges.'
+  },
+  {
+    costCategory: 'Energy & Power Tariffs',
+    baselineAmount: '$120,000',
+    adjustedAmount: '$160,000',
+    change: '+33.3%',
+    changePercent: 33.3,
+    driver: 'Grid blackouts, heavy reliance on diesel fuel generators, solar battery maintenance.'
+  },
+  {
+    costCategory: 'Raw Materials & Hardware',
+    baselineAmount: '$250,000',
+    adjustedAmount: '$325,000',
+    change: '+30.0%',
+    changePercent: 30.0,
+    driver: 'Customs delays, border import clearance surcharges, electronic component rationing.'
+  },
+  {
+    costCategory: 'Cloud & Cybersecurity',
+    baselineAmount: '$80,000',
+    adjustedAmount: '$95,000',
+    change: '+18.8%',
+    changePercent: 18.8,
+    driver: 'State-sponsored DDoS defense, multi-region failover, sovereign cloud data replicas.'
+  },
+  {
+    costCategory: 'Engineering Payroll',
+    baselineAmount: '$350,000',
+    adjustedAmount: '$350,000',
+    change: '0.0%',
+    changePercent: 0.0,
+    driver: 'Maintained via fresh USD pegging, Employer of Record (EoR) contracts, offshore talent arbitrage.'
+  }
+];
 
-  // Dispatch calculations to WebWorker whenever role, query, or directory members count change
-  useEffect(() => {
-    if (!members || members.length === 0) return;
-    dispatchMatch(searchQuery || `${currentProfile.title} ${currentProfile.subtitle}`);
-  }, [selectedRole, searchQuery, members?.length, dispatchMatch, currentProfile.title, currentProfile.subtitle]);
+export const POLICY_PAPERS_CATALOG: PolicyPaper[] = [
+  {
+    id: 'ai-compliance-middle-east',
+    title: "Navigating the Algorithmic Frontier: The Imperative for AI Compliance in the Middle East and Lebanon's Ecosystem",
+    subtitle: 'Strategic Analysis of Global AI Mandates (EU AI Act, NIST RMF, ISO 42001, Law 81/2018) & The "Trust Arbitrage" Moat for Lebanese Founders',
+    publisher: 'NCEI Lebanon & z961AI Regulatory Intelligence Unit',
+    registryId: 'NCEI-REG-2026-POL-01',
+    date: 'September 2026',
+    issue: 'Strategic Dossier // Vol. IV',
+    readTime: '12 min read',
+    badge: 'AI REGULATORY GOVERNANCE',
+    tags: ['EU AI Act', 'Law 81/2018', 'NIST AI RMF', 'ISO/IEC 42001', 'Trust Arbitrage', 'Model Context Protocol (MCP)'],
+    abstract: 'The explosion of enterprise Artificial Intelligence (AI)—spanning Large Language Models (LLMs), agentic workflows, and predictive analytics—has altered the corporate risk landscape. Operating without systematic oversight introduces grave threats: algorithmic bias, severe data privacy leaks, shadow AI deployment, and existential regulatory non-compliance. This paper presents how Lebanese startups can transform compliance from an administrative burden into a competitive "Trust Arbitrage" moat to rapidly win GCC and Western enterprise contracts.',
+    keyMetrics: [
+      { label: 'Core Legal Mandate', value: 'Law 81/2018', subtext: 'Electronic Transactions & Data Privacy' },
+      { label: 'Target Market Standards', value: 'EU AI Act & ISO 42001', subtext: 'Prerequisite for GCC / Global Sales' },
+      { label: 'Strategic Play', value: 'Trust Arbitrage', subtext: 'Compliance-by-Design as a Sales Weapon' },
+      { label: 'Audit Velocity', value: '4x Faster', subtext: 'Accelerated Enterprise Vendor Procurement' }
+    ]
+  },
+  {
+    id: 'lebanon-ecosystem-investment-risk',
+    title: 'Lebanon Ecosystem INVESTMENT RISK HIGHLIGHTS',
+    subtitle: 'Impacts from the Ongoing Middle East Conflict, on MENA Startups: Lebanon Ecosystem Case Study (2026)',
+    publisher: 'NceiLebanon reg2220 Beirut Lebanon - z961AI Network Intelligence Service',
+    registryId: 'NCEI-REG-2220-RISK-05',
+    date: 'September 18th, 2026',
+    issue: 'Issue 5/2026',
+    readTime: '16 min read',
+    badge: 'VENTURE INTELLIGENCE SERVICE',
+    tags: ['Venture Capital', 'Macroeconomic Risk', 'Runway Depreciation', 'Beirut StartupBlink #341', 'Offshore Playbook', 'Anghami', 'Toters'],
+    abstract: 'A standard $1.0M annual baseline budget experiences a 23.0% post-escalation cost expansion, reducing overall startup runway by approximately 2.8 months. Despite regional conflict and banking insolvency, Beirut climbed 36 places to 341st globally in the 2026 StartupBlink Index (+46.3% YoY). This paper details the structural operating playbooks of Lebanese founders, complete offshore dollarization stacks, diaspora angel syndicates, and detailed comparative case studies of Anghami and Toters.',
+    keyMetrics: [
+      { label: 'Baseline Budget Drag', value: '+23.0%', subtext: 'Post-escalation operational cost surge' },
+      { label: 'Runway Reduction', value: '-2.8 mo', subtext: 'Average contraction on $1.0M budget' },
+      { label: 'Beirut Global Rank', value: '#341', subtext: 'Climbed +36 places in 2026 (+46.3% YoY)' },
+      { label: 'Active Tech Sector', value: '$486.7M', subtext: 'Across ~125 resilient operating firms' }
+    ]
+  }
+];
 
-  // Handle semantic prompt matching
-  const handleRunSearch = (queryText: string) => {
-    setSearchQuery(queryText);
-    setIsProcessing(true);
-    setActiveVectorMatch(null);
-
-    // Offload 128-dim vector calculation to WebWorker
-    dispatchMatch(queryText);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      const lower = queryText.toLowerCase();
-
-      if (lower.includes('clinic') || lower.includes('health') || lower.includes('aubmc') || lower.includes('scholar') || lower.includes('research')) {
-        setSelectedRole('scholar');
-        setActiveVectorMatch('High Confidence Match: Biomedical & Empirical Research Vector (0.94)');
-      } else if (lower.includes('gov') || lower.includes('citizen') || lower.includes('engineer') || lower.includes('freelanc') || lower.includes('municipal')) {
-        setSelectedRole('freelancer');
-        setActiveVectorMatch('High Confidence Match: Sovereign GovTech & Automation Vector (0.91)');
-      } else if (lower.includes('invest') || lower.includes('found') || lower.includes('fund') || lower.includes('seed') || lower.includes('startup')) {
-        setSelectedRole('guru');
-        setActiveVectorMatch('High Confidence Match: Venture Scaling & Capital Vector (0.96)');
-      } else {
-        setSelectedRole('enterprise');
-        setActiveVectorMatch('High Confidence Match: Institutional & Enterprise Infrastructure Vector (0.89)');
-      }
-    }, 450);
-  };
-
-  // Find matching members in the Yellow Pages registry - fallback if worker initializing
-  const fallbackMatchedMembers = useMemo(() => {
-    if (!members || members.length === 0) return [];
-    
-    return members.filter(m => {
-      if (selectedRole === 'scholar') {
-        return m.role === 'AI Researcher' || m.sector === 'HealthTech' || m.skills.some(s => s.toLowerCase().includes('research') || s.toLowerCase().includes('rag'));
-      }
-      if (selectedRole === 'freelancer') {
-        return m.role === 'Software Architect' || m.role === 'Freelance Consultant' || m.sector === 'GovTech';
-      }
-      if (selectedRole === 'guru') {
-        return m.role === 'Founder' || m.role === 'Venture Investor' || m.sector === 'FinTech';
-      }
-      return m.role === 'Ecosystem Mentor' || m.role === 'Software Architect' || m.sector === 'Enterprise AI';
-    }).slice(0, 4);
-  }, [members, selectedRole]);
-
-  const displayMatches: VectorMatchResult[] = useMemo(() => {
-    if (workerResult.matches && workerResult.matches.length > 0) {
-      return workerResult.matches.slice(0, 4);
-    }
-    return fallbackMatchedMembers.map((m, idx) => ({
-      memberId: m.id,
-      member: m,
-      similarityScore: 0.94 - idx * 0.03,
-      archetypeMatch: selectedRole,
-      confidenceLabel: 'Strong Alignment',
-      matchedVectors: m.skills.slice(0, 2),
-      vectorOps: 256
-    }));
-  }, [workerResult.matches, fallbackMatchedMembers, selectedRole]);
-
-  return (
-    <div className="bg-slate-50 min-h-screen pb-20">
-      {/* Top Breadcrumb & Status Bar */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 text-xs text-slate-500 font-mono">
-            <button 
-              onClick={() => onNavigate('home')}
-              className="hover:text-cyan-600 transition-colors"
-            >
-              NCEI Network
-            </button>
-            <span>/</span>
-            <span className="text-slate-900 font-bold">Neural Matcher Engine v4.8</span>
-          </div>
-
-          <div className="flex items-center space-x-3 text-[11px] font-mono">
-            <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-200">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-              <span>Semantic Latency: 18ms</span>
-            </span>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <Zap className="w-3 h-3 text-emerald-600" />
-              <span>WebWorker Matrix: {workerTelemetry.executionTimeMs > 0 ? workerTelemetry.executionTimeMs.toFixed(2) : '0.80'}ms off-thread</span>
-            </span>
-            <span className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              <Database className="w-3 h-3 text-slate-500" />
-              <span>1,420+ Embeddings</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        
-        {/* Hero Section */}
-        <div className="relative rounded-3xl bg-slate-950 text-white p-6 sm:p-10 border border-cyan-900/60 shadow-xl overflow-hidden">
-          {/* Subtle Grid Background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#08334415_1px,transparent_1px),linear-gradient(to_bottom,#08334415_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-              <span>FULL-PAGE NEURAL ALIGNMENT PIPELINE</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              Sovereign Neural <span className="text-cyan-400">Matcher Engine</span>
-            </h1>
-
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Dynamically maps your institutional requirements, research theses, or commercial projects to vetted ecosystem guilds, compute cluster allocations, and verified talent in Lebanon and the diaspora.
-            </p>
-
-            {/* Prompt Search Box */}
-            <div className="pt-2">
-              <form 
-                onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) handleRunSearch(searchQuery); }}
-                className="relative flex items-center"
-              >
-                <div className="absolute left-4 pointer-events-none text-cyan-400">
-                  <Search className="w-5 h-5" />
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Describe your initiative, dataset requirements, or talent needs in plain language..."
-                  className="w-full pl-12 pr-32 py-3.5 rounded-2xl bg-slate-900/90 text-white text-sm placeholder:text-slate-400 border border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all shadow-inner"
-                />
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  className="absolute right-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-colors flex items-center space-x-1.5 disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                      <span>Matching...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Run Matcher</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {/* Sample Prompts */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-1">
-                <span className="text-[11px] font-mono text-slate-400 mr-1">Quick Prompts:</span>
-                {samplePrompts.map((prompt, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleRunSearch(prompt)}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-cyan-950/60 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-200 transition-colors truncate max-w-[280px]"
-                  >
-                    "{prompt}"
-                  </button>
-                ))}
-              </div>
-
-              {activeVectorMatch && (
-                <div className="mt-3 p-2.5 rounded-xl bg-cyan-950/70 border border-cyan-500/40 text-xs text-cyan-200 flex items-center space-x-2 animate-in fade-in">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="font-mono">{activeVectorMatch}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 4 Archetype Selector Tabs */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                Select Your Ecosystem Archetype
-              </h2>
-              <p className="text-xs text-slate-500">
-                Explore tailored architectural pathways, assigned channels, compute token grants, and guild affiliations.
-              </p>
-            </div>
-            <span className="text-xs font-mono text-slate-400 hidden sm:inline">
-              Pathway: <strong className="text-slate-900">{currentProfile.title}</strong>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {Object.values(roleProfiles).map((p) => {
-              const Icon = p.icon;
-              const isSelected = selectedRole === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedRole(p.id as any)}
-                  className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-white border-cyan-500 shadow-md ring-2 ring-cyan-500/20'
-                      : 'bg-white/70 border-slate-200 hover:border-slate-300 hover:bg-white'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${p.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      {isSelected && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500 text-slate-950">
-                          ACTIVE
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                      {p.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2">
-                      {p.subtitle}
-                    </p>
-                  </div>
-
-                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-cyan-700 font-semibold">
-                    <span>Explore Pathway</span>
-                    <ArrowRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'translate-x-1 text-cyan-600' : ''}`} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Deep Dive Profile Card */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-8">
-          {/* Header of Active Archetype */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div className="space-y-1">
-              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold uppercase border mb-1 bg-slate-100 text-slate-800 border-slate-200">
-                <Terminal className="w-3.5 h-3.5 text-cyan-600" />
-                <span>Verified Ecosystem Track // {currentProfile.id}</span>
-              </div>
-              <h2 className="text-2xl font-black text-slate-950">
-                {currentProfile.title}
-              </h2>
-              <p className="text-sm text-slate-600 italic">
-                "{currentProfile.quote}"
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-3 shrink-0">
-              <button
-                onClick={() => onNavigate(currentProfile.actionUrl)}
-                className="px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center space-x-2"
-              >
-                <span>{currentProfile.actionLabel}</span>
-                <ArrowRight className="w-4 h-4 text-cyan-400" />
-              </button>
-              {onOpenRegister && (
-                <button
-                  onClick={() => onOpenRegister('signup')}
-                  className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs border border-amber-500 flex items-center space-x-1.5"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Register This Role</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Grid of Architectural Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Recommended Hubs */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Database className="w-4 h-4 text-cyan-600" />
-                <span>Recommended Technical Hubs</span>
-              </div>
-              <div className="space-y-2.5">
-                {currentProfile.recommendedHubs.map((hub, i) => (
-                  <div 
-                    key={i}
-                    onClick={() => onNavigate(hub.link)}
-                    className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>{hub.name}</span>
-                      <ArrowRight className="w-3 h-3 text-cyan-600" />
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{hub.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Compute & Infrastructure */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Cpu className="w-4 h-4 text-cyan-600" />
-                <span>Compute Cluster Allocation</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                <div className="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{currentProfile.computeAllocation}</span>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Automatically provisioned via NCEI Lebanese sovereign node gateways upon identity verification.
-                </p>
-              </div>
-
-              <div className="pt-1">
-                <div className="text-[11px] font-mono text-slate-500 uppercase mb-1.5 font-bold">
-                  Compliance & Security Protocols:
-                </div>
-                <div className="space-y-1">
-                  {currentProfile.protocols.map((proto, idx) => (
-                    <div key={idx} className="flex items-center space-x-1.5 text-xs text-slate-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{proto}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Communication & Guild Affiliation */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Radio className="w-4 h-4 text-cyan-600" />
-                <span>Guild & Network Channel</span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                <div className="text-xs font-mono text-slate-500 uppercase">Assigned Channel:</div>
-                <div className="text-xs font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-1 rounded border border-cyan-200 truncate">
-                  {currentProfile.assignedChannel}
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5">
-                <div className="text-xs font-mono text-slate-500 uppercase">Recommended Guild:</div>
-                <div className="text-xs font-bold text-slate-900">
-                  {currentProfile.recommendedGuild}
-                </div>
-                <button
-                  onClick={() => onNavigate('guilds-dev')}
-                  className="text-[11px] text-cyan-700 font-semibold hover:underline inline-flex items-center space-x-1 pt-1"
-                >
-                  <span>View Guild Repository & Taskforce →</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Matched Yellow Pages Members */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-amber-500" />
-                  <span>Ranked Ecosystem Matches for {currentProfile.title}</span>
-                </h2>
-                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <Zap className="w-3 h-3 text-emerald-600" />
-                  <span>WebWorker: {workerTelemetry.executionTimeMs > 0 ? workerTelemetry.executionTimeMs.toFixed(2) : '0.80'}ms</span>
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Sorted via 128-dimensional vector cosine similarity calculated off-thread in a dedicated WebWorker.
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigate('yellow-pages')}
-              className="text-xs font-bold text-amber-800 hover:text-amber-900 hover:underline flex items-center space-x-1"
-            >
-              <span>View Full Directory ({members.length}) →</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {displayMatches.map((candidate: VectorMatchResult) => {
-              const member = candidate.member;
-              return (
-                <div
-                  key={member.id}
-                  onClick={() => onNavigate('yellow-pages')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 cursor-pointer transition-all shadow-xs flex flex-col justify-between space-y-4 group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                        {member.badge}
-                      </span>
-                      {/* Worker Compatibility Score */}
-                      <div className="flex items-center space-x-1 text-[11px] font-mono font-extrabold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <Zap className="w-3 h-3 text-emerald-600" />
-                        <span>{(candidate.similarityScore * 100).toFixed(0)}% Match</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                        {member.initials}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-bold text-slate-950 truncate group-hover:text-amber-700 transition-colors">
-                          {member.name}
-                        </h3>
-                        <p className="text-xs text-slate-500 truncate">{member.title}</p>
-                      </div>
-                    </div>
-
-                    {/* Bilateral Vector Breakdown */}
-                    <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono space-y-1 text-slate-600">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Cosine Score:</span>
-                        <span className="font-bold text-slate-800">{candidate.similarityScore.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Vector Ops:</span>
-                        <span className="font-bold text-slate-800">{candidate.vectorOps} FLOPS</span>
-                      </div>
-                      <div className="flex justify-between items-center text-cyan-800 font-semibold pt-0.5 border-t border-slate-200/60">
-                        <span>Alignment:</span>
-                        <span>{candidate.confidenceLabel}</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-600 line-clamp-2">
-                      {member.bio}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {member.skills.slice(0, 2).map((skill: string, sIdx: number) => (
-                        <span key={sIdx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-                    <span className="flex items-center space-x-1 truncate">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="truncate">{member.location}</span>
-                    </span>
-                    <span className="font-bold text-slate-900 shrink-0">{member.hourlyRate}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Bottom Banner to Register or Vetting */}
-        <div className="rounded-3xl bg-linear-to-r from-slate-900 to-slate-950 text-white p-8 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl text-center md:text-left">
-            <h3 className="text-xl sm:text-2xl font-black text-white">
-              Ready to Align With the Sovereign AI Network?
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Register as an independent researcher, GovTech specialist, venture founder, or apply for institutional Tier 2/3 sandbox vetting.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={() => onOpenRegister ? onOpenRegister('signup') : onNavigate('register')}
-              className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition-all shadow-sm flex items-center space-x-2"
-            >
-              <Users className="w-4 h-4" />
-              <span>Register Member Profile</span>
-            </button>
-            <button
-              onClick={() => onOpenRegister ? onOpenRegister('sandbox') : onNavigate('register')}
-              className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs transition-all border border-slate-700 flex items-center space-x-2"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Apply for Sandbox Vetting</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
+export const SWOT_DATA = {
+  strengths: [
+    { title: 'Hyper-Resilient, Multilingual Talent', desc: 'Highly skilled software engineering and product talent fluent in Arabic, English, and French, accustomed to operating under extreme uncertainty.' },
+    { title: 'Cost Arbitrage', desc: 'Developing products in Lebanon using local remote teams provides a massive engineering cost advantage compared to Riyadh, Dubai, or Western hubs.' },
+    { title: 'Global Diaspora Backing', desc: 'Over 90% of venture capital flowing into Lebanese-founded startups originates from the global diaspora, generating over $7 billion annually in remittances and informal angel checks.' }
+  ],
+  weaknesses: [
+    { title: 'Infrastructure Deficits', desc: 'Startups must allocate significant operational budgets (~15-25%) strictly for redundant internet, generator fuel, and solar infrastructure.' },
+    { title: 'Bankrupt Domestic Banking System', desc: 'Local bank lending is nonexistent; central bank funding programs (like historical Circular 331) are dead.' },
+    { title: 'Accelerated Brain Drain', desc: 'Over 300,000 skilled workers have emigrated since 2019, making mid-to-senior talent retention a constant battle.' }
+  ],
+  opportunities: [
+    { title: 'FinTech & Remittance Surge', desc: 'Only 23% of adults hold formal bank accounts; BDL Basic Circular No. 1 (2026) formalized e-payment service providers and Web3 rails.' },
+    { title: 'GCC Nearshoring Tech Hub', desc: 'Position Lebanon as the primary back-office, design, and software R&D engine for capital-rich Saudi and UAE tech scaleups.' },
+    { title: 'Crisis-Tested IP Export', desc: 'Exporting specialized software, logistics operating systems, and remote labor platforms built under harsh conditions.' }
+  ],
+  threats: [
+    { title: 'Regional Conflict Escalation', desc: 'Kinetic airstrikes risking physical telecom landing stations, power grids, and airport logistics.' },
+    { title: 'International Isolation', desc: 'Total paralysis of sovereign political reforms blocking international aid (IMF) and institutional foreign capital.' },
+    { title: 'De-risking by Foreign Partners', desc: 'Global enterprise clients canceling B2B software contracts due to country risk and business continuity concerns.' }
+  ]
 };
+
+export const VC_DISLOCATION_PHASES = [
+  {
+    phase: '1. FREEZE',
+    period: 'Q1-Q2 2026',
+    description: 'Deal flow drops 41%; LPs pause allocations; international investors withdraw to home markets.'
+  },
+  {
+    phase: '2. VALUATION RESET',
+    period: 'Q2-Q3 2026',
+    description: 'International VCs mark down NAVs; distressed deal windows emerge for secondary buyers (9-12 month window).'
+  },
+  {
+    phase: '3. RESTRUCTURING',
+    period: 'Q3-Q4 2026',
+    description: 'Flight to Gulf hubs; mandatory corporate re-domiciling to KSA (Riyadh) and UAE (ADGM/DIFC) forced on founders.'
+  },
+  {
+    phase: '4. DIVERGENCE',
+    period: '2027+',
+    description: 'GCC markets recover rapidly; Levant & North Africa rely on localized micro-funds, angel syndicates, and fresh-USD cash flow.'
+  }
+];
+
+export const STARTUP_CASE_STUDIES: StartupCaseStudy[] = [
+  {
+    id: 'anghami',
+    name: 'Anghami',
+    founders: 'Eddy Maroun & Elie Habib',
+    foundedYear: '2012 (Beirut)',
+    headline: 'The Corporate Re-Domiciling & SPAC Capital Model',
+    corporateStructure: [
+      {
+        title: 'Headquarters Migration to ADGM (2021)',
+        description: 'Shifted ultimate legal parent entity and global headquarters from Lebanon to the Abu Dhabi Global Market (ADGM) in the UAE. Allowed the company to operate under English Common Law, issue multi-class equity, and protect IP under international standards.'
+      },
+      {
+        title: 'SPAC Merger & NASDAQ Listing (2022)',
+        description: 'Completed merger with Vistas Media Acquisition Company (VMAC), becoming the first Arab technology company to list on NASDAQ (NASDAQ: ANGH).'
+      },
+      {
+        title: 'Public-to-Private / Strategic Consolidation',
+        description: 'OSN Group (backed by Kuwait’s KIPCO) acquired a controlling majority stake in Anghami, combining OSN+ streaming assets with Anghami audio platform to tap regional strategic capital.'
+      }
+    ],
+    gccExpansionStrategy: [
+      {
+        title: 'Incentive Alignment with ADIO',
+        description: 'Leveraged the Abu Dhabi Investment Office (ADIO) Innovation Programme, securing financial subsidies, office subsidies, and payroll incentives to establish core tech & data operations in Hub71.'
+      },
+      {
+        title: 'Saudi Localization',
+        description: 'Targeted Saudi Arabia as largest consumer market: established dedicated offices in Riyadh and direct carrier billing (DCB) partnerships with STC, Mobily, and MBC Group.'
+      }
+    ],
+    financialInfrastructure: [
+      {
+        title: 'Decoupled R&D in Beirut',
+        description: 'Retained substantial engineering, music curation, and administrative teams in Beirut to benefit from low-cost R&D talent, paying salaries in "Fresh USD" through offshore accounts in Dubai and Europe.'
+      },
+      {
+        title: 'Currency Hedging',
+        description: 'Subscription revenues collected directly in hard-currency GCC pegs (SAR, AED, QAR) via direct telecom integration, shielding the core P&L from Lebanese Pound hyperinflation.'
+      }
+    ],
+    flowchart: [
+      { step: '01', label: 'BEIRUT, LEBANON', subtext: 'Operational R&D Hub & Talent Engine' },
+      { step: '02', label: 'ABU DHABI (ADGM, UAE)', subtext: 'Corporate Pivot & Global HQ via ADIO Hub71' },
+      { step: '03', label: 'NASDAQ: ANGH', subtext: 'SPAC Public Capital Access' },
+      { step: '04', label: 'OSN GROUP / MBC', subtext: 'Strategic Saudi/GCC Hub & Buyout' }
+    ]
+  },
+  {
+    id: 'toters',
+    name: 'Toters',
+    founders: 'Tamim Khalfa & Nabil Zakka',
+    foundedYear: '2017 (Beirut)',
+    headline: 'Hyper-Local Operations & Dual-Entity Expansion',
+    corporateStructure: [
+      {
+        title: 'Offshore Holding Structure',
+        description: 'Ring-fenced venture investments via offshore holding company registered in Cayman Islands / ADGM. All equity rounds from regional funds (MEVP, Berytech, Cedar Mundi) processed into offshore banking accounts.'
+      },
+      {
+        title: 'Foreign Subsidiary Licensing (MISA)',
+        description: 'Operating local delivery entities across Saudi Arabia and Iraq: secured foreign investment licenses (MISA in Saudi Arabia) to operate direct logistics, dark stores, and merchant settlement services.'
+      }
+    ],
+    gccExpansionStrategy: [
+      {
+        title: 'High-Margin Niche Segments in KSA',
+        description: 'Avoided front-on price wars with heavily capitalized incumbents (Jahez, Hungerstation, Keeta). Focused on premium merchant partnerships, dark-store fulfillment (Toters Fresh), and retail media.'
+      },
+      {
+        title: 'Expansion into Iraq (Baghdad & Erbil)',
+        description: 'Scaled into Iraq’s cash-heavy economy using operational playbooks perfected under complex Lebanese conditions, achieving high margins with low competition.'
+      }
+    ],
+    financialInfrastructure: [
+      {
+        title: 'Local R&D Cost Arbitrage',
+        description: 'Retained primary engineering, product management, and customer support in Beirut. Earned revenues in SAR and IQD while keeping tech costs low, achieving exceptional capital efficiency.'
+      },
+      {
+        title: 'Cash-Flow Isolation',
+        description: 'Domestic Lebanese revenues maintained strictly to cover local operational expenses, while GCC and Iraqi revenues were recycled directly into regional expansion without touching Lebanese banks.'
+      }
+    ],
+    flowchart: [
+      { step: '01', label: 'CAYMAN / ADGM HOLDING', subtext: 'Venture Capital & Equity Ownership (MEVP, Cedar Mundi)' },
+      { step: '02', label: 'BEIRUT R&D ENGINE', subtext: 'Operational Hub & Local Fresh-USD Payroll' },
+      { step: '03', label: 'GCC / SAUDI ARABIA', subtext: 'MISA Licensed Units & Premium Dark Stores' },
+      { step: '04', label: 'IRAQ EXPANSION', subtext: 'Baghdad & Erbil High-Margin Delivery Operations' }
+    ]
+  }
+];
+
+export const COMPARATIVE_ANALYSIS = [
+  {
+    dimension: 'Expansion Driver',
+    anghami: 'Content scaling, media partnerships, and public capital markets.',
+    toters: 'Unit-economics arbitrage, logistics management, and geographic scale.'
+  },
+  {
+    dimension: 'Holding Location',
+    anghami: 'ADGM (Abu Dhabi, UAE).',
+    toters: 'Cayman Islands / ADGM Holding.'
+  },
+  {
+    dimension: 'GCC Anchor Market',
+    anghami: 'UAE (Abu Dhabi) & Saudi Arabia.',
+    toters: 'Saudi Arabia & Iraq.'
+  },
+  {
+    dimension: 'Lebanon Role',
+    anghami: 'Talent back-office, music curation, engineering hub.',
+    toters: 'Engineering, product development, back-office operations.'
+  },
+  {
+    dimension: 'Capital Mechanism',
+    anghami: 'Venture capital → NASDAQ SPAC → Strategic Buyout (OSN).',
+    toters: 'Venture capital rounds (MEVP, Cedar Mundi) → Regional growth rounds.'
+  }
+];

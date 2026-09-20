@@ -1,607 +1,730 @@
-import { Competency, DeploymentProject, LiveChannel, LiveMessage, Guild, StartupItem, NationalMilestone } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { PageId, UserProfile } from '../types';
+import { ECOSYSTEM_METADATA } from '../data/ecosystemData';
+import { 
+  Cpu, 
+  Menu, 
+  X, 
+  Sparkles, 
+  Radio, 
+  Terminal, 
+  ShieldCheck, 
+  FolderKanban, 
+  FileText, 
+  Rocket, 
+  ChevronRight,
+  ChevronDown,
+  Search,
+  Users,
+  Key,
+  LogIn,
+  LogOut,
+  Lock,
+  UserCheck,
+  UserPlus,
+  ArrowLeft,
+  Layers,
+  GraduationCap
+} from 'lucide-react';
 
-export const ECOSYSTEM_METADATA = {
-  orgName: "NCEI Lebanon",
-  orgFullTitle: "National Council for Entrepreneurship & Innovation",
-  networkName: "961AI Network",
-  networkAlt: "z961aiNetwork",
-  byline: "Home Business startups and entrepreneurs catalysts of the innovation ecosystem.",
-  mainStatementOfValue: "With the introduction of the Neural Matcher, we have engineered one of the most sophisticated platforms in the MENA region to invigorate this ecosystem. Whether you are a scholar pushing the boundaries of science, a freelancer solving complex government challenges, or a guru looking to monetize your genius, 961AI Network is the engine for your success.",
-  heroBadge: "NATIONAL INNOVATION INFRASTRUCTURE • MENA REGION",
-  stats: [
-    { label: "Active Startups & Ventures", value: "85+", change: "+34% YoY" },
-    { label: "RAG & Multi-Agent Deployments", value: "24+", change: "Production Tier" },
-    { label: "Vetted Guild Members", value: "1,420+", change: "Across 3 Tiers" },
-    { label: "National Policy & CV Blueprints", value: "6 Major", change: "Gov & World Bank" },
-  ]
-};
+interface NavbarProps {
+  currentPage: PageId;
+  currentUser: UserProfile | null;
+  onNavigate: (page: PageId) => void;
+  onOpenMatcher: () => void;
+  onOpenGetAccess: () => void;
+  onOpenAuth: (mode?: 'signin' | 'signup') => void;
+  onSignOut: () => void;
+}
 
-export const CORE_COMPETENCIES: Competency[] = [
-  {
-    id: "ai-bizdev",
-    title: "AI Business Development & Venture Scaling",
-    subtitle: "Venture Architecture & Commercial Product Strategy",
-    description: "Aligning early-stage AI products with enterprise market needs, transitioning founders from simple LLM wrappers to high-value, outcome-based AI models and custom agentic workflows.",
-    tags: ["LLM Transition", "Enterprise GTM", "Agentic Workflows", "Monetization"],
-    deliverables: [
-      "Product-Market Fit validation for frontier AI models",
-      "Unit-economics optimization for token consumption and GPU workloads",
-      "Conversion of wrapper MVPs into defensible multi-tier IP architectures",
-      "Enterprise procurement compliance and security readiness"
-    ],
-    impactMetric: "4.8x average ARR expansion post-transition"
-  },
-  {
-    id: "multi-agent-rag",
-    title: "Enterprise AI & Multi-Agent Architecture",
-    subtitle: "Distributed Inference & Autonomous Supervisor Networks",
-    description: "Expert design of Retrieval-Augmented Generation (RAG) pipelines, n8n workflow automations, vector database implementations, and function-calling multi-agent networks.",
-    tags: ["Multi-Agent", "RAG Pipelines", "n8n Workflows", "Vector DBs", "Function Calling"],
-    deliverables: [
-      "Custom LangChain, LlamaIndex, and native agent supervisors",
-      "Low-latency Milvus, Pinecone, and pgvector clustering",
-      "Autonomous tool-calling frameworks with validation gates",
-      "Enterprise fallback topologies and semantic cache layers"
-    ],
-    impactMetric: "99.4% factual precision across enterprise corpora"
-  },
-  {
-    id: "ecosystem-partnerships",
-    title: "Ecosystem Building & Strategic Partnerships",
-    subtitle: "Institutional Alliances & Capital syndication",
-    description: "Direct access to regional entrepreneurship networks, government institutions, cross-border investment channels, and tech incubation programs.",
-    tags: ["GovTech Alliances", "Cross-Border VC", "MENA Dealflow", "Incubators"],
-    deliverables: [
-      "Bilateral bridges to GCC and European sovereign tech funds",
-      "Institutional tech sandbox integration with regulatory bodies",
-      "Syndicated angel dealrooms and co-investment frameworks",
-      "Regional accelerator curricula and demo-day staging"
-    ],
-    impactMetric: "$18M+ leveraged ecosystem co-investment pool"
-  },
-  {
-    id: "gtm-brand-authority",
-    title: "Go-To-Market (GTM) & Brand Authority",
-    subtitle: "High-Converting Growth Infrastructure & Digital Dominance",
-    description: "Architecting digital presence, SEO infrastructure, news CMS deployments, and high-converting growth funnels for emerging tech startups.",
-    tags: ["Search Authority", "Growth Funnels", "Dynamic CMS", "Technical PR"],
-    deliverables: [
-      "High-velocity programatic SEO architectures for deep-tech niches",
-      "Automated news engine and editorial publication hubs",
-      "WhatsApp Business API funnel automation for MENA customer capture",
-      "Thought leadership positioning and international tier-1 coverage"
-    ],
-    impactMetric: "320% organic inbound reach expansion"
-  },
-  {
-    id: "coaching-talent",
-    title: "Coaching & Talent Development",
-    subtitle: "Executive Transformation & Engineering Leadership",
-    description: "Executive coaching, mindset alignment, performance optimization, and mentoring engineering leads into strategic startup CEOs.",
-    tags: ["Founder Mindset", "Engineering to CEO", "Performance Ops", "Talent Upskilling"],
-    deliverables: [
-      "1-on-1 executive performance and capital negotiation mastery",
-      "Engineering-to-CEO psychological alignment & delegation systems",
-      "Publication-as-authority curriculum for founder personal brands",
-      "Talent sourcing pods for AI researchers and ML engineers"
-    ],
-    impactMetric: "120+ senior technical leaders coached"
-  }
-];
+export const Navbar: React.FC<NavbarProps> = ({
+  currentPage,
+  currentUser,
+  onNavigate,
+  onOpenMatcher,
+  onOpenGetAccess,
+  onOpenAuth,
+  onSignOut
+}) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sectionsDropdownOpen, setSectionsDropdownOpen] = useState(false);
+  const [mobileSectionsOpen, setMobileSectionsOpen] = useState(true);
 
-export const DEPLOYMENT_PROJECTS: DeploymentProject[] = [
-  // 1. Technical AI Architecture & App Development
-  {
-    id: "ballish-agents",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "Deep Multi-Agent Orchestration & Knowledge Systems",
-    title: "Ballish & Enterprise Agent Workspace",
-    description: "Complex supervisor networks, executable intelligence layers, and unified workspace environments coordinating autonomous multi-agent task resolution.",
-    technologies: ["Supervisor Networks", "Executable Layers", "Agent Workspaces", "Context Bus"],
-    metrics: "Sub-500ms multi-agent coordination loop",
-    status: "Enterprise Active",
-    badgeColor: "cyan"
-  },
-  {
-    id: "company-brain",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "Deep Multi-Agent Orchestration & Knowledge Systems",
-    title: "Company Brain & Brain Builder",
-    description: "Institutional memory synthesis platform extracting unstructured operational data, emails, and documentation into unified queryable organizational cognition.",
-    technologies: ["GraphRAG", "Knowledge Graphs", "Incremental Vectorization", "Semantic Routing"],
-    metrics: "100k+ enterprise records indexed per node",
-    status: "Enterprise Active",
-    badgeColor: "cyan"
-  },
-  {
-    id: "al-hakam-legal",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
-    title: "Al-Hakam Legal Knowledge Base",
-    description: "Specialized Retrieval-Augmented Generation engine and hybrid search model for MENA civil and commercial legal codes with bilingual Arabic/English citations.",
-    technologies: ["Hybrid Sparse/Dense Search", "Arabic Legal NLP", "Citation Grounding", "Cross-Encoder"],
-    metrics: "100% verifiable statutory references",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "nexuslm",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
-    title: "NexusLM & Research Notebook Workspaces",
-    description: "Domain-specific search engine with optical OCR processing tools for legal dossiers, academic manuscripts, and macroeconomic telemetry.",
-    technologies: ["OCR Processing", "Domain Embeddings", "Notebook Workspaces", "Dynamic Re-ranking"],
-    metrics: "50+ pages/sec OCR processing throughput",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "risk-economic-intel",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
-    title: "Risk & Economic Intelligence Workspace",
-    description: "Real-time macroeconomic risk indexation with multi-vector scenario generation for Lebanese and MENA banking and commerce stability assessments.",
-    technologies: ["Time-Series Vectors", "Predictive Risk Modeling", "Financial Data Pipelines"],
-    metrics: "Daily macro stress testing indices",
-    status: "Regional Deployment",
-    badgeColor: "cyan"
-  },
-  {
-    id: "saas-deployment-hub",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "Automated Deployment & Workflow Orchestration",
-    title: "SaaS Deployment Hub & Studio Launchpad",
-    description: "Automated low-code SaaS provisioning tools, code generation hubs, and cross-platform publishing suites enabling rapid concept-to-production launches.",
-    technologies: ["Container Automation", "Low-Code Generators", "CI/CD Micro-Orchestrators"],
-    metrics: "48-hour typical MVP deployment cycle",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "social-content-suite",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "Automated Deployment & Workflow Orchestration",
-    title: "Automated Social Content & Digital Identity Suite",
-    description: "Cross-platform publishing engine and workflow orchestrator aligning brand voices across channels with automated compliance verification.",
-    technologies: ["Multi-Channel API", "Content Generation Engine", "Digital Identity Vault"],
-    metrics: "10x throughput in branded assets",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "startup-portal",
-    category: "tech-ai",
-    categoryLabel: "Technical AI Architecture",
-    subcategory: "Developers & Startup Portals",
-    title: "Startup Portal & Telemetry Hub",
-    description: "Frontier-model powered developer workspaces, telemetry dashboards, and research indexing portals for high-velocity venture engineering teams.",
-    technologies: ["Telemetry Dashboards", "Frontier LLM Routing", "Research Indexing API"],
-    metrics: "Unified dev telemetry for 80+ builders",
-    status: "Enterprise Active",
-    badgeColor: "cyan"
-  },
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 2. Business Development, Commercialization & Venture Ecosystems
-  {
-    id: "capitalissues-iq",
-    category: "biz-dev",
-    categoryLabel: "Business Development & Ventures",
-    subcategory: "Macroeconomic & Financial Intelligence Terminals",
-    title: "CapitalIssuesIQ & MarketPulse",
-    description: "Commercialized real-time financial tracking, market index feeds, and risk analysis platforms deployed for commercial banks and corporate treasuries.",
-    technologies: ["Streaming Market Feeds", "Forex Discrepancy Monitors", "Treasury Risk Analytics"],
-    metrics: "$240M+ simulated transaction analytics",
-    status: "Commercialized",
-    badgeColor: "amber"
-  },
-  {
-    id: "combinator-961",
-    category: "biz-dev",
-    categoryLabel: "Business Development & Ventures",
-    subcategory: "Venture Incubation & Dealroom Platforms",
-    title: "961 Combinator & z961combinator",
-    description: "Ecosystem incubation hubs featuring high-density community dealrooms, curated hacker news clones, and gamified founder pitch accelerators.",
-    technologies: ["Dealroom Engine", "Interactive Pitch Scoring", "Hacker News Clone CMS"],
-    metrics: "350+ startup pitches evaluated",
-    status: "Live & Scaled",
-    badgeColor: "amber"
-  },
-  {
-    id: "zrolodex-dealroom",
-    category: "biz-dev",
-    categoryLabel: "Business Development & Ventures",
-    subcategory: "Venture Incubation & Dealroom Platforms",
-    title: "Zrolodex & MENA Investment Directory",
-    description: "Global startup and investor indexation infrastructure connecting angel syndicates, sovereign capital, and MENA founders with deep algorithmic matchmaking.",
-    technologies: ["CRM Graph Database", "Investor Syndication Pipelines", "Entity Resolution"],
-    metrics: "1,200+ verified regional investor profiles",
-    status: "Live & Scaled",
-    badgeColor: "amber"
-  },
-  {
-    id: "rawcoach-ai",
-    category: "biz-dev",
-    categoryLabel: "Business Development & Ventures",
-    subcategory: "Specialized AI Coaching & Talent Upskilling",
-    title: "RAWCOACH.AI & Resume Builder",
-    description: "Gen Z-inspired executive coaching, leadership growth portals, and automated resume optimization tools engineered for the Arab digital economy.",
-    technologies: ["Voice & Text Coaching Bots", "Automated ATS Resume Parsing", "Skill Gap Mapping"],
-    metrics: "14,000+ optimized profiles & resumes",
-    status: "Commercialized",
-    badgeColor: "amber"
-  },
-  {
-    id: "alwarraq-webfx",
-    category: "biz-dev",
-    categoryLabel: "Business Development & Ventures",
-    subcategory: "Digital Publishing & Media Authority",
-    title: "Alwarraq News & WebFX Agency Toolkit",
-    description: "High-fidelity, dynamic news generation engines and digital agency toolkits powering high-volume authoritative publications across technology and culture.",
-    technologies: ["Dynamic News Pipeline", "Media Generation Workflow", "Digital Agency Engine"],
-    metrics: "1.2M+ monthly pageviews generated",
-    status: "Commercialized",
-    badgeColor: "amber"
-  },
-
-  // 3. Vertical Marketplaces & Consumer Tech Advisories
-  {
-    id: "artisan-ecommerce",
-    category: "marketplaces",
-    categoryLabel: "Vertical Marketplaces",
-    subcategory: "Artisan E-Commerce & Cyberpunk Platforms",
-    title: "Pickle & Pepper Market & Avant-Garde Commerce",
-    description: "End-to-end B2C and B2B artisanal marketplaces with bespoke administrative workflows, dynamic inventory syncing, and automated dropshipping logic.",
-    technologies: ["Custom Headless Checkout", "Cross-Border Settlement", "Dropship Dispatch Logic"],
-    metrics: "50+ artisan vendors integrated",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "gaming-healthcare",
-    category: "marketplaces",
-    categoryLabel: "Vertical Marketplaces",
-    subcategory: "Gaming, Esports & Healthcare Solutions",
-    title: "961Med, FC Pulse & Leban Esports",
-    description: "Virtual direct-pay clinic networks paired with high-performance gaming loyalty hubs featuring AI talent scouting and esports tournament management.",
-    technologies: ["Direct-Pay Telehealth", "AI Esports Scouting", "Gamified Loyalty Smart Ledger"],
-    metrics: "4,500+ active gamers & patient consultations",
-    status: "Live & Scaled",
-    badgeColor: "cyan"
-  },
-  {
-    id: "b2b-lead-intel",
-    category: "marketplaces",
-    categoryLabel: "Vertical Marketplaces",
-    subcategory: "B2B Growth & Lead Intelligence Services",
-    title: "Point to Business Services & Lebanon Airbnb Platform",
-    description: "Structured B2B email lead intelligence databases and curated regional hospitality showcases accelerating commercial acquisition.",
-    technologies: ["B2B Data Scraping & Verification", "Hospitality Booking Showcases", "Email Enrichment"],
-    metrics: "250k+ verified commercial leads",
-    status: "Commercialized",
-    badgeColor: "cyan"
-  }
-];
-
-export const LIVE_CHANNELS: LiveChannel[] = [
-  {
-    id: "public-square",
-    name: "#public-square",
-    tier: "public",
-    tierLabel: "Tier 1: Public Square",
-    description: "Open forum for casual networking, MENA tech news aggregation, ecosystem questions, and public community support.",
-    activeUsers: 342,
-    unreadCount: 4,
-    isEncrypted: false
-  },
-  {
-    id: "scholars-lab",
-    name: "#scholars-lab",
-    tier: "scholar",
-    tierLabel: "Tier 2: The Scholar's Lab",
-    description: "Collaborative research zone: clean dataset exchanges, daily ArXiv ML paper breakdowns, and co-developed open-source prompt libraries.",
-    activeUsers: 88,
-    unreadCount: 2,
-    isEncrypted: false
-  },
-  {
-    id: "gurus-penthouse",
-    name: "#gurus-penthouse",
-    tier: "penthouse",
-    tierLabel: "Tier 3: The Guru's Penthouse",
-    description: "Exclusive encrypted channel where premium members access high-frequency 'Alpha' market signals, 5-figure bounties, and elite consultation suites.",
-    activeUsers: 24,
-    unreadCount: 0,
-    isEncrypted: true
-  },
-  {
-    id: "enterprise-war-room",
-    name: "#enterprise-war-room",
-    tier: "penthouse",
-    tierLabel: "Tier 3: Enterprise War Rooms",
-    description: "High-security strategic chambers for government task force leaders, institutional bank heads, and venture partners executing live Red Teaming and private deals.",
-    activeUsers: 12,
-    unreadCount: 0,
-    isEncrypted: true
-  }
-];
-
-export const INITIAL_MESSAGES: Record<string, LiveMessage[]> = {
-  "public-square": [
-    {
-      id: "m1",
-      channelId: "public-square",
-      sender: "Neural Concierge",
-      role: "System AI Bot",
-      avatar: "NC",
-      timestamp: "10:41 AM",
-      content: "Welcome to NCEILEBANON Live Nexus! I am your Neural Concierge. State your objective (Scholar, Freelancer, Founder, Enterprise) to receive instant channel routing and compute access.",
-      badge: "Native AI",
-      isAiBot: true
-    },
-    {
-      id: "m2",
-      channelId: "public-square",
-      sender: "Tarek Mansour",
-      role: "Hardware Founder",
-      avatar: "TM",
-      timestamp: "10:44 AM",
-      content: "Has anyone benchmarked the local low-latency RAG pipeline for Arabic legal codices compared to standard OpenAI models?",
-      badge: "Founder"
-    },
-    {
-      id: "m3",
-      channelId: "public-square",
-      sender: "@961Brain",
-      role: "Autonomous RAG Bot",
-      avatar: "9B",
-      timestamp: "10:45 AM",
-      content: "@Tarek: Al-Hakam Legal Knowledge Base achieves 99.4% citation accuracy by pairing custom Arabic stemmers with hybrid dense/sparse vector search, outperforming generic LLMs on Lebanese commerce laws by 41%.",
-      badge: "RAG Oracle",
-      isAiBot: true
-    }
-  ],
-  "scholars-lab": [
-    {
-      id: "m4",
-      channelId: "scholars-lab",
-      sender: "Dr. Maya Khoury",
-      role: "NLP Research Fellow",
-      avatar: "MK",
-      timestamp: "09:30 AM",
-      content: "Just uploaded the cleaned Levantine Arabic dialect dataset (142k verified prompt-response pairs). Check the pinned Data Cooperative link.",
-      badge: "Scholar"
-    },
-    {
-      id: "m5",
-      channelId: "scholars-lab",
-      sender: "@961Brain",
-      role: "Autonomous RAG Bot",
-      avatar: "9B",
-      timestamp: "09:32 AM",
-      content: "Dataset ingested into sandbox cache. PII scan complete: 0 leaks detected. Available for federated fine-tuning in Guilds sandbox.",
-      badge: "RAG Oracle",
-      isAiBot: true
-    }
-  ],
-  "gurus-penthouse": [
-    {
-      id: "m6",
-      channelId: "gurus-penthouse",
-      sender: "Ziad Haddad",
-      role: "Ecosystem Partner",
-      avatar: "ZH",
-      timestamp: "08:15 AM",
-      content: "[ALPHA SIGNAL] Regional sovereign wealth fund just opened a $15M fast-track allocation for multi-agent supply chain optimization. Reviewing RFP in private escrow suite.",
-      badge: "Tier 3 Vetted"
-    },
-    {
-      id: "m7",
-      channelId: "gurus-penthouse",
-      sender: "Karim B.",
-      role: "Enterprise Architect",
-      avatar: "KB",
-      timestamp: "08:22 AM",
-      content: "Deploying the Red Teaming audit for the VAMS v3 architecture now. Target throughput: 15,000 QR scans/minute without latency degradation.",
-      badge: "Tier 3 Vetted"
-    }
-  ],
-  "enterprise-war-room": [
-    {
-      id: "m8",
-      channelId: "enterprise-war-room",
-      sender: "Institutional Lead",
-      role: "GovTech Director",
-      avatar: "IL",
-      timestamp: "07:50 AM",
-      content: "Reviewing the National SME Revival Strategy models. The automated inventory forecasting metrics have been approved for Ministry presentation.",
-      badge: "GovTech Special"
-    }
-  ]
-};
-
-export const INDUSTRY_GUILDS: Guild[] = [
-  {
-    id: "fintech-guild",
-    name: "FinTech & Banking Intelligence Guild",
-    sector: "FinTech",
-    description: "Exclusive micro-consortium sharing macroeconomic index feeds, risk engines, and banking automation tools with strict banking compliance.",
-    regulatoryStandard: "Basel III & BDL Circular 158/165 Frameworks",
-    dataCooperativeName: "Levant Financial Data Cooperative",
-    sandboxFeatures: ["Synthetic Transaction Generator", "Anti-Money Laundering Anonymizer", "n8n Banking Webhooks", "Zero-PII Gateway"],
-    membersCount: 420,
-    status: "Active Gated Sandbox"
-  },
-  {
-    id: "healthcare-guild",
-    name: "Digital Health & Clinical AI Guild",
-    sector: "Healthcare",
-    description: "Governed clinical innovation sandbox linking virtual clinic networks, diagnostic assistants, and emergency dispatch systems.",
-    regulatoryStandard: "HIPAA Compliant & MoPH Hospital Standards",
-    dataCooperativeName: "MedData Federated Cooperative",
-    sandboxFeatures: ["Synthetic Patient Records (FHIR)", "DICOM Image Masking Pipeline", "Direct-Pay Telehealth Ledger", "Clinical Protocol Validator"],
-    membersCount: 310,
-    status: "Active Gated Sandbox"
-  },
-  {
-    id: "legaltech-guild",
-    name: "LegalTech & Regulatory Policy Guild",
-    sector: "Legal Tech",
-    description: "High-level consortium connecting law firms, ministries, and enterprise legal departments with verified bilingual statutory databases.",
-    regulatoryStandard: "GDPR, Arab League Legal Harmonization & ISO 27001",
-    dataCooperativeName: "Al-Hakam Jurisprudence Cooperative",
-    sandboxFeatures: ["Bilingual Contract Synthesizer", "Court Judgment Semantic Search", "Redline Risk Classifier", "Statute Cross-Referencer"],
-    membersCount: 285,
-    status: "Active Gated Sandbox"
-  }
-];
-
-export const TECHNICAL_VALUES = {
-  organization: "z961aiNetwork",
-  coreValues: [
-    {
-      title: "AI Integrations & Automation",
-      description: "Spearheading custom AI agent deployment, RAG pipelines, n8n automated workflows, LangChain integrations, and GPT-powered business tools.",
-      icon: "Cpu"
-    },
-    {
-      title: "Social Media & Growth Architecture",
-      description: "Directing end-to-end social media strategy, brand monitoring, paid campaigns, and WhatsApp Business developer deployments.",
-      icon: "Share2"
-    },
-    {
-      title: "Founder & Executive Coaching",
-      description: "Delivering structured 1-on-1 and group coaching focused on startup monetization, founder performance, leadership identity, and publication-as-authority strategies.",
-      icon: "Users"
-    },
-    {
-      title: "Operational Leadership",
-      description: "Architecting enterprise AI capacity models, managing distributed AI engineering pods, and executing advanced technical masterclasses.",
-      icon: "ShieldCheck"
-    }
-  ],
-  alkhawarizmiLead: {
-    role: "AI Development Lead",
-    company: "AlKhawarizmi Solutions",
-    timeline: "Sep 2025 – Present",
-    highlights: [
-      {
-        title: "Enterprise RAG Systems",
-        detail: "Architected dynamic, real-time vector databases and knowledge bases grounding AI capabilities inside company-specific unstructured data."
-      },
-      {
-        title: "Secure AI Sandboxes (ALmouwateN)",
-        detail: "Engineered isolated, containerized AI environments featuring PII masking and controlled execution for civic/government data interactions."
-      },
-      {
-        title: "Autonomous Agent Networks",
-        detail: "Built specialized multi-agent systems including aicademy.online (AI scholar community) and matchprenai.online (freelancer matchmaking platform)."
-      },
-      {
-        title: "Fintech & Banking Automation",
-        detail: "Deployed n8n and LangChain API workflows for data analysis and financial simulations across the regional fintech and banking sectors."
+  // Close dropdown on outside click or ESC key
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSectionsDropdownOpen(false);
       }
-    ]
-  }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSectionsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Primary top-level links
+  const topNavLinks: { id: PageId; label: string; icon: React.ReactNode; badge?: string; highlight?: boolean }[] = [
+    { id: 'home', label: 'Home', icon: <Cpu className="w-4 h-4" /> },
+    { id: 'ai-courses', label: 'AI Courses', icon: <GraduationCap className="w-4 h-4 text-emerald-600" />, badge: '12 CERTS', highlight: true },
+    { id: 'yellow-pages', label: 'Yellow Pages', icon: <Users className="w-4 h-4 text-amber-500" />, badge: 'MEMBERS', highlight: true },
+    { id: 'policy-papers', label: 'Policy & Research', icon: <FileText className="w-4 h-4 text-cyan-600" />, badge: 'PAPERS', highlight: true },
+  ];
+
+  // Submenu items under "Our Sections"
+  const ourSectionsItems: {
+    id?: PageId;
+    label: string;
+    icon: React.ReactNode;
+    badge?: string;
+    badgeColor?: string;
+    action?: 'navigate' | 'matcher' | 'home';
+    description?: string;
+  }[] = [
+    { 
+      id: 'ai-courses', 
+      label: '12 Essential AI Courses', 
+      icon: <GraduationCap className="w-4 h-4 text-emerald-500" />, 
+      badge: 'ACADEMY',
+      badgeColor: 'bg-emerald-500 text-slate-950 font-bold',
+      action: 'navigate',
+      description: 'Executive certifications & startup case studies'
+    },
+    { 
+      id: 'neural-matcher', 
+      label: 'Neural Matcher', 
+      icon: <Sparkles className="w-4 h-4 text-cyan-500" />, 
+      badge: 'AI ENGINE',
+      badgeColor: 'bg-cyan-500 text-slate-950 font-bold',
+      action: 'navigate',
+      description: 'Bilateral matchmaking and vector similarity'
+    },
+    { 
+      id: 'competencies', 
+      label: 'Competencies', 
+      icon: <ShieldCheck className="w-4 h-4 text-indigo-500" />, 
+      action: 'navigate',
+      description: 'Verified engineering credentials & frameworks'
+    },
+    { 
+      id: 'architecture', 
+      label: 'Deployments', 
+      icon: <FolderKanban className="w-4 h-4 text-sky-500" />, 
+      action: 'navigate',
+      description: 'Production topology and technical blueprints'
+    },
+    { 
+      id: 'livenexus', 
+      label: 'Live Nexus', 
+      icon: <Radio className="w-4 h-4 text-rose-500 animate-pulse" />, 
+      badge: 'LIVE',
+      badgeColor: 'bg-rose-500 text-white font-bold',
+      action: 'navigate',
+      description: 'Real-time telemetry and 466 ecosystem nodes'
+    },
+    { 
+      id: 'guilds-dev', 
+      label: 'Guilds & Dev', 
+      icon: <Terminal className="w-4 h-4 text-emerald-500" />, 
+      action: 'navigate',
+      description: 'Builder working groups and code repositories'
+    },
+    { 
+      id: 'leadership', 
+      label: 'Values', 
+      icon: <Cpu className="w-4 h-4 text-amber-500" />, 
+      action: 'navigate',
+      description: 'Ethical governance and institutional mandate'
+    },
+    { 
+      id: 'national-cv', 
+      label: 'National CV', 
+      icon: <FileText className="w-4 h-4 text-blue-500" />, 
+      action: 'navigate',
+      description: 'Lebanon innovation track record and benchmarks'
+    },
+    { 
+      id: 'startups', 
+      label: 'Startups', 
+      icon: <Rocket className="w-4 h-4 text-purple-500" />, 
+      action: 'navigate',
+      description: 'Venture directory and commercial scaling index'
+    },
+    { 
+      label: 'Matcher', 
+      icon: <Sparkles className="w-4 h-4 text-cyan-600" />, 
+      badge: 'LAUNCH',
+      badgeColor: 'bg-slate-900 text-cyan-300 font-bold',
+      action: 'matcher',
+      description: 'Instant matchmaking assistant popup'
+    },
+    { 
+      id: 'home',
+      label: 'Back to Ecosystem Overview', 
+      icon: <ArrowLeft className="w-4 h-4 text-slate-500" />, 
+      action: 'home',
+      description: 'Return to ecosystem root dashboard'
+    },
+  ];
+
+  const isOurSectionsActive = [
+    'ai-courses',
+    'neural-matcher',
+    'competencies',
+    'architecture',
+    'livenexus',
+    'guilds-dev',
+    'leadership',
+    'national-cv',
+    'startups'
+  ].includes(currentPage);
+
+  const handleNavClick = (page: PageId) => {
+    onNavigate(page);
+    setMobileMenuOpen(false);
+    setSectionsDropdownOpen(false);
+  };
+
+  return (
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+      {/* Top Telemetry & Byline Bar */}
+      <div className="bg-slate-900 text-slate-200 text-xs px-4 py-1.5 border-b border-cyan-900/40">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 text-[11px] tracking-wide">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping mr-1"></span>
+              961AI OPERATIONAL
+            </span>
+            <span className="text-slate-300 font-medium truncate">
+              {ECOSYSTEM_METADATA.byline}
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-4 text-[11px] font-mono text-slate-400">
+            <span className="hidden sm:inline-flex items-center text-cyan-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+              Live Nexus: 466 Active Nodes
+            </span>
+            <span className="text-slate-500">|</span>
+            <span className="text-slate-300">MENA Innovation Grid</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo Branding */}
+          <div 
+            onClick={() => handleNavClick('home')}
+            className="flex items-center space-x-3 cursor-pointer group select-none"
+            id="nav-logo"
+          >
+            {/* High tech cybernetic crest */}
+            <div className="relative w-10 h-10 rounded-lg bg-slate-950 border border-cyan-500/50 flex items-center justify-center shadow-xs group-hover:border-cyan-400 transition-all">
+              <div className="absolute inset-0 bg-cyan-500/10 rounded-lg"></div>
+              <Cpu className="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" />
+              <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white"></div>
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-base tracking-tight text-slate-900">
+                  NCEI <span className="text-cyan-600">LEBANON</span>
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-cyan-50 text-cyan-700 font-semibold border border-cyan-200">
+                  961AI
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium tracking-tight">
+                National Council for Entrepreneurship & Innovation
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden lg:flex items-center space-x-1">
+            {topNavLinks.map((link) => {
+              const isActive = currentPage === link.id;
+              return (
+                <button
+                  key={link.id}
+                  id={`nav-link-${link.id}`}
+                  onClick={() => handleNavClick(link.id)}
+                  className={`relative px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-colors flex items-center space-x-1.5 ${
+                    isActive
+                      ? 'text-cyan-700 bg-cyan-50/80 border border-cyan-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                  }`}
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className={`ml-1 px-1 py-0.2 text-[9px] font-mono font-bold rounded ${
+                      link.highlight ? 'bg-amber-400 text-slate-950' : 'bg-cyan-500 text-white'
+                    }`}>
+                      {link.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Our Sections Dropdown Menu */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                id="nav-dropdown-our-sections"
+                onClick={() => setSectionsDropdownOpen(!sectionsDropdownOpen)}
+                aria-expanded={sectionsDropdownOpen}
+                aria-haspopup="true"
+                className={`relative px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center space-x-1.5 border ${
+                  isOurSectionsActive || sectionsDropdownOpen
+                    ? 'text-cyan-800 bg-cyan-50/90 border-cyan-300 shadow-xs'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 border-transparent'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-cyan-600" />
+                <span>Our Sections</span>
+                {isOurSectionsActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 ring-2 ring-cyan-200"></span>
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${sectionsDropdownOpen ? 'rotate-180 text-cyan-600' : 'text-slate-400'}`} />
+              </button>
+
+              {sectionsDropdownOpen && (
+                <div 
+                  id="dropdown-our-sections-panel"
+                  className="absolute left-0 mt-2 w-80 rounded-2xl bg-white/98 backdrop-blur-md border border-slate-200/90 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100"
+                >
+                  <div className="px-3.5 py-1.5 flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Our Sections
+                    </span>
+                    <span className="text-[9px] font-mono text-cyan-700 font-semibold bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                      961AI DIRECTORY
+                    </span>
+                  </div>
+
+                  {/* Main Submenus */}
+                  <div className="py-1 px-1.5 space-y-0.5 max-h-[60vh] overflow-y-auto">
+                    {ourSectionsItems.filter((item) => item.action !== 'matcher' && item.action !== 'home').map((item) => {
+                      const isActive = currentPage === item.id;
+                      return (
+                        <button
+                          key={item.label}
+                          id={`dropdown-item-${item.id || item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                          onClick={() => {
+                            if (item.id) handleNavClick(item.id);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors ${
+                            isActive
+                              ? 'bg-cyan-50 text-cyan-900 font-bold border border-cyan-200/80'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <span className={`p-1.5 rounded-lg shrink-0 ${isActive ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {item.icon}
+                            </span>
+                            <div className="truncate">
+                              <div className="text-xs font-semibold tracking-tight text-slate-900 truncate">
+                                {item.label}
+                              </div>
+                              {item.description && (
+                                <div className="text-[10px] text-slate-500 font-normal truncate">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {item.badge && (
+                            <span className={`ml-2 px-1.5 py-0.5 text-[9px] font-mono rounded shrink-0 ${item.badgeColor || 'bg-cyan-500 text-white'}`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bottom Actions: Matcher & Back to Ecosystem Overview */}
+                  <div className="pt-1.5 pb-1 px-1.5 bg-slate-50/70 space-y-0.5">
+                    {ourSectionsItems.filter((item) => item.action === 'matcher' || item.action === 'home').map((item) => (
+                      <button
+                        key={item.label}
+                        id={`dropdown-action-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                        onClick={() => {
+                          if (item.action === 'matcher') {
+                            onOpenMatcher();
+                            setSectionsDropdownOpen(false);
+                          } else if (item.action === 'home') {
+                            handleNavClick('home');
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors ${
+                          item.action === 'matcher'
+                            ? 'bg-cyan-50/90 hover:bg-cyan-100/80 text-cyan-950 border border-cyan-200/80 font-bold'
+                            : 'hover:bg-slate-100 text-slate-700 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span className="p-1.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                            {item.icon}
+                          </span>
+                          <div>
+                            <div className="text-xs font-bold tracking-tight text-slate-900">
+                              {item.label}
+                            </div>
+                            {item.description && (
+                              <div className="text-[10px] text-slate-500 font-normal">
+                                {item.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {item.badge && (
+                          <span className={`px-1.5 py-0.5 text-[9px] font-mono rounded shrink-0 ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Right Action CTAs */}
+          <div className="hidden lg:flex items-center space-x-2.5">
+            {/* Quick Search */}
+            <div className="relative">
+              {searchOpen ? (
+                <div className="flex items-center bg-slate-100 rounded-lg px-2.5 py-1 border border-slate-300">
+                  <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+                  <input
+                    type="text"
+                    placeholder="Search systems, RAG, CV..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden w-40"
+                    autoFocus
+                    onBlur={() => !searchQuery && setSearchOpen(false)}
+                  />
+                  <button 
+                    onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                  title="Search Ecosystem"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Neural Matcher Primary Button */}
+            <button
+              id="cta-neural-matcher-nav"
+              onClick={onOpenMatcher}
+              className={`relative inline-flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-xs ${
+                currentPage === 'neural-matcher'
+                  ? 'bg-cyan-500 text-slate-950 border border-cyan-400 ring-2 ring-cyan-400/40 shadow-xs'
+                  : 'text-slate-900 bg-cyan-100/70 border border-cyan-300 hover:bg-cyan-200/80 hover:border-cyan-400'
+              }`}
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${currentPage === 'neural-matcher' ? 'text-slate-950' : 'text-cyan-600'}`} />
+              <span className="hidden 2xl:inline">Neural Matcher</span>
+              <span className="2xl:hidden">Matcher</span>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              </span>
+            </button>
+
+            {/* User Auth or Sign In / Sign Up CTAs */}
+            {currentUser ? (
+              <div className="flex items-center space-x-2 pl-1 border-l border-slate-200">
+                <div 
+                  onClick={() => onNavigate('yellow-pages')}
+                  className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 cursor-pointer transition-colors border border-slate-200"
+                  title="View Profile in Yellow Pages"
+                >
+                  <div className="w-6 h-6 rounded-full bg-slate-950 text-cyan-400 font-mono font-bold text-[10px] flex items-center justify-center">
+                    {currentUser.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="text-left hidden xl:block">
+                    <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[100px]">
+                      {currentUser.name}
+                    </span>
+                    <span className="text-[9px] font-mono text-cyan-700 block uppercase">
+                      {currentUser.badge}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={onSignOut}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  title="Sign Out of Session"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => onOpenAuth('signin')}
+                  className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1 ${
+                    currentPage === 'register'
+                      ? 'bg-slate-200 text-slate-950 font-bold'
+                      : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                  }`}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  onClick={() => onOpenAuth('signup')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors shadow-xs ${
+                    currentPage === 'register'
+                      ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-400/50'
+                      : 'text-slate-950 bg-amber-400 hover:bg-amber-300'
+                  }`}
+                >
+                  <span>Sign Up</span>
+                </button>
+              </div>
+            )}
+
+            {/* Admin Protected Route /Maan70939779 Quick Entry */}
+            <button
+              id="cta-admin-nav"
+              onClick={() => onNavigate('admin-maan')}
+              className={`p-2 rounded-lg text-xs font-semibold transition-all border flex items-center space-x-1 ${
+                currentPage === 'admin-maan'
+                  ? 'bg-slate-950 text-cyan-400 border-cyan-500 shadow-xs'
+                  : 'bg-slate-50 text-slate-600 hover:text-slate-950 hover:bg-slate-100 border-slate-200'
+              }`}
+              title="Admin Command Console /Maan70939779"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-700" />
+              <span className="text-[10px] font-mono hidden 2xl:inline">/Maan</span>
+            </button>
+          </div>
+
+          {/* Mobile Menu Hamburger */}
+          <div className="flex lg:hidden items-center space-x-2">
+            <button
+              onClick={() => onOpenAuth('signin')}
+              className="p-2 rounded-md text-slate-700 bg-slate-100 text-xs font-bold"
+            >
+              <LogIn className="w-4 h-4" />
+            </button>
+            <button
+              id="mobile-matcher-btn"
+              onClick={onOpenMatcher}
+              className="p-2 rounded-md text-cyan-600 bg-cyan-50 border border-cyan-200"
+              title="Neural Matcher"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+            <button
+              id="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-hidden"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3 shadow-lg animate-in slide-in-from-top-2">
+          {/* User Auth Info in Mobile */}
+          {currentUser ? (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-950 text-cyan-400 font-mono font-bold flex items-center justify-center text-xs">
+                  {currentUser.name.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900">{currentUser.name}</div>
+                  <div className="text-[10px] text-cyan-700 font-mono">{currentUser.badge}</div>
+                </div>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { onOpenAuth('signin'); setMobileMenuOpen(false); }}
+                className="py-2 px-3 rounded-lg text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 flex items-center justify-center space-x-1"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+              <button
+                onClick={() => { onOpenAuth('signup'); setMobileMenuOpen(false); }}
+                className="py-2 px-3 rounded-lg text-xs font-bold text-slate-950 bg-amber-400 flex items-center justify-center space-x-1"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 py-1">
+            <button
+              onClick={() => { onOpenMatcher(); setMobileMenuOpen(false); }}
+              className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-bold text-cyan-900 bg-cyan-50 border border-cyan-200"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+              <span>Neural Matcher</span>
+            </button>
+            <button
+              onClick={() => { onOpenGetAccess(); setMobileMenuOpen(false); }}
+              className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-bold text-white bg-slate-950 border border-slate-800"
+            >
+              <span>Get Access</span>
+              <ChevronRight className="w-3.5 h-3.5 text-cyan-400" />
+            </button>
+          </div>
+
+          <div className="space-y-1 pt-1">
+            {/* Primary Top Links */}
+            {topNavLinks.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => handleNavClick(link.id)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  currentPage === link.id
+                    ? 'text-cyan-600 bg-cyan-50/70 font-semibold'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  {link.icon}
+                  <span>{link.label}</span>
+                </div>
+                {link.badge && (
+                  <span className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded ${
+                    link.highlight ? 'bg-amber-400 text-slate-950' : 'bg-cyan-500 text-white'
+                  }`}>
+                    {link.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+
+            {/* Expandable "Our Sections" in Mobile */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setMobileSectionsOpen(!mobileSectionsOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold tracking-wide uppercase transition-colors ${
+                  isOurSectionsActive
+                    ? 'bg-cyan-50 text-cyan-900 border border-cyan-200'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Layers className="w-4 h-4 text-cyan-600" />
+                  <span>Our Sections</span>
+                  {isOurSectionsActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[10px] font-mono text-slate-500 normal-case">
+                    {ourSectionsItems.length} items
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${mobileSectionsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {mobileSectionsOpen && (
+                <div className="mt-1.5 pl-2 pr-1 space-y-1 border-l-2 border-cyan-200/80 ml-3">
+                  {ourSectionsItems.map((item) => {
+                    const isSubActive = item.id && currentPage === item.id;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          if (item.action === 'matcher') {
+                            onOpenMatcher();
+                            setMobileMenuOpen(false);
+                          } else if (item.action === 'home') {
+                            handleNavClick('home');
+                          } else if (item.id) {
+                            handleNavClick(item.id);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg transition-colors ${
+                          isSubActive
+                            ? 'text-cyan-800 bg-cyan-50 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 truncate">
+                          {item.icon}
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <span className={`px-1.5 py-0.2 text-[9px] font-mono rounded shrink-0 ${item.badgeColor || 'bg-cyan-500 text-white'}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Admin page link in mobile menu */}
+            <div className="pt-2">
+              <button
+                onClick={() => handleNavClick('admin-maan')}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <Lock className="w-4 h-4 text-slate-600" />
+                  <span>Admin Portal (/Maan70939779)</span>
+                </div>
+                <span className="px-1.5 py-0.5 text-[9px] font-mono bg-slate-900 text-cyan-400 rounded">
+                  SECURE
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
 };
-
-export const NATIONAL_CV: NationalMilestone[] = [
-  {
-    id: "vams-system",
-    title: "National COVID-19 Emergency Task Force",
-    entity: "Rafic Hariri University Hospital & Ministry of Public Health",
-    date: "2020 – 2022",
-    scope: "National Critical Infrastructure",
-    description: "Built the Vaccination Management Information System (VAMS) for Rafic Hariri University Hospital, incorporating QR patient tracking and PCR data systems.",
-    keyOutputs: [
-      "End-to-end Vaccination Management Information System (VAMS)",
-      "High-throughput QR patient verification at national triage centers",
-      "Automated PCR lab result syndication and digital vaccination certificate issuance",
-      "Zero-downtime server scaling during emergency national surges"
-    ],
-    impactMetric: "Over 1.8M verified QR vaccinations and tests processed"
-  },
-  {
-    id: "digitization-blueprints",
-    title: "Digitization & Policy Blueprints",
-    entity: "Ministry of State for Administrative Development (OMSAR) & World Bank",
-    date: "2022 – 2024",
-    scope: "Public Sector Modernization",
-    description: "Submitted national digitization proposals to the Ministry of State for Administrative Development and the World Bank.",
-    keyOutputs: [
-      "National Digital Identity & One-Stop Civic Service Blueprint",
-      "Open Government Data interoperability standards across Lebanese ministries",
-      "World Bank technical framework for judicial and civil registry digitization",
-      "Cloud sovereignty and public sector cryptographic security recommendations"
-    ],
-    impactMetric: "Formally submitted to OMSAR & World Bank taskforces"
-  },
-  {
-    id: "economic-recovery",
-    title: "National Economic Recovery & SME Revival Strategy",
-    entity: "Lebanese Industrial & Commercial Taskforces",
-    date: "2023 – Present",
-    scope: "Macroeconomic Restructuring",
-    description: "Drafted the Lebanon SME Revival Strategy and post-COVID industrial restructuring models.",
-    keyOutputs: [
-      "Lebanon SME Revival Strategy with export-focused digital acceleration corridors",
-      "Post-COVID industrial restructuring models for local agro-food and manufacturing",
-      "Digital remittance and cross-border payment integration guidelines",
-      "Alternative credit-scoring framework for micro-enterprises leveraging AI telemetry"
-    ],
-    impactMetric: "Adopted in regional SME rehabilitation pilot zones"
-  }
-];
-
-export const STARTUPS_MANAGED: StartupItem[] = [
-  {
-    id: "the-961ai-network",
-    name: "The 961aiNetwork",
-    domain: "961ai.network",
-    role: "Founder",
-    timeline: "Oct 2024 – Present",
-    description: "Established Lebanon's premier AI startup hub and accelerator ecosystem. Directing the AI Academy (offering hands-on instruction in ML, NLP, computer vision, and AI ethics), active founder mentorship programs, and a regional network for AI researchers and entrepreneurs.",
-    focusAreas: ["AI Accelerator", "Founder Mentorship", "AI Academy", "Research Hub"],
-    metrics: "85+ mentored founders • 1,200+ trained in AI Academy",
-    url: "#"
-  },
-  {
-    id: "zrolodex",
-    name: "zrolodex.live",
-    domain: "zrolodex.live",
-    role: "Proprietary Platform",
-    timeline: "2024 – Present",
-    description: "Smart networking and relationship-management platform combining CRM capabilities with digital rolodex tracking for founders and business executives.",
-    focusAreas: ["Smart CRM", "Executive Rolodex", "AI Relationship Intelligence", "Deal Sourcing"],
-    metrics: "2,400+ active executive relationship graphs",
-    url: "https://zrolodex.live"
-  },
-  {
-    id: "zappcademy",
-    name: "zappcademy.xyz",
-    domain: "zappcademy.xyz",
-    role: "Educational Venture",
-    timeline: "2024 – Present",
-    description: "Gamified digital academy delivering micro-courses in AI integration, social media growth, and tech entrepreneurship tailored for the Arab digital economy.",
-    focusAreas: ["Gamified Learning", "Micro-Credentials", "Arab Digital Economy", "No-Code AI"],
-    metrics: "8,500+ completed micro-lessons",
-    url: "https://zappcademy.xyz"
-  },
-  {
-    id: "logistics-iq",
-    name: "LogisticsIQ Supply",
-    domain: "logisticsiq.supply",
-    role: "B2B Enterprise Venture",
-    timeline: "2024 – Present",
-    description: "AI-driven supply chain intelligence platform providing demand forecasting, vendor analytics, and inventory optimization for regional SMEs.",
-    focusAreas: ["Demand Forecasting", "Vendor Analytics", "Inventory Optimization", "SME Logistics"],
-    metrics: "$12M+ managed inventory tracked via predictive models",
-    url: "#"
-  }
-];

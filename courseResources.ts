@@ -3,742 +3,403 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { PageId } from '../types';
-import { 
-  ShieldCheck, 
-  Cpu, 
-  TrendingUp, 
-  Store, 
-  Radio, 
-  Terminal, 
-  FileText, 
-  Rocket, 
-  ArrowRight, 
-  Sparkles, 
-  Lock, 
-  Code2, 
-  CheckCircle2, 
-  Layers, 
-  BarChart3, 
-  Bot,
-  Users,
-  Star,
-  MapPin,
-  BookOpen,
-  Scale,
-  AlertTriangle
-} from 'lucide-react';
-import { 
-  CORE_COMPETENCIES, 
-  DEPLOYMENT_PROJECTS, 
-  LIVE_CHANNELS, 
-  INDUSTRY_GUILDS, 
-  TECHNICAL_VALUES, 
-  NATIONAL_CV, 
-  STARTUPS_MANAGED 
-} from '../data/ecosystemData';
-import { SEED_YELLOW_PAGES_MEMBERS } from '../data/yellowPagesData';
-import { POLICY_PAPERS_CATALOG } from '../data/policyPapersData';
-import { AiCoursesSection } from './AiCoursesSection';
+import { AiCourseItem } from '../types';
+import { COURSE_SYLLABI } from './courseSyllabi';
+import { COURSE_RESOURCES } from './courseResources';
+import { COURSE_DEEP_CASE_STUDIES } from './courseDeepCaseStudies';
 
-interface SectionExcerptsProps {
-  onNavigate: (page: PageId) => void;
-  onOpenMatcher: () => void;
-  onOpenGetAccess: () => void;
-}
+const RAW_AI_ENTREPRENEUR_COURSES: AiCourseItem[] = [
+  {
+    id: 'mit-sloan-ai-business-strategy',
+    number: 1,
+    title: 'Artificial Intelligence: Implications for Business Strategy',
+    provider: 'MIT Sloan & MIT CSAIL',
+    providerType: 'University',
+    format: 'Executive Certificate (6 Weeks Online)',
+    category: 'Strategy & Leadership',
+    level: 'Executive / Advanced',
+    targetTools: ['Machine Learning Frameworks', 'Process Automation Architectures', 'Computer Vision APIs', 'Algorithmic Risk Models'],
+    skills: ['Organizational strategy', 'Machine learning integration', 'Process automation', 'Algorithmic risk management'],
+    synopsis: 'Focuses on demystifying AI technology from a non-technical management perspective. It provides entrepreneurs with frameworks to evaluate emerging tech, identify high-impact organizational use cases, and make data-backed resource allocation decisions.',
+    duration: '6 Weeks (6-8 hrs/week)',
+    accreditationBadge: 'MIT Sloan Executive Education',
+    keyTakeaways: [
+      'Strategic evaluation frameworks to separate viable AI applications from hype',
+      'Organizational design principles for human-in-the-loop autonomous processes',
+      'Build vs. buy vs. API-partner decision matrices for non-technical leadership'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'],
+    caseStudy: {
+      title: 'Fintech Onboarding KYC Automation',
+      industry: 'FinTech / Digital Banking',
+      summary: 'A fintech startup used this framework to map out customer verification workflows. Instead of building custom ML models from scratch, they integrated pre-built computer vision APIs to automate KYC (Know Your Customer) compliance.',
+      impactMetric: '60% Reduction in Onboarding Friction',
+      impactHighlight: '$120,000 saved in initial software R&D spend',
+      methodology: 'Replaced a planned 9-month in-house computer vision engineering effort with commercial off-the-shelf OCR and liveness detection APIs connected through standard webhooks.',
+      toolsUsed: ['Computer Vision APIs', 'OCR Pipelines', 'Automated Verification Webhooks']
+    }
+  },
+  {
+    id: 'deeplearning-ai-for-everyone',
+    number: 2,
+    title: 'AI for Everyone',
+    provider: 'DeepLearning.AI (Instructor: Andrew Ng via Coursera)',
+    providerType: 'EdTech Platform',
+    format: 'Professional Certification (Self-paced, ~10 hours)',
+    category: 'Strategy & Leadership',
+    level: 'Foundational',
+    targetTools: ['Data Pipelines', 'SQL Analytics Tables', 'Open-source Model Repositories', 'Feasible Problem Worksheets'],
+    skills: ['AI terminology', 'Data strategy', 'Technical team communication', 'Feasible problem definition'],
+    synopsis: 'A non-technical foundational course that teaches founders how to speak the language of engineers and data scientists. It helps entrepreneurs spot opportunities to apply AI within their business while avoiding unrealistic marketing hype.',
+    duration: '~10 hours (Self-paced)',
+    accreditationBadge: 'DeepLearning.AI Verified',
+    keyTakeaways: [
+      'Mastering precision vocabulary to write clear engineering requirements',
+      'Evaluating data readiness, pipeline hygiene, and realistic model capabilities',
+      'Identifying high-ROI small wins before committing large capital to data science'
+    ],
+    recommendedForStage: ['Idea / MVP', 'Seed Stage'],
+    caseStudy: {
+      title: 'E-Commerce Personalization Engine',
+      industry: 'E-Commerce / Consumer Retail',
+      summary: 'A non-technical e-commerce founder learned how data pipelines feed recommendation engines. Armed with this knowledge, she hired a freelance engineer to build an automated cross-selling recommendation tool using simple SQL tables and open-source models.',
+      impactMetric: '+22% Average Order Value (AOV)',
+      impactHighlight: 'Delivered in 2 weeks using open-source models & existing SQL',
+      methodology: 'Structured catalog and cart event streams into normalized relational tables, enabling an off-the-shelf collaborative filtering model to recommend dynamic bundles at checkout.',
+      toolsUsed: ['PostgreSQL', 'Scikit-learn', 'Open-Source Recommenders', 'Shopify Webhooks']
+    }
+  },
+  {
+    id: 'microsoft-ai-business-professional',
+    number: 3,
+    title: 'Microsoft Certified: AI Business Professional (Exam AB-730)',
+    provider: 'Microsoft',
+    providerType: 'BigTech',
+    format: 'Industry Certification (Proctored Exam)',
+    category: 'Operations & Workflows',
+    level: 'Intermediate',
+    targetTools: ['Microsoft 365 Copilot', 'Copilot Studio Agents', 'Power Automate', 'Prompt Architecture Suites'],
+    skills: ['Microsoft 365 Copilot', 'Copilot agents', 'Data analysis', 'Prompt architecture'],
+    synopsis: "Validates a leader's ability to use generative AI productivity tools and agents to improve operational efficiency and decision-making without writing code.",
+    duration: 'Exam AB-730 (~15-20 hrs prep)',
+    accreditationBadge: 'Microsoft Certified Professional',
+    keyTakeaways: [
+      'Configuring autonomous Copilot Studio agents with enterprise security boundary controls',
+      'Prompt chaining architectures inside daily knowledge worker workflows',
+      'Executive dashboard synthesis and cross-tenant compliance governance'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'],
+    caseStudy: {
+      title: 'B2B Sales Acceleration & Deal Velocity',
+      industry: 'Enterprise SaaS',
+      summary: 'An enterprise SaaS startup trained its sales team using Copilot in Teams and Word. The sales reps automated client meeting summaries, customized follow-up decks on the fly, and trimmed sales cycle lengths significantly.',
+      impactMetric: 'Sales Cycle: 45 Days → 28 Days',
+      impactHighlight: '38% reduction in deal velocity latency',
+      methodology: 'Connected Teams transcripts directly into Copilot prompt templates that generated personalized executive proposals and CRM action updates within 5 minutes of call completion.',
+      toolsUsed: ['Microsoft 365 Copilot', 'Teams Transcripts', 'Word Template Engine', 'Dynamics/HubSpot CRM']
+    }
+  },
+  {
+    id: 'duke-ai-for-product-management',
+    number: 4,
+    title: 'AI for Product Management',
+    provider: 'Duke University (via Coursera)',
+    providerType: 'University',
+    format: 'Course Certificate (4 Modules)',
+    category: 'Product & Engineering',
+    level: 'Intermediate',
+    targetTools: ['Product Telemetry SDKs', 'Probabilistic PRD Frameworks', 'A/B Testing Suites', 'Prompt Routing Gateways'],
+    skills: ['User behavior modeling', 'AI product specification (PRDs)', 'A/B testing', 'Product telemetry'],
+    synopsis: 'Teaches founders how to build AI-first products. It covers how to define user metrics, design feedback loops, and manage product management pipelines when machine learning outputs are probabilistic rather than deterministic.',
+    duration: '4 Modules (~20 hours)',
+    accreditationBadge: 'Duke Pratt School of Engineering',
+    keyTakeaways: [
+      'Drafting probabilistic PRDs with explicit confidence thresholds and graceful fallbacks',
+      'Telemetry instrumentation to track hallucination rates and user dissatisfaction loops',
+      'Designing active human feedback mechanisms (RLHF-style UX signals) in consumer apps'
+    ],
+    recommendedForStage: ['Idea / MVP', 'Seed Stage', 'Growth / Scale-up'],
+    caseStudy: {
+      title: 'EdTech Adaptive Learning & Dynamic Problem Routing',
+      industry: 'EdTech / K-12 Education',
+      summary: 'An EdTech founder used AI product management principles to build an adaptive testing system. By tracking real-time user failure modes and sending data into a dynamic prompt routing layer, the platform tailored math problem sets to student skill levels.',
+      impactMetric: '+40% Platform Engagement',
+      impactHighlight: 'Student session completion rose from 54% to 88%',
+      methodology: 'Built probabilistic confidence intervals into user question response times, automatically branching struggling students into conversational diagnostic hints before serving next problems.',
+      toolsUsed: ['Dynamic Prompt Router', 'User Telemetry Logs', 'Adaptive Branching Engine']
+    }
+  },
+  {
+    id: 'applied-genai-marketing-communication',
+    number: 5,
+    title: 'Generative AI Applied to Marketing and Communication',
+    provider: 'Applied AI Industry Certification / Business Institute Programs',
+    providerType: 'Specialized Institute',
+    format: 'Practical Certificate (4–6 Weeks)',
+    category: 'Marketing & Revenue',
+    level: 'Intermediate',
+    targetTools: ['Midjourney v6', 'Claude 3.5 Sonnet / ChatGPT', 'Jasper AI', 'Canva AI', 'Copy.ai'],
+    skills: ['Midjourney', 'Advanced Prompt Engineering', 'Jasper', 'Canva AI', 'Copy.ai'],
+    synopsis: 'Focuses on leveraging generative AI to build full-funnel marketing campaigns, generate ad creatives, run SEO analysis, and automate social media production at a fraction of the cost of traditional agencies.',
+    duration: '4-6 Weeks (4 hrs/week)',
+    accreditationBadge: 'Applied AI Institute Credential',
+    keyTakeaways: [
+      'Multi-modal prompt scripting for hyper-realistic brand asset creation',
+      'Automated semantic content clustering and competitor keyword gap analysis',
+      'Cost-efficient creative testing loops eliminating expensive external marketing agency retainers'
+    ],
+    recommendedForStage: ['Idea / MVP', 'Seed Stage'],
+    caseStudy: {
+      title: 'Bootstrapped D2C Brand Omnichannel Launch',
+      industry: 'D2C Consumer Brands / FMCG',
+      summary: 'A bootstrapped direct-to-consumer beverage brand generated 30 unique ad variations, lifestyle photography, and email marketing sequences in 3 days using Midjourney and Claude.',
+      impactMetric: '35% Customer Acquisition Cost (CAC) Drop',
+      impactHighlight: 'Completed in 3 days with $0 agency retainer fees',
+      methodology: 'Prompt-engineered lifestyle product placements in varied regional settings and piped copy variations into Meta Ads dynamic creative testing, identifying top-converting hooks within 48 hours.',
+      toolsUsed: ['Midjourney', 'Claude 3.5', 'Meta Ads Dynamic Creative', 'Klaviyo AI']
+    }
+  },
+  {
+    id: 'mit-xpro-process-automation-agentic',
+    number: 6,
+    title: 'Process Automation with AI & Agentic Workflows',
+    provider: 'MIT xPRO / Harvard Online (Agentic AI Foundations)',
+    providerType: 'University',
+    format: 'Specialized Certificate (3–4 Weeks)',
+    category: 'Operations & Workflows',
+    level: 'Intermediate',
+    targetTools: ['Make.com', 'Zapier AI Central', 'AutoGen', 'CrewAI', 'LangChain Wrappers', 'Custom GPTs'],
+    skills: ['Make.com', 'Zapier AI', 'AutoGen', 'CrewAI', 'LangChain (No-Code wrappers)', 'Custom GPTs'],
+    synopsis: 'Explores the shift from simple prompt-response interactions to autonomous multi-step AI agents. Founders learn how to connect APIs and build self-executing workflows for internal operations.',
+    duration: '3-4 Weeks (5-8 hrs/week)',
+    accreditationBadge: 'MIT xPRO Verified',
+    keyTakeaways: [
+      'Deconstructing complex operational SOPs into discrete autonomous agent tasks',
+      'Orchestrating agent-to-agent verification protocols and deterministic fallback rules',
+      'Connecting webhook triggers with multi-model validation pipelines'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'],
+    caseStudy: {
+      title: 'Logistics Fleet Order & Bill-of-Lading Dispatch',
+      industry: 'Freight & Supply Chain Logistics',
+      summary: 'A freight startup built a multi-agent workflow where Agent A parsed incoming PDF bill-of-lading documents, Agent B checked route availability against a database, and Agent C drafted invoice quotes.',
+      impactMetric: 'Processing Time: 45 Minutes → < 2 Minutes',
+      impactHighlight: 'Over 95% reduction in manual order triage overhead',
+      methodology: 'Integrated vision OCR to ingest raw customs PDFs, queried fleet dispatch API via CrewAI agent wrapper, and automatically populated approved pricing tables into ERP.',
+      toolsUsed: ['CrewAI', 'Make.com', 'PDF Extraction Agents', 'Postgres Fleet DB']
+    }
+  },
+  {
+    id: 'wharton-data-analysis-decision-making',
+    number: 7,
+    title: 'Data Analysis and Decision Making with AI',
+    provider: 'Wharton School (University of Pennsylvania) / Executive Programs',
+    providerType: 'University',
+    format: 'Executive Certificate',
+    category: 'Strategy & Leadership',
+    level: 'Executive / Advanced',
+    targetTools: ['Advanced Data Analysis (Code Interpreter)', 'Julius AI', 'Tableau AI', 'Predictive Forecasting Models'],
+    skills: ['Advanced Data Analysis', 'Julius AI', 'Tableau AI', 'Predictive forecasting models'],
+    synopsis: 'Teaches business leaders how to transform raw unstructured data into actionable strategic insights. It covers predictive analytics, customer churn forecasting, and automated quantitative modeling without needing advanced Python knowledge.',
+    duration: '4-6 Weeks Executive Pace',
+    accreditationBadge: 'Wharton Executive Education',
+    keyTakeaways: [
+      'Translating messy transactional logs into cohort retention curves and behavioral clusters',
+      'Statistical validation techniques to prevent spurious correlation in AI findings',
+      'Executive narrative dashboards demonstrating unit economics to institutional investors'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'],
+    caseStudy: {
+      title: 'SaaS Churn Attribution & Onboarding Intervention',
+      industry: 'B2B Software as a Service',
+      summary: 'A SaaS founder uploaded user event logs into an AI data analysis workspace. The AI detected a pattern: users who did not set up custom integrations within 72 hours had an 80% higher churn rate.',
+      impactMetric: '18% Reduction in 90-Day Churn',
+      impactHighlight: 'Pinpointed single inflection event across 500,000 log entries in 4 hours',
+      methodology: 'Ran survival analysis and feature importance regressions using Julius AI, subsequently deploying automated concierge onboarding sequences triggered at hour 24 for unintegrated accounts.',
+      toolsUsed: ['Julius AI', 'Python Code Interpreter', 'Mixpanel Event Logs', 'Customer.io']
+    }
+  },
+  {
+    id: 'harvard-storytelling-narrative-ai',
+    number: 8,
+    title: 'Storytelling as Strategy: Narrative and AI',
+    provider: 'Harvard Online (AI Leadership Series)',
+    providerType: 'University',
+    format: 'Professional Certificate (4 Weeks)',
+    category: 'Strategy & Leadership',
+    level: 'Intermediate',
+    targetTools: ['Beautiful.ai', 'Gamma App', 'Claude 3.5 Sonnet', 'Perplexity Pro', 'Pitch Deck Generation Frameworks'],
+    skills: ['Pitch deck generation', 'Beautiful.ai', 'Gamma', 'AI-assisted market research', 'Narrative structuring'],
+    synopsis: 'Combines classic narrative pitching frameworks with AI tools to help founders craft persuasive pitches for investors, talent, and partners. It teaches founders how to turn complex analytics into compelling pitch materials.',
+    duration: '4 Weeks (~15 hours)',
+    accreditationBadge: 'Harvard Online Verified',
+    keyTakeaways: [
+      'Distilling technical deep-tech defensibility into clear commercial value arguments',
+      'Rapid prototype slide deck iteration matching venture capital thesis criteria',
+      'Conducting competitive market landscape deep dives using synthesis engines'
+    ],
+    recommendedForStage: ['Idea / MVP', 'Seed Stage'],
+    caseStudy: {
+      title: 'HealthTech Seed Syndicate Fundraising Round',
+      industry: 'Clinical HealthTech / Medical AI',
+      summary: 'A health-tech startup synthesized 200 pages of medical journals and TAM (Total Addressable Market) studies into a clear pitch deck storyline using Gamma and Claude. The polished deck helped them secure institutional capital.',
+      impactMetric: '$1.5M Seed Round Closed in 6 Weeks',
+      impactHighlight: 'Synthesized 200+ medical research pages into 12 executive slides',
+      methodology: 'Input clinical trial trial metrics and reimbursement regulatory filings into Claude to build an institutional-grade investment memorandum and investor FAQ repository.',
+      toolsUsed: ['Gamma App', 'Claude 3.5 Sonnet', 'Perplexity Pro', 'Notion AI']
+    }
+  },
+  {
+    id: 'oxford-iapp-ai-governance-compliance',
+    number: 9,
+    title: 'AI Governance, Trust, and Legal Compliance',
+    provider: 'Oxford Artificial Intelligence Programme / IAPP (International Association of Privacy Professionals)',
+    providerType: 'University',
+    format: 'Professional Certification (6 Weeks)',
+    category: 'Governance & Compliance',
+    level: 'Executive / Advanced',
+    targetTools: ['EU AI Act Conformity Checklists', 'NIST AI RMF Framework', 'PII Scrubbing Gateways', 'Audit Logging Pipelines'],
+    skills: ['Risk assessment frameworks', 'Copyright compliance', 'EU AI Act compliance', 'Data privacy guardrails'],
+    synopsis: 'Essential for founders operating in regulated markets or building enterprise B2B applications. It covers data privacy, IP ownership of AI outputs, bias mitigation, and regulatory frameworks.',
+    duration: '6 Weeks (6 hrs/week)',
+    accreditationBadge: 'Oxford Saïd / IAPP Certified',
+    keyTakeaways: [
+      'Navigating EU AI Act High-Risk system compliance mandates and technical documentation',
+      'Protecting proprietary client training data and IP from third-party model ingestion',
+      'Building defensible algorithmic bias mitigation and audit trail frameworks for enterprise RFPs'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'],
+    caseStudy: {
+      title: 'Enterprise HR Tech Procurement & Audit Acceleration',
+      industry: 'HR Tech / Automated Talent Evaluation',
+      summary: 'An AI-driven recruiting startup preemptively designed their algorithms to follow transparent governance standards. When pitching to Fortune 500 clients, their audit-ready compliance framework gave them a major edge.',
+      impactMetric: 'Closed Enterprise Deals 2x Faster',
+      impactHighlight: 'Zero redlines on corporate security and ethical AI compliance assessments',
+      methodology: 'Integrated algorithmic explainability scorecards and synthetic anonymization filters into candidate evaluations, providing clients with immediate EEOC and EU AI Act conformity dossiers.',
+      toolsUsed: ['NIST AI RMF Audit Checklist', 'Synthetic Anonymizers', 'Conformity Dossier Generator']
+    }
+  },
+  {
+    id: 'hubspot-ai-sales-customer-success',
+    number: 10,
+    title: 'AI-Powered Sales and Customer Success',
+    provider: 'HubSpot Academy / Sales Enablement Institutes',
+    providerType: 'Specialized Institute',
+    format: 'Certification (~6–8 hours)',
+    category: 'Marketing & Revenue',
+    level: 'Foundational',
+    targetTools: ['Gong.ai', 'HubSpot AI Engine', 'Apollo.ai', 'ChatSpot', 'Zendesk AI'],
+    skills: ['Gong.ai', 'HubSpot AI', 'Apollo.ai', 'ChatSpot', 'Zendesk AI'],
+    synopsis: 'Focuses on integrating AI into the revenue engine. Founders learn how to deploy AI sales development reps (SDRs), automate lead scoring, personalize cold outreach, and deploy 24/7 intelligent customer support agents.',
+    duration: '~6-8 Hours (Self-paced)',
+    accreditationBadge: 'HubSpot Academy Certified',
+    keyTakeaways: [
+      'Configuring dynamic intent scoring to prioritize high-value inbound enterprise leads',
+      'Deploying continuous knowledge-base sync for zero-hallucination tier-1 customer resolutions',
+      'Automating call coaching and objection handling transcription for early sales reps'
+    ],
+    recommendedForStage: ['Idea / MVP', 'Seed Stage', 'Growth / Scale-up'],
+    caseStudy: {
+      title: 'Lean 24/7 Global B2B Marketplace Support',
+      industry: 'B2B Wholesale Marketplace',
+      summary: 'An online B2B supplier deployed an AI-driven support agent backed by their internal product knowledge base. The AI resolved 70% of inbound customer queries instantly, allowing the lean startup to maintain 24/7 global customer support.',
+      impactMetric: '70% Instant Resolution Rate',
+      impactHighlight: 'Maintained 24/7 support across 14 timezones with only 2 support staff',
+      methodology: 'Indexed 1,200 product specification sheets into a vector-grounded support agent integrated into Zendesk, escalating only edge billing exceptions to human agents.',
+      toolsUsed: ['Zendesk AI', 'HubSpot Knowledge Base', 'ChatSpot', 'Apollo.ai']
+    }
+  },
+  {
+    id: 'deeplearning-bubble-nocode-ai-app-dev',
+    number: 11,
+    title: 'No-Code AI Web & App Development',
+    provider: 'DeepLearning.AI & Bubble / Webflow Academies',
+    providerType: 'EdTech Platform',
+    format: 'Practical Applied Certificate (Self-Paced)',
+    category: 'Product & Engineering',
+    level: 'Foundational',
+    targetTools: ['Bubble.io', 'Webflow', 'v0.dev', 'Replit Agent', 'Supabase', 'OpenAI API'],
+    skills: ['Bubble.io', 'Webflow', 'v0.dev', 'Replit Agent', 'Supabase', 'OpenAI API'],
+    synopsis: 'Designed for non-technical founders to rapidly prototype and launch functional Minimum Viable Products (MVPs) without hiring expensive dev agencies. It covers building front-end interfaces, connecting database backends, and integrating AI endpoints.',
+    duration: '2-3 Weeks (15-20 hours hands-on)',
+    accreditationBadge: 'No-Code Applied Builder Credential',
+    keyTakeaways: [
+      'Building responsive component layouts in minutes using generative UI (v0.dev)',
+      'Designing relational schemas and authenticated role permissions in Supabase / Bubble',
+      'Securely proxying API keys and streaming LLM responses without writing custom backend servers'
+    ],
+    recommendedForStage: ['Idea / MVP'],
+    caseStudy: {
+      title: 'Solo Founder Property Management SaaS Launch',
+      industry: 'PropTech / Real Estate Management',
+      summary: 'A solo non-technical founder used v0.dev and Bubble to build an automated tenant messaging and maintenance scheduling portal in one weekend. She acquired paying customers before hiring developers.',
+      impactMetric: 'First 5 Paying Clients in 1 Weekend',
+      impactHighlight: '$0 spent on external software development agencies',
+      methodology: 'Generated front-end designs via v0.dev, bound them to Bubble logic workflows, and connected the OpenAI API to categorize and dispatch maintenance requests to local contractors.',
+      toolsUsed: ['v0.dev', 'Bubble.io', 'OpenAI API', 'Stripe Connect']
+    }
+  },
+  {
+    id: 'cfi-wallstreetprep-genai-financial-modeling',
+    number: 12,
+    title: 'Generative AI for Financial Modeling & Valuation',
+    provider: 'Corporate Finance Institute (CFI) / Wall Street Prep AI Modules',
+    providerType: 'Specialized Institute',
+    format: 'Specialized Credential (10–15 hours)',
+    category: 'Finance & Valuation',
+    level: 'Intermediate',
+    targetTools: ['Microsoft Excel Copilot', 'Formula Bot', 'ChatBA', 'FinChat.io', 'Monte-Carlo Scenario Engines'],
+    skills: ['Microsoft Excel AI', 'Copilot/Formula Bot', 'ChatBA', 'FinChat.io', 'Scenario analysis engines'],
+    synopsis: 'Teaches entrepreneurs how to build dynamic 3-statement financial models, forecast runway, model cap tables, and simulate risk scenarios using AI-assisted spreadsheets and natural language formulas.',
+    duration: '10–15 Hours',
+    accreditationBadge: 'CFI Financial Modeling AI Credential',
+    keyTakeaways: [
+      'Prompting natural-language formulas to build dynamic multi-scenario financial statements',
+      'Automating Monte Carlo simulations to model supply chain price volatility and foreign exchange risks',
+      'Generating investor-ready capitalization table waterfall distributions and dilution models'
+    ],
+    recommendedForStage: ['Seed Stage', 'Growth / Scale-up'],
+    caseStudy: {
+      title: 'Hardware Startup Runway & Supply-Chain Shock Modeling',
+      industry: 'Hardware IoT / Consumer Electronics',
+      summary: 'A hardware startup used financial modeling AI tools to build dynamic supply-chain cost models. By running Monte Carlo simulations on component cost fluctuations, they identified a potential cash-flow bottleneck 6 months in advance.',
+      impactMetric: 'Identified Cash Bottleneck 6 Months Early',
+      impactHighlight: 'Saved the company from $240,000 in emergency capital dilution',
+      methodology: 'Integrated Excel Copilot with historical component price variance datasets to run 1,000 stochastic simulation runs, allowing founders to renegotiate minimum order quantities with suppliers.',
+      toolsUsed: ['Excel Copilot', 'Formula Bot', 'FinChat.io', 'Monte-Carlo Simulator']
+    }
+  }
+];
 
-export const SectionExcerpts: React.FC<SectionExcerptsProps> = ({
-  onNavigate,
-  onOpenMatcher,
-  onOpenGetAccess
-}) => {
-  return (
-    <div className="space-y-16 py-12">
-      {/* SECTION 1: CORE COMPETENCIES & FOUNDER VALUE PROPOSITIONS */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <ShieldCheck className="w-3 h-3 text-cyan-600" />
-              <span>Section 01 // Strategic Foundation</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Core Competencies & Founder Value Propositions
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Equipping frontier entrepreneurs with institutional backing, agentic scaling, RAG architectures, and venture authority.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-competencies"
-            onClick={() => onNavigate('competencies')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-900 bg-cyan-100 hover:bg-cyan-200 transition-colors shrink-0"
-          >
-            <span>Explore Full Competencies</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
+export const AI_ENTREPRENEUR_COURSES: AiCourseItem[] = RAW_AI_ENTREPRENEUR_COURSES.map(course => ({
+  ...course,
+  syllabus: COURSE_SYLLABI[course.id] || [],
+  resources: COURSE_RESOURCES[course.id] || {
+    starterPrompts: [],
+    recommendedTools: [],
+    actionChecklist: [],
+    officialGuides: []
+  },
+  caseStudy: {
+    ...course.caseStudy,
+    ...(COURSE_DEEP_CASE_STUDIES[course.id] || {})
+  }
+}));
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-          {CORE_COMPETENCIES.slice(0, 3).map((comp) => (
-            <div 
-              key={comp.id} 
-              onClick={() => onNavigate('competencies')}
-              className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 hover:bg-slate-50/80 cursor-pointer transition-all flex flex-col justify-between space-y-3 group"
-            >
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">{comp.title}</h3>
-                <p className="text-xs text-slate-600 line-clamp-3">{comp.description}</p>
-              </div>
-              <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
-                <span className="font-mono text-cyan-700 font-semibold">{comp.impactMetric}</span>
-                <span className="text-slate-400 font-mono text-[10px] group-hover:text-slate-700">{comp.tags[0]} →</span>
-              </div>
-            </div>
-          ))}
-        </div>
+export const COURSE_CATEGORIES = [
+  'All Domains',
+  'Strategy & Leadership',
+  'Product & Engineering',
+  'Marketing & Revenue',
+  'Operations & Workflows',
+  'Governance & Compliance',
+  'Finance & Valuation'
+] as const;
 
-        <div className="mt-4 pt-3 flex items-center justify-between text-xs text-slate-500">
-          <span>Covers: AI BizDev, Multi-Agent RAG, Strategic Partnerships, GTM & Brand Authority, and Coaching.</span>
-          <button 
-            onClick={() => onNavigate('competencies')}
-            className="text-cyan-700 font-bold hover:underline inline-flex items-center space-x-1"
-          >
-            <span>View All 5 Pillars →</span>
-          </button>
-        </div>
-      </section>
-
-      {/* FEATURED: NCEI YELLOW PAGES FOR MEMBERS */}
-      <section className="border-2 border-amber-300 rounded-2xl bg-amber-50/20 p-6 sm:p-8 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-amber-200">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-amber-100 text-amber-900 border border-amber-300 mb-2">
-              <Users className="w-3 h-3 text-amber-700" />
-              <span>Ecosystem Member Registry // Yellow Pages</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight">
-              961AI Yellow Pages for Members
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Discover verified founders, deep AI researchers, sovereign systems architects, and mentor guilds across Lebanon and the diaspora. Connect directly via WhatsApp, phone, or Live Nexus.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-yellow-pages"
-            onClick={() => onNavigate('yellow-pages')}
-            className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-950 bg-amber-400 hover:bg-amber-300 transition-all shrink-0 shadow-sm border border-amber-500"
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Open Yellow Pages Directory</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-          {SEED_YELLOW_PAGES_MEMBERS.slice(0, 3).map((member) => (
-            <div 
-              key={member.id} 
-              onClick={() => onNavigate('yellow-pages')}
-              className="p-4 rounded-xl bg-white border border-slate-200 hover:border-amber-400 cursor-pointer transition-all flex flex-col justify-between space-y-3 shadow-xs group"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                    {member.badge}
-                  </span>
-                  <div className="flex items-center space-x-1 text-[11px] text-amber-600 font-mono font-bold">
-                    <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                    <span>{member.rating.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-slate-950 text-amber-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                    {member.initials}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-slate-950 truncate group-hover:text-amber-600 transition-colors">{member.name}</h3>
-                    <p className="text-xs text-slate-500 truncate">{member.title}</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 line-clamp-2">{member.bio}</p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-                <span className="flex items-center space-x-1 truncate">
-                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                  <span className="truncate">{member.location}</span>
-                </span>
-                <span className="font-bold text-slate-900 shrink-0 group-hover:text-amber-600">{member.hourlyRate} →</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 flex items-center justify-between text-xs text-slate-500">
-          <span>Official Yellow Pages Directory: Direct contact, verified credentials, and escrow services.</span>
-          <button 
-            onClick={() => onNavigate('yellow-pages')}
-            className="text-amber-800 font-bold hover:underline inline-flex items-center space-x-1"
-          >
-            <span>Browse All {SEED_YELLOW_PAGES_MEMBERS.length}+ Members →</span>
-          </button>
-        </div>
-      </section>
-
-      {/* POLICY AND RESEARCH PAPERS SECTION */}
-      <section className="border-2 border-cyan-200 rounded-2xl bg-gradient-to-b from-cyan-50/30 to-white p-6 sm:p-8 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-cyan-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-100 text-cyan-900 border border-cyan-300 mb-2">
-              <FileText className="w-3 h-3 text-cyan-700" />
-              <span>Institutional Research // Policy & Macro Intelligence</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-950 tracking-tight">
-              Policy and Research Papers
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Published by the National Council for Entrepreneurship & Innovation (NCEI Lebanon) and the z961AI Regulatory Intelligence Unit. Groundbreaking frameworks for sovereign AI compliance and macroeconomic venture survival.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-policy-papers"
-            onClick={() => onNavigate('policy-papers')}
-            className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition-all shrink-0 shadow-sm border border-cyan-500"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Open Policy & Research Library</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* 2 Featured Policy & Research Papers Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6">
-          {POLICY_PAPERS_CATALOG.map((paper) => (
-            <div
-              key={paper.id}
-              onClick={() => onNavigate('policy-papers')}
-              className="p-6 rounded-2xl bg-white border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all flex flex-col justify-between space-y-4 shadow-xs group"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
-                    {paper.badge}
-                  </span>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {paper.issue}
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-950 group-hover:text-cyan-700 transition-colors leading-snug">
-                    {paper.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                    {paper.subtitle}
-                  </p>
-                </div>
-
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                  {paper.abstract}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {paper.tags.slice(0, 4).map((tag, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-50 text-slate-700 border border-slate-200">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Metrics & Read Link */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-4">
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-mono block uppercase">{paper.keyMetrics[0].label}</span>
-                    <span className="text-xs font-mono font-bold text-slate-900">{paper.keyMetrics[0].value}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-mono block uppercase">{paper.keyMetrics[1].label}</span>
-                    <span className="text-xs font-mono font-bold text-cyan-700">{paper.keyMetrics[1].value}</span>
-                  </div>
-                </div>
-
-                <span className="text-xs font-bold text-cyan-700 group-hover:text-cyan-900 inline-flex items-center space-x-1">
-                  <span>Read Full Paper</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 flex items-center justify-between text-xs text-slate-500">
-          <span>Peer-reviewed intelligence: AI safety tools, SWOT matrix, StartupBlink rankings, and Anghami/Toters case studies.</span>
-          <button 
-            onClick={() => onNavigate('policy-papers')}
-            className="text-cyan-800 font-bold hover:underline inline-flex items-center space-x-1"
-          >
-            <span>Read Both Research Papers Online →</span>
-          </button>
-        </div>
-      </section>
-
-      {/* SECTION 2, 3, 4: TECHNICAL AI ARCHITECTURE, BIZ DEV & VERTICAL MARKETPLACES */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <Cpu className="w-3 h-3 text-cyan-600" />
-              <span>Section 02-04 // Past Year Accomplishments</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Technical AI Architecture & Venture Deployments
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Product deployments, multi-agent frameworks, macroeconomic terminals, and vertical marketplaces scaled across the MENA region.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-architecture"
-            onClick={() => onNavigate('architecture')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-slate-950 hover:bg-slate-800 transition-colors shrink-0"
-          >
-            <span>View Complete Deployment Catalog</span>
-            <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-          </button>
-        </div>
-
-        {/* 3 Categories Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-          {/* Sub-excerpt 1: Technical AI Architecture & App Dev */}
-          <div 
-            onClick={() => onNavigate('architecture')}
-            className="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-xs">
-                01
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">Technical AI & Knowledge</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Deep multi-agent supervisor networks (<strong>Ballish, Company Brain</strong>), legal RAG (<strong>Al-Hakam, NexusLM</strong>), automated SaaS deployment hubs, and telemetry portals.
-            </p>
-            <div className="pt-2 flex flex-wrap gap-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">Ballish Agent OS</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">Al-Hakam RAG</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">NexusLM OCR</span>
-            </div>
-            <div className="pt-1 text-xs font-bold text-cyan-700 inline-flex items-center space-x-1">
-              <span>Inspect Deployments</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Sub-excerpt 2: Business Dev, Commercialization & Dealrooms */}
-          <div 
-            onClick={() => onNavigate('architecture')}
-            className="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-amber-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
-                02
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-700 transition-colors">Commercialization & Dealrooms</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Financial intelligence terminals (<strong>CapitalIssuesIQ, MarketPulse</strong>), incubator dealrooms (<strong>961 Combinator, Zrolodex</strong>), and coaching portals (<strong>RAWCOACH.AI</strong>).
-            </p>
-            <div className="pt-2 flex flex-wrap gap-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">CapitalIssuesIQ</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">961 Combinator</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">RAWCOACH.AI</span>
-            </div>
-            <div className="pt-1 text-xs font-bold text-amber-700 inline-flex items-center space-x-1">
-              <span>Inspect Dealrooms</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Sub-excerpt 3: Vertical Marketplaces & Consumer Tech */}
-          <div 
-            onClick={() => onNavigate('architecture')}
-            className="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-xs">
-                03
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">Vertical Marketplaces</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Artisan e-commerce platforms (<strong>Pickle & Pepper Market</strong>), virtual direct-pay clinic networks (<strong>961Med, FC Pulse</strong>), and B2B growth lead engines.
-            </p>
-            <div className="pt-2 flex flex-wrap gap-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">Pickle & Pepper</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">961Med Telehealth</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">B2B Leads</span>
-            </div>
-            <div className="pt-1 text-xs font-bold text-cyan-700 inline-flex items-center space-x-1">
-              <span>Inspect Marketplaces</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 5: NCEILEBANON LIVE NEXUS: A LIVING DIGITAL HEADQUARTERS */}
-      <section className="border border-cyan-500/30 rounded-2xl bg-slate-950 text-white p-6 sm:p-8 shadow-xl glow-cyan">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-950 text-cyan-400 border border-cyan-500/40 mb-2">
-              <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
-              <span>Section 05 // Real-Time Operating System</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-              NCEILEBANON Live Nexus: A "Living" Digital Headquarters
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-              Replacing isolated dashboards with a high-frequency trading-floor and elite developer Discord-on-Steroids architecture.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-livenexus"
-            onClick={() => onNavigate('livenexus')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition-colors shrink-0"
-          >
-            <span>Enter Live Nexus Channel OS</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* 3 Tiers Excerpt */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-          <div 
-            onClick={() => onNavigate('livenexus')}
-            className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300">The Public Square</span>
-              <span className="text-[10px] font-mono text-cyan-400">Tier 1</span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Open forum for casual networking, news aggregation, and community support with the automated Neural Concierge greeting incoming members.
-            </p>
-            <div className="text-[11px] font-bold text-cyan-400 pt-1 flex items-center space-x-1">
-              <span>Join Channel</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          <div 
-            onClick={() => onNavigate('livenexus')}
-            className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-400 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300">The Scholar's Lab</span>
-              <span className="text-[10px] font-mono text-cyan-400">Tier 2</span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Mid-tier collaborative zone: researchers sharing clean datasets, reviewing daily ArXiv papers, and co-developing open-source prompt libraries.
-            </p>
-            <div className="text-[11px] font-bold text-cyan-400 pt-1 flex items-center space-x-1">
-              <span>Join Channel</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          <div 
-            onClick={() => onNavigate('livenexus')}
-            className="p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-400 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-200 group-hover:text-amber-300">Guru's Penthouse & War Rooms</span>
-              <span className="text-[10px] font-mono text-amber-400">Tier 3 Encrypted</span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Exclusive channels accessing "Alpha" market signals, high-ticket bounties, and private consultation suites with ticket-based escrow channels.
-            </p>
-            <div className="text-[11px] font-bold text-amber-400 pt-1 flex items-center space-x-1">
-              <span>Enter Suite</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-
-        {/* Native AI Bot Highlight */}
-        <div className="mt-4 p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-2 text-cyan-300">
-            <Bot className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span>
-              <strong>Native AI Utilities:</strong> Summon <code className="bg-slate-900 px-1 py-0.5 rounded text-cyan-300">@961Brain</code> directly in any channel for real-time RAG groundings.
-            </span>
-          </div>
-          <button
-            onClick={() => onNavigate('livenexus')}
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-bold hover:underline shrink-0"
-          >
-            Test Live Chat Stream →
-          </button>
-        </div>
-      </section>
-
-      {/* SECTION 6: INDUSTRY SERVICES GUILDS & DEVELOPER NEXUS */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <Terminal className="w-3 h-3 text-cyan-600" />
-              <span>Section 06 // Specialized Access & Developer Power</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Industry Services Guilds & The Developer Nexus
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Micro-consortiums for FinTech, Healthcare, and Legal Tech with governed Data Cooperatives + unified APIs and SDKs for builders.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={onOpenGetAccess}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-slate-950 hover:bg-slate-800 transition-colors"
-            >
-              <Lock className="w-3.5 h-3.5 text-cyan-400" />
-              <span>"Get Access" Gateway</span>
-            </button>
-            <button
-              id="excerpt-btn-guilds-dev"
-              onClick={() => onNavigate('guilds-dev')}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-900 bg-cyan-100 hover:bg-cyan-200 transition-colors"
-            >
-              <span>Developer Nexus</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-          {/* Guilds Box */}
-          <div 
-            onClick={() => onNavigate('guilds-dev')}
-            className="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">Industry Services Guilds</h3>
-              <span className="text-[10px] font-mono text-cyan-700 font-bold">HIPAA & GDPR</span>
-            </div>
-            <p className="text-xs text-slate-600">
-              Vetted environments for verified peers: <strong>Data Cooperatives</strong> for secure federated learning, <strong>Regulatory Sandboxes</strong>, and Jargon-Tuned foundation models.
-            </p>
-            <div className="space-y-1.5 pt-1 text-xs">
-              <div className="flex items-center space-x-2 text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>FinTech Guild: Basel III & BDL Circular 158/165 compliance</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>Healthcare Guild: HIPAA & MoPH hospital telemetry</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>Legal Tech Guild: Al-Hakam bilingual jurisprudence database</span>
-              </div>
-            </div>
-            <div className="pt-2 text-xs font-bold text-cyan-700 flex items-center space-x-1">
-              <span>View Guild Consortiums</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Dev Nexus Box */}
-          <div 
-            onClick={() => onNavigate('guilds-dev')}
-            className="p-5 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-3 group"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">The Developer Nexus</h3>
-              <span className="text-[10px] font-mono text-slate-500 font-bold">Built for Builders</span>
-            </div>
-            <p className="text-xs text-slate-600">
-              Low-level access to the 961AI infrastructure with Unified API keys, drop-in Python and JS SDKs, and sandboxed test playgrounds.
-            </p>
-            <div className="space-y-1.5 pt-1 text-xs">
-              <div className="flex items-center space-x-2 text-slate-700">
-                <Code2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>Unified API Keys across frontier foundation models</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700">
-                <Code2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>Drop-in Python & JavaScript SDKs + Webhook listeners</span>
-              </div>
-              <div className="flex items-center space-x-2 text-slate-700">
-                <Code2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
-                <span>Playground environment to dry-run calls with zero credit drain</span>
-              </div>
-            </div>
-            <div className="pt-2 text-xs font-bold text-cyan-700 flex items-center space-x-1">
-              <span>Launch Playground & SDK</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 7: TECHNICAL VALUES & LEADERSHIP */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <Layers className="w-3 h-3 text-cyan-600" />
-              <span>Section 07 // Leadership & Engineering Dossier</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Technical Values of z961aiNetwork & AlKhawarizmi Solutions
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              AI Integrations, PII Masked Sandboxes (ALmouwateN), Autonomous Agent Networks (aicademy.online, matchprenai.online), and Fintech automations.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-leadership"
-            onClick={() => onNavigate('leadership')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-900 bg-cyan-100 hover:bg-cyan-200 transition-colors shrink-0"
-          >
-            <span>View Technical Dossier</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
-          {TECHNICAL_VALUES.coreValues.map((v, i) => (
-            <div 
-              key={i} 
-              onClick={() => onNavigate('leadership')}
-              className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-2 group"
-            >
-              <h3 className="text-xs font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">{v.title}</h3>
-              <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{v.description}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 p-4 rounded-xl bg-cyan-50/60 border border-cyan-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div>
-            <strong className="text-cyan-950 font-bold">AlKhawarizmi Solutions | AI Development Lead (Sep 2025 – Present):</strong>
-            <span className="text-slate-700 ml-1">Enterprise RAG, Secure AI Sandboxes (ALmouwateN) with PII masking, aicademy.online & matchprenai.online.</span>
-          </div>
-          <button
-            onClick={() => onNavigate('leadership')}
-            className="text-cyan-700 font-bold hover:underline shrink-0"
-          >
-            Explore AlKhawarizmi Profile →
-          </button>
-        </div>
-      </section>
-
-      {/* SECTION 8: OUR CV SO FAR (NATIONAL IMPACT) */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <FileText className="w-3 h-3 text-cyan-600" />
-              <span>Section 08 // Institutional Milestones</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Our CV So Far
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              Proven national scale: National COVID-19 VAMS System at Rafic Hariri Hospital, digitization policy blueprints for OMSAR & World Bank, and the SME Revival Strategy.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-national-cv"
-            onClick={() => onNavigate('national-cv')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-900 bg-cyan-100 hover:bg-cyan-200 transition-colors shrink-0"
-          >
-            <span>Inspect Full Institutional CV</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-          {NATIONAL_CV.map((cv) => (
-            <div 
-              key={cv.id} 
-              onClick={() => onNavigate('national-cv')}
-              className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all space-y-2 group"
-            >
-              <div className="flex items-center justify-between text-[11px] font-mono text-cyan-700 font-semibold">
-                <span>{cv.date}</span>
-                <span className="text-slate-400">{cv.scope}</span>
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">{cv.title}</h3>
-              <p className="text-xs text-slate-600 line-clamp-3">{cv.description}</p>
-              <div className="pt-2 text-[11px] font-mono font-bold text-slate-800 border-t border-slate-200">
-                {cv.impactMetric}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 9: STARTUPS UNDER MANAGEMENT */}
-      <section className="border border-slate-200 rounded-2xl bg-white p-6 sm:p-8 shadow-xs hover:border-cyan-300 transition-all">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-          <div>
-            <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-cyan-50 text-cyan-800 border border-cyan-200 mb-2">
-              <Rocket className="w-3 h-3 text-cyan-600" />
-              <span>Section 09 // Venture Portfolio</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Startups Under Management
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
-              The 961aiNetwork accelerator, zrolodex.live, zappcademy.xyz, and LogisticsIQ Supply delivering tangible market value.
-            </p>
-          </div>
-          <button
-            id="excerpt-btn-startups"
-            onClick={() => onNavigate('startups')}
-            className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-slate-900 bg-cyan-100 hover:bg-cyan-200 transition-colors shrink-0"
-          >
-            <span>View All Startups</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6">
-          {STARTUPS_MANAGED.map((startup) => (
-            <div 
-              key={startup.id} 
-              onClick={() => onNavigate('startups')}
-              className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all flex flex-col justify-between space-y-3 group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors">{startup.name}</h3>
-                  <span className="text-[10px] font-mono text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
-                    {startup.timeline}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 line-clamp-3">{startup.description}</p>
-              </div>
-              <div className="pt-2 border-t border-slate-200 text-[11px] font-mono text-slate-700 font-medium">
-                {startup.metrics}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 10: 12 ESSENTIAL AI COURSES & CERTIFICATIONS */}
-      <AiCoursesSection onNavigate={onNavigate} onOpenMatcher={onOpenMatcher} />
-    </div>
-  );
-};
+export const STARTUP_STAGES = [
+  'All Stages',
+  'Idea / MVP',
+  'Seed Stage',
+  'Growth / Scale-up',
+  'Enterprise B2B'
+] as const;
