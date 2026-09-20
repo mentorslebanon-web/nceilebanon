@@ -1,101 +1,249 @@
-import React from 'react';
-import { PageId } from '../types';
-import { HeroSection } from '../components/HeroSection';
-import { SectionExcerpts } from '../components/SectionExcerpts';
-import { Sparkles, Radio, ShieldCheck, Terminal, ArrowRight } from 'lucide-react';
+export type PageId = 
+  | 'home'
+  | 'competencies'
+  | 'architecture'
+  | 'livenexus'
+  | 'guilds-dev'
+  | 'leadership'
+  | 'national-cv'
+  | 'startups'
+  | 'neural-matcher'
+  | 'yellow-pages'
+  | 'policy-papers'
+  | 'ai-courses'
+  | 'admin-maan'
+  | 'register';
 
-interface HomePageProps {
-  onNavigate: (page: PageId) => void;
-  onOpenMatcher: () => void;
-  onOpenGetAccess: () => void;
+export interface AiCourseModule {
+  moduleNumber: number;
+  title: string;
+  duration: string;
+  topics: string[];
+  handsOnLab: string;
+  founderDeliverable: string;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({
-  onNavigate,
-  onOpenMatcher,
-  onOpenGetAccess
-}) => {
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section with Byline & Main Statement of Value */}
-      <HeroSection 
-        onNavigate={onNavigate}
-        onOpenMatcher={onOpenMatcher}
-        onOpenGetAccess={onOpenGetAccess}
-      />
+export interface AiCourseCaseStudy {
+  title: string;
+  industry: string;
+  summary: string;
+  impactMetric: string;
+  impactHighlight: string;
+  methodology: string;
+  toolsUsed: string[];
+  baselineProblem?: string;
+  solutionArchitecture?: string;
+  stepByStepImplementation?: string[];
+  quantifiedResults?: {
+    metric: string;
+    before: string;
+    after: string;
+    impact: string;
+  }[];
+  founderQuote?: string;
+  keyInsight?: string;
+}
 
-      {/* Main Container for Section Excerpts leading to full pages */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Quick Jump Ribbon */}
-        <div className="py-4 border-b border-slate-100 flex items-center justify-between text-xs overflow-x-auto gap-3 text-slate-500 font-mono">
-          <span className="font-bold text-slate-800 shrink-0 uppercase tracking-wider text-[11px]">
-            Section Navigation Index:
-          </span>
-          <div className="flex items-center space-x-3 shrink-0">
-            <button onClick={() => onNavigate('competencies')} className="hover:text-cyan-700 transition-colors">01. Competencies</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('architecture')} className="hover:text-cyan-700 transition-colors">02. Architecture & Deployments</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('livenexus')} className="hover:text-cyan-700 text-cyan-700 font-bold transition-colors">03. Live Nexus OS</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('guilds-dev')} className="hover:text-cyan-700 transition-colors">04. Guilds & Dev Nexus</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('leadership')} className="hover:text-cyan-700 transition-colors">05. Tech Leadership</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('national-cv')} className="hover:text-cyan-700 transition-colors">06. National CV</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('startups')} className="hover:text-cyan-700 transition-colors">07. Startups</button>
-            <span>/</span>
-            <button onClick={() => onNavigate('ai-courses')} className="hover:text-cyan-700 text-amber-600 font-bold transition-colors">08. AI Courses & Certs</button>
-          </div>
-        </div>
+export interface AiCourseResourcePrompt {
+  title: string;
+  prompt: string;
+  targetTool: string;
+  purpose: string;
+}
 
-        {/* Every section excerpt leading to full pages */}
-        <SectionExcerpts 
-          onNavigate={onNavigate}
-          onOpenMatcher={onOpenMatcher}
-          onOpenGetAccess={onOpenGetAccess}
-        />
+export interface AiCourseResourceTool {
+  name: string;
+  category: string;
+  description: string;
+  pricingTier: string;
+}
 
-        {/* Bottom Banner for Ecosystem Activation */}
-        <div className="my-16 p-8 sm:p-10 rounded-3xl bg-linear-to-r from-slate-950 via-slate-900 to-cyan-950 text-white border border-cyan-500/40 relative overflow-hidden shadow-xl">
-          <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30">
-              ECOSYSTEM CATALYST
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Ready to plug into the 961AI Innovation Network?
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Whether you are scaling an enterprise agent workspace, deploying civic sandboxes, or joining an industry data cooperative, our team and autonomous supervisors are ready.
-            </p>
-            <div className="pt-2 flex flex-wrap gap-3">
-              <button
-                onClick={onOpenMatcher}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition-colors flex items-center space-x-2"
-              >
-                <Sparkles className="w-4 h-4 text-slate-950" />
-                <span>Run Neural Matcher</span>
-              </button>
-              <button
-                onClick={onOpenGetAccess}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors flex items-center space-x-2"
-              >
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <span>Apply for Guild Vetting</span>
-              </button>
-              <button
-                onClick={() => onNavigate('livenexus')}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition-colors"
-              >
-                Explore Live Nexus →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+export interface AiCourseResourceChecklist {
+  phase: string;
+  tasks: string[];
+}
+
+export interface AiCourseOfficialGuide {
+  title: string;
+  type: string;
+  description: string;
+  linkNote?: string;
+}
+
+export interface AiCourseResources {
+  starterPrompts: AiCourseResourcePrompt[];
+  recommendedTools: AiCourseResourceTool[];
+  actionChecklist: AiCourseResourceChecklist[];
+  officialGuides: AiCourseOfficialGuide[];
+}
+
+export interface AiCourseItem {
+  id: string;
+  number: number;
+  title: string;
+  provider: string;
+  providerType: 'University' | 'BigTech' | 'Specialized Institute' | 'EdTech Platform';
+  format: string;
+  category: 'Strategy & Leadership' | 'Product & Engineering' | 'Marketing & Revenue' | 'Operations & Workflows' | 'Governance & Compliance' | 'Finance & Valuation';
+  level: 'Foundational' | 'Intermediate' | 'Executive / Advanced';
+  targetTools: string[];
+  skills: string[];
+  synopsis: string;
+  caseStudy: AiCourseCaseStudy;
+  duration: string;
+  keyTakeaways: string[];
+  recommendedForStage: ('Idea / MVP' | 'Seed Stage' | 'Growth / Scale-up' | 'Enterprise B2B')[];
+  accreditationBadge?: string;
+  syllabus?: AiCourseModule[];
+  resources?: AiCourseResources;
+}
+
+export interface MemberDirectoryItem {
+  id: string;
+  name: string;
+  title: string;
+  organization: string;
+  avatarUrl?: string;
+  initials: string;
+  role: 'Founder' | 'AI Researcher' | 'Software Architect' | 'Ecosystem Mentor' | 'Venture Investor' | 'Freelance Consultant';
+  sector: 'FinTech' | 'HealthTech' | 'GovTech' | 'Enterprise AI' | 'Logistics' | 'LegalTech' | 'EdTech';
+  location: string;
+  phone?: string;
+  email: string;
+  website?: string;
+  linkedin?: string;
+  skills: string[];
+  bio: string;
+  badge: 'NCEI Verified' | 'Guild Lead' | 'GovTech Fellow' | 'Angel Syndicate' | 'Founding Member';
+  tier: 'Public' | 'Scholar' | 'Penthouse / VIP';
+  hourlyRate?: string;
+  status: 'Available' | 'In Consultation' | 'Sabbatical';
+  projectsCount: number;
+  rating: number;
+  dateJoined: string;
+  featured?: boolean;
+  approved: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: 'scholar' | 'freelancer' | 'guru' | 'enterprise' | 'admin';
+  roleTitle: string;
+  organization?: string;
+  location?: string;
+  phone?: string;
+  avatar?: string;
+  badge: string;
+  tier: 'Public' | 'Scholar' | 'Penthouse' | 'Admin';
+  allocatedComputeCredits: number;
+  verified: boolean;
+  isAdmin?: boolean;
+}
+
+export interface VettingSubmission {
+  id: string;
+  name: string;
+  email: string;
+  organization: string;
+  guildId: string;
+  guildName: string;
+  proposedUseCase: string;
+  tierRequested: string;
+  status: 'Pending Review' | 'Approved' | 'Rejected';
+  dateSubmitted: string;
+  allocatedCompute: string;
+}
+
+export interface Competency {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  tags: string[];
+  deliverables: string[];
+  impactMetric: string;
+}
+
+export interface DeploymentProject {
+  id: string;
+  category: 'tech-ai' | 'biz-dev' | 'marketplaces';
+  categoryLabel: string;
+  subcategory: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  metrics?: string;
+  status: 'Live & Scaled' | 'Enterprise Active' | 'Commercialized' | 'Regional Deployment';
+  badgeColor?: string;
+}
+
+export interface LiveChannel {
+  id: string;
+  name: string;
+  tier: 'public' | 'scholar' | 'penthouse';
+  tierLabel: string;
+  description: string;
+  activeUsers: number;
+  unreadCount?: number;
+  isEncrypted?: boolean;
+}
+
+export interface LiveMessage {
+  id: string;
+  channelId: string;
+  sender: string;
+  role: string;
+  avatar: string;
+  timestamp: string;
+  content: string;
+  badge?: string;
+  isAiBot?: boolean;
+}
+
+export interface Guild {
+  id: string;
+  name: string;
+  sector: 'FinTech' | 'Healthcare' | 'Legal Tech' | 'GovTech';
+  description: string;
+  regulatoryStandard: string;
+  dataCooperativeName: string;
+  sandboxFeatures: string[];
+  membersCount: number;
+  status: string;
+}
+
+export interface StartupItem {
+  id: string;
+  name: string;
+  domain: string;
+  role: string;
+  timeline: string;
+  description: string;
+  focusAreas: string[];
+  metrics: string;
+  url?: string;
+}
+
+export interface NationalMilestone {
+  id: string;
+  title: string;
+  entity: string;
+  date: string;
+  scope: string;
+  description: string;
+  keyOutputs: string[];
+  impactMetric: string;
+}
+
+export interface MatcherProfile {
+  type: 'scholar' | 'freelancer' | 'guru' | 'enterprise';
+  title: string;
+  subtitle: string;
+  recommendedPrograms: string[];
+  suggestedGuilds: string[];
+  suggestedNexusChannel: string;
+  allocatedCompute: string;
+  nextSteps: string[];
+}

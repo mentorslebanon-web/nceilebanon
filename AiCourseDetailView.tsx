@@ -3,593 +3,1017 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  ShieldAlert, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Download, 
-  Printer, 
+  GraduationCap, 
+  Search, 
+  Filter, 
   Sparkles, 
-  RefreshCw, 
-  TrendingDown, 
-  Building2, 
-  DollarSign, 
-  Cpu, 
-  FileText, 
+  ArrowRight, 
   CheckCircle2, 
-  X, 
-  ExternalLink,
-  Sliders,
-  Scale
+  Clock, 
+  Building2, 
+  TrendingUp, 
+  Award, 
+  BookOpen, 
+  ExternalLink, 
+  Copy, 
+  Check, 
+  Layers, 
+  Sliders, 
+  Cpu, 
+  Rocket, 
+  Briefcase, 
+  Zap, 
+  DollarSign, 
+  ShieldCheck, 
+  BarChart3, 
+  ChevronRight,
+  ChevronLeft,
+  X,
+  Share2,
+  FileCheck,
+  Menu,
+  ChevronDown,
+  Compass,
+  ArrowUpRight
 } from 'lucide-react';
+import { PageId, AiCourseItem } from '../types';
+import { AI_ENTREPRENEUR_COURSES, COURSE_CATEGORIES, STARTUP_STAGES } from '../data/aiCoursesData';
+import { AiCourseDetailView } from '../components/AiCourseDetailView';
 
-export interface RiskScenarioPreset {
-  id: string;
-  name: string;
-  sector: string;
-  description: string;
-  capitalDislocation: number; // 0 to 100
-  gridResilience: 'low' | 'medium' | 'high';
-  complianceStrictness: 'domestic' | 'bdl' | 'gcc' | 'eu-ai-act';
-  entityStructure: 'single-onshore' | 'dual-entity' | 'multi-spv';
-  runwayMonths: number;
+interface AiCoursesPageProps {
+  onNavigate: (page: PageId) => void;
+  onOpenMatcher?: () => void;
 }
 
-export const SCENARIO_PRESETS: RiskScenarioPreset[] = [
-  {
-    id: 'fintech-seed',
-    name: 'Seed / Pre-Series A FinTech (Beirut)',
-    sector: 'FinTech & Sovereign Payments',
-    description: 'Early-stage payment orchestrator facing regional capital flight and BDL Circular 158/165 compliance.',
-    capitalDislocation: 75,
-    gridResilience: 'medium',
-    complianceStrictness: 'bdl',
-    entityStructure: 'single-onshore',
-    runwayMonths: 8
-  },
-  {
-    id: 'healthtech-clinical',
-    name: 'Clinical HealthTech RAG (AUBMC / Mount Lebanon)',
-    sector: 'Biomedical AI & Hospital Informatics',
-    description: 'Genomic & diagnostic model processing patient records subject to HIPAA, MoPH, and EU GDPR strictness.',
-    capitalDislocation: 40,
-    gridResilience: 'high',
-    complianceStrictness: 'eu-ai-act',
-    entityStructure: 'dual-entity',
-    runwayMonths: 18
-  },
-  {
-    id: 'govtech-diaspora',
-    name: 'Diaspora-Backed GovTech & Civic Automation',
-    sector: 'GovTech & Administrative Optimization',
-    description: 'Workflow agent for municipal departments with diaspora angel funding through DIFC/Delaware HoldCo.',
-    capitalDislocation: 30,
-    gridResilience: 'medium',
-    complianceStrictness: 'domestic',
-    entityStructure: 'dual-entity',
-    runwayMonths: 14
-  },
-  {
-    id: 'sovereign-cluster',
-    name: 'Air-Gapped Sovereign Cluster & Defense AI',
-    sector: 'Cybersecurity & Critical Infrastructure',
-    description: 'On-premise LLM and data lake operating under severe regional escalation threat and zero foreign cloud exposure.',
-    capitalDislocation: 90,
-    gridResilience: 'high',
-    complianceStrictness: 'gcc',
-    entityStructure: 'multi-spv',
-    runwayMonths: 24
-  }
-];
+export const AiCoursesPage: React.FC<AiCoursesPageProps> = ({ onNavigate, onOpenMatcher }) => {
+  // Navigation & Selection state
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'case-studies' | 'matrix' | 'advisor' | 'detail'>('overview');
+  
+  // Filtering & Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sidebarFilter, setSidebarFilter] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Domains');
+  const [selectedStage, setSelectedStage] = useState<string>('All Stages');
+  
+  // UI toggles
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareFeedback, setShareFeedback] = useState(false);
 
-export const PolicyRiskCalculator: React.FC = () => {
-  // Scenario configuration state
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('fintech-seed');
-  const [capitalDislocation, setCapitalDislocation] = useState<number>(75);
-  const [gridResilience, setGridResilience] = useState<'low' | 'medium' | 'high'>('medium');
-  const [complianceStrictness, setComplianceStrictness] = useState<'domestic' | 'bdl' | 'gcc' | 'eu-ai-act'>('bdl');
-  const [entityStructure, setEntityStructure] = useState<'single-onshore' | 'dual-entity' | 'multi-spv'>('single-onshore');
-  const [runwayMonths, setRunwayMonths] = useState<number>(8);
+  // Advisor quiz state
+  const [advisorStage, setAdvisorStage] = useState<'Idea / MVP' | 'Seed Stage' | 'Growth / Scale-up' | 'Enterprise B2B'>('Idea / MVP');
+  const [advisorBottleneck, setAdvisorBottleneck] = useState<'mvp_speed' | 'sales_leads' | 'fundraising' | 'operations' | 'compliance' | 'finance'>('mvp_speed');
+  const [advisorTechLevel, setAdvisorTechLevel] = useState<'non-technical' | 'semi-technical' | 'technical'>('non-technical');
 
-  // Modal for 1-page executive brief
-  const [showExecutiveBriefModal, setShowExecutiveBriefModal] = useState<boolean>(false);
+  // Currently active course object (if viewing a course)
+  const currentCourse = useMemo(() => {
+    if (!selectedCourseId) return null;
+    return AI_ENTREPRENEUR_COURSES.find(c => c.id === selectedCourseId) || null;
+  }, [selectedCourseId]);
 
-  // Apply a preset scenario
-  const handleApplyPreset = (presetId: string) => {
-    const preset = SCENARIO_PRESETS.find(p => p.id === presetId);
-    if (!preset) return;
-    setSelectedPresetId(preset.id);
-    setCapitalDislocation(preset.capitalDislocation);
-    setGridResilience(preset.gridResilience);
-    setComplianceStrictness(preset.complianceStrictness);
-    setEntityStructure(preset.entityStructure);
-    setRunwayMonths(preset.runwayMonths);
+  // Index of current course for previous / next navigation
+  const currentCourseIndex = useMemo(() => {
+    if (!currentCourse) return -1;
+    return AI_ENTREPRENEUR_COURSES.findIndex(c => c.id === currentCourse.id);
+  }, [currentCourse]);
+
+  const prevCourse = useMemo(() => {
+    if (currentCourseIndex <= 0) return null;
+    return AI_ENTREPRENEUR_COURSES[currentCourseIndex - 1];
+  }, [currentCourseIndex]);
+
+  const nextCourse = useMemo(() => {
+    if (currentCourseIndex < 0 || currentCourseIndex >= AI_ENTREPRENEUR_COURSES.length - 1) return null;
+    return AI_ENTREPRENEUR_COURSES[currentCourseIndex + 1];
+  }, [currentCourseIndex]);
+
+  // Filtered courses for main grid
+  const filteredCourses = useMemo(() => {
+    return AI_ENTREPRENEUR_COURSES.filter((course) => {
+      const matchesSearch = 
+        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.synopsis.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.targetTools.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        course.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        course.caseStudy.title.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory = 
+        selectedCategory === 'All Domains' || course.category === selectedCategory;
+
+      const matchesStage = 
+        selectedStage === 'All Stages' || course.recommendedForStage.includes(selectedStage as any);
+
+      return matchesSearch && matchesCategory && matchesStage;
+    });
+  }, [searchQuery, selectedCategory, selectedStage]);
+
+  // Filtered courses for sidebar list
+  const sidebarCourses = useMemo(() => {
+    if (!sidebarFilter.trim()) return AI_ENTREPRENEUR_COURSES;
+    const query = sidebarFilter.toLowerCase();
+    return AI_ENTREPRENEUR_COURSES.filter(c => 
+      c.title.toLowerCase().includes(query) ||
+      c.provider.toLowerCase().includes(query) ||
+      c.category.toLowerCase().includes(query) ||
+      c.targetTools.some(t => t.toLowerCase().includes(query)) ||
+      String(c.number).includes(query)
+    );
+  }, [sidebarFilter]);
+
+  // Advisor recommended courses
+  const recommendedCourses = useMemo(() => {
+    return AI_ENTREPRENEUR_COURSES.filter(c => {
+      if (advisorBottleneck === 'mvp_speed') {
+        return c.id === 'deeplearning-bubble-nocode-ai-app-dev' || c.id === 'deeplearning-ai-for-everyone' || c.id === 'applied-genai-marketing-communication';
+      }
+      if (advisorBottleneck === 'sales_leads') {
+        return c.id === 'hubspot-ai-sales-customer-success' || c.id === 'microsoft-ai-business-professional' || c.id === 'applied-genai-marketing-communication';
+      }
+      if (advisorBottleneck === 'fundraising') {
+        return c.id === 'harvard-storytelling-narrative-ai' || c.id === 'cfi-wallstreetprep-genai-financial-modeling' || c.id === 'wharton-data-analysis-decision-making';
+      }
+      if (advisorBottleneck === 'operations') {
+        return c.id === 'mit-xpro-process-automation-agentic' || c.id === 'microsoft-ai-business-professional' || c.id === 'mit-sloan-ai-business-strategy';
+      }
+      if (advisorBottleneck === 'compliance') {
+        return c.id === 'oxford-iapp-ai-governance-compliance' || c.id === 'mit-sloan-ai-business-strategy' || c.id === 'duke-ai-for-product-management';
+      }
+      if (advisorBottleneck === 'finance') {
+        return c.id === 'cfi-wallstreetprep-genai-financial-modeling' || c.id === 'wharton-data-analysis-decision-making' || c.id === 'harvard-storytelling-narrative-ai';
+      }
+      return true;
+    });
+  }, [advisorBottleneck]);
+
+  // Select a course and switch to detail view
+  const handleSelectCourse = (courseId: string) => {
+    setSelectedCourseId(courseId);
+    setActiveTab('detail');
+    setMobileSidebarOpen(false);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
   };
 
-  // Real-Time Calculated Risk Metrics
-  const calculatedRisk = useMemo(() => {
-    // 1. Grid factor (low = 30 pts, med = 15 pts, high = 5 pts)
-    const gridScore = gridResilience === 'low' ? 30 : gridResilience === 'medium' ? 15 : 5;
+  // Switch to one of the overview tabs
+  const handleSelectTab = (tab: 'overview' | 'case-studies' | 'matrix' | 'advisor') => {
+    setActiveTab(tab);
+    setSelectedCourseId(null);
+    setMobileSidebarOpen(false);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
 
-    // 2. Compliance factor
-    const complianceScore = 
-      complianceStrictness === 'eu-ai-act' ? 28 :
-      complianceStrictness === 'gcc' ? 22 :
-      complianceStrictness === 'bdl' ? 18 : 8;
+  const handleCopyCitation = (course: AiCourseItem) => {
+    const text = `${course.title} by ${course.provider} (${course.format}). Key Tools: ${course.targetTools.join(', ')}. Case Study: ${course.caseStudy.title} (${course.caseStudy.impactMetric}).`;
+    navigator.clipboard.writeText(text);
+    setCopiedId(course.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-    // 3. Entity structure mitigating multiplier
-    const structureModifier = 
-      entityStructure === 'single-onshore' ? 1.35 :
-      entityStructure === 'dual-entity' ? 0.78 : 0.60;
-
-    // 4. Runway vulnerability (under 6 months is severe)
-    const runwayVulnerability = runwayMonths <= 6 ? 25 : runwayMonths <= 12 ? 14 : 5;
-
-    // Composite raw calculation (0 - 100)
-    const rawIndex = (capitalDislocation * 0.35 + gridScore * 0.25 + complianceScore * 0.20 + runwayVulnerability * 0.20) * structureModifier;
-    const compositeScore = Math.min(98, Math.max(12, Math.round(rawIndex)));
-
-    // Runway erosion factor (how much faster burn will occur due to currency / supply friction)
-    const burnMultiplier = (1 + (capitalDislocation / 100) * 0.65 + (gridResilience === 'low' ? 0.35 : 0.1)).toFixed(2);
-
-    // Adjusted effective runway
-    const effectiveRunway = (runwayMonths / parseFloat(burnMultiplier)).toFixed(1);
-
-    // Risk Classification
-    let riskTier: { label: string; color: string; bg: string; border: string; desc: string };
-    if (compositeScore >= 75) {
-      riskTier = {
-        label: 'CRITICAL RUNWAY DISLOCATION',
-        color: 'text-rose-400',
-        bg: 'bg-rose-950/40',
-        border: 'border-rose-500/40',
-        desc: 'Immediate vulnerability to foreign capital flight, infrastructure blackout, and severe local regulatory friction.'
-      };
-    } else if (compositeScore >= 50) {
-      riskTier = {
-        label: 'ELEVATED GEOPOLITICAL FRICTION',
-        color: 'text-amber-400',
-        bg: 'bg-amber-950/40',
-        border: 'border-amber-500/40',
-        desc: 'Substantial burn acceleration. Dual-entity treasury isolation and local offline failovers required.'
-      };
-    } else {
-      riskTier = {
-        label: 'SOVEREIGN HEDGED RESILIENCE',
-        color: 'text-emerald-400',
-        bg: 'bg-emerald-950/40',
-        border: 'border-emerald-500/40',
-        desc: 'Structure effectively insulates core IP, foreign runway tranches, and compute workloads from domestic shocks.'
-      };
+  const handleShareCourse = (course: AiCourseItem) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setShareFeedback(true);
+      setTimeout(() => setShareFeedback(false), 2000);
     }
-
-    // Recommended Tooling Stack Category
-    let recommendedCategory: string;
-    let recommendedAction: string;
-    if (complianceStrictness === 'eu-ai-act' || complianceStrictness === 'gcc') {
-      recommendedCategory = 'Enterprise Governance & Model Inventory';
-      recommendedAction = 'Deploy automated conformity assessments (Articles 9 & 14) and audit logs prior to cross-border deployment.';
-    } else if (gridResilience === 'low' || capitalDislocation > 70) {
-      recommendedCategory = 'Runtime Control & Guardrails';
-      recommendedAction = 'Air-gap model inference on local edge clusters with automated fallback prompts during cloud disconnections.';
-    } else {
-      recommendedCategory = 'GRC Automation & Dual-Treasury Bridges';
-      recommendedAction = 'Isolate investor capital in Delaware/DIFC HoldCo while funding Beirut OpCo on milestone-based escrow contracts.';
-    }
-
-    return {
-      compositeScore,
-      burnMultiplier,
-      effectiveRunway,
-      riskTier,
-      recommendedCategory,
-      recommendedAction
-    };
-  }, [capitalDislocation, gridResilience, complianceStrictness, entityStructure, runwayMonths]);
-
-  // Trigger print for 1-page executive brief
-  const handlePrintBrief = () => {
-    window.print();
   };
 
   return (
-    <div id="risk-calculator-section" className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-8 text-white">
-      {/* Header & Scenario Presets */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center space-x-2 text-amber-400 text-xs font-mono font-bold tracking-wide uppercase">
-            <Sliders className="w-4 h-4" />
-            <span>Interactive Risk Simulator & Scenario Modeler</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white mt-1 tracking-tight">
-            MENA Geopolitical & AI Regulatory Risk Calculator
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-            Simulate the impact of capital flight, infrastructure disruptions, and international compliance mandates on startup runway and regulatory exposure.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowExecutiveBriefModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs font-mono transition-colors flex items-center space-x-2 shadow-sm"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export 1-Page Executive Briefing (PDF)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Preset Scenario Selector Pills */}
-      <div className="space-y-2">
-        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
-          Select Standard Scenario Preset:
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {SCENARIO_PRESETS.map((preset) => {
-            const isSelected = selectedPresetId === preset.id;
-            return (
-              <button
-                key={preset.id}
-                onClick={() => handleApplyPreset(preset.id)}
-                className={`text-left p-3 rounded-2xl border transition-all ${
-                  isSelected
-                    ? 'bg-amber-400/10 border-amber-400 text-white shadow-xs'
-                    : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/40'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 text-amber-300">
-                    {preset.sector.split(' ')[0]}
-                  </span>
-                  {isSelected && <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>}
-                </div>
-                <div className="font-bold text-xs text-white mt-2 leading-tight">
-                  {preset.name}
-                </div>
-                <div className="text-[11px] text-slate-400 mt-1 line-clamp-2">
-                  {preset.description}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Grid: Controls on Left, Live Computed Score on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Interactive Parameters */}
-        <div className="lg:col-span-7 space-y-6 bg-slate-950/60 p-5 rounded-2xl border border-slate-800">
-          <div className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider flex items-center space-x-1.5">
-            <Scale className="w-4 h-4" />
-            <span>Operational & Geopolitical Variables</span>
-          </div>
-
-          {/* Slider: Capital Dislocation Index */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Foreign Capital Flight / Dislocation:</span>
-              <span className="text-amber-400 font-bold">{capitalDislocation}% Dislocation</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={capitalDislocation}
-              onChange={(e) => setCapitalDislocation(Number(e.target.value))}
-              className="w-full accent-amber-400 bg-slate-800 h-2 rounded-lg cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-              <span>0% (Full Cross-Border Flow)</span>
-              <span>50% (Hesitant Foreign LPs)</span>
-              <span>100% (Complete Sovereign Freeze)</span>
-            </div>
-          </div>
-
-          {/* Grid Resilience Toggle */}
-          <div className="space-y-2">
-            <div className="text-xs font-mono text-slate-300">Domestic Power & Connectivity Infrastructure:</div>
-            <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-              {[
-                { id: 'low', label: 'Grid Only (High Blackouts)', color: 'border-rose-500/40 text-rose-300' },
-                { id: 'medium', label: 'Hybrid UPS / Diesel', color: 'border-amber-500/40 text-amber-300' },
-                { id: 'high', label: 'Solar + Starlink Mesh', color: 'border-emerald-500/40 text-emerald-300' }
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setGridResilience(item.id as any)}
-                  className={`p-2.5 rounded-xl border text-center transition-colors ${
-                    gridResilience === item.id
-                      ? 'bg-slate-800 border-amber-400 text-white font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Regulatory Compliance Mandate */}
-          <div className="space-y-2">
-            <div className="text-xs font-mono text-slate-300">Target Compliance & Jurisdictional Exposure:</div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-              {[
-                { id: 'domestic', label: 'Lebanon Civic Only' },
-                { id: 'bdl', label: 'BDL Circulars 158/165' },
-                { id: 'gcc', label: 'UAE / Saudi NDMO' },
-                { id: 'eu-ai-act', label: 'EU AI Act High-Risk' }
-              ].map((comp) => (
-                <button
-                  key={comp.id}
-                  onClick={() => setComplianceStrictness(comp.id as any)}
-                  className={`p-2.5 rounded-xl border text-center transition-colors ${
-                    complianceStrictness === comp.id
-                      ? 'bg-slate-800 border-cyan-400 text-cyan-300 font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {comp.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Entity & Treasury Structuring */}
-          <div className="space-y-2">
-            <div className="text-xs font-mono text-slate-300">Corporate & Treasury Structuring:</div>
-            <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-              {[
-                { id: 'single-onshore', label: 'Single Onshore LLC', badge: 'High Risk' },
-                { id: 'dual-entity', label: 'DIFC / DE HoldCo + Beirut OpCo', badge: 'Best Practice' },
-                { id: 'multi-spv', label: 'Multi-Jurisdiction SPV Trust', badge: 'Institutional' }
-              ].map((ent) => (
-                <button
-                  key={ent.id}
-                  onClick={() => setEntityStructure(ent.id as any)}
-                  className={`p-2.5 rounded-xl border text-left transition-colors ${
-                    entityStructure === ent.id
-                      ? 'bg-slate-800 border-emerald-400 text-white font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <div className="text-xs leading-tight">{ent.label}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{ent.badge}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cash Runway Months */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Nominal Cash Runway:</span>
-              <span className="text-cyan-400 font-bold">{runwayMonths} Months</span>
-            </div>
-            <input
-              type="range"
-              min="2"
-              max="36"
-              value={runwayMonths}
-              onChange={(e) => setRunwayMonths(Number(e.target.value))}
-              className="w-full accent-cyan-400 bg-slate-800 h-2 rounded-lg cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* Right Column: Real-Time Calculated Risk Assessment */}
-        <div className="lg:col-span-5 space-y-5">
-          <div className={`p-6 rounded-2xl border ${calculatedRisk.riskTier.bg} ${calculatedRisk.riskTier.border} space-y-4`}>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                Composite Risk Index
+    <div className="min-h-screen bg-slate-50/60 text-slate-900 flex flex-col">
+      {/* Top Banner / Hero */}
+      <section className="bg-slate-950 text-white border-b border-slate-800 relative overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(6,182,212,0.18),rgba(255,255,255,0))]"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 relative z-10">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30 inline-flex items-center space-x-1">
+              <GraduationCap className="w-3.5 h-3.5 text-cyan-400 mr-1" />
+              NCEI ENTREPRENEUR AI ACADEMY
+            </span>
+            <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-slate-900 text-slate-400 border border-slate-800">
+              12 ESSENTIAL CURRICULUMS // VERIFIED REAL-WORLD IMPACT
+            </span>
+            {currentCourse && (
+              <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-amber-950/80 text-amber-300 border border-amber-500/30">
+                ACTIVE COURSE: #{String(currentCourse.number).padStart(2, '0')}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
-                Monte-Carlo Model v2.4
-              </span>
-            </div>
-
-            <div className="flex items-baseline space-x-3">
-              <div className="text-5xl font-black font-mono tracking-tight text-white">
-                {calculatedRisk.compositeScore}
-              </div>
-              <div className="text-sm font-mono text-slate-400">/ 100</div>
-              <div className={`text-xs font-mono font-extrabold uppercase px-2.5 py-1 rounded-lg ml-auto border ${calculatedRisk.riskTier.color} border-current/30`}>
-                {calculatedRisk.riskTier.label.split(' ')[0]} RISK
-              </div>
-            </div>
-
-            {/* Score Progress Bar */}
-            <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-300 ${
-                  calculatedRisk.compositeScore >= 75 ? 'bg-rose-500' :
-                  calculatedRisk.compositeScore >= 50 ? 'bg-amber-500' : 'bg-emerald-500'
-                }`}
-                style={{ width: `${calculatedRisk.compositeScore}%` }}
-              ></div>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              {calculatedRisk.riskTier.desc}
-            </p>
+            )}
           </div>
 
-          {/* Runway Impact Card */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3 font-mono text-xs">
-            <div className="flex items-center justify-between text-slate-400 border-b border-slate-800/80 pb-2">
-              <span>Nominal Runway</span>
-              <span className="text-white font-bold">{runwayMonths} Months</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-400 border-b border-slate-800/80 pb-2">
-              <span className="flex items-center space-x-1">
-                <span>Burn Friction Factor</span>
-                <span className="text-[10px] text-amber-400">({calculatedRisk.burnMultiplier}x)</span>
-              </span>
-              <span className="text-amber-400 font-bold">+{Math.round((parseFloat(calculatedRisk.burnMultiplier) - 1) * 100)}% Burn Rate</span>
-            </div>
-            <div className="flex items-center justify-between text-slate-200 pt-1">
-              <span className="font-bold">Real Effective Runway</span>
-              <span className="text-base font-black text-cyan-400">
-                {calculatedRisk.effectiveRunway} Months
-              </span>
-            </div>
-          </div>
-
-          {/* Tooling Category Recommendation */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
-            <div className="text-[10px] font-mono uppercase text-amber-400 tracking-wider">
-              Recommended Compliance Architecture
-            </div>
-            <div className="text-sm font-bold text-white flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>{calculatedRisk.recommendedCategory}</span>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {calculatedRisk.recommendedAction}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 1-Page Executive Briefing Modal (Print-Optimized) */}
-      {showExecutiveBriefModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-white text-slate-950 rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto border border-slate-300 shadow-2xl p-6 sm:p-10 space-y-6 relative print:p-0 print:border-none print:shadow-none">
-            
-            {/* Modal Controls (Hidden in Print) */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4 print:hidden">
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-100 text-amber-900 font-bold uppercase">
-                  CONFIDENTIAL BRIEFING
-                </span>
-                <span className="text-xs font-mono text-slate-500">NCEI Policy Intelligence Document</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handlePrintBrief}
-                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-bold flex items-center space-x-1.5 transition-colors"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print / Save as PDF</span>
-                </button>
-                <button
-                  onClick={() => setShowExecutiveBriefModal(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Document Header / Letterhead */}
-            <div className="border-b-2 border-slate-950 pb-6 space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest uppercase text-slate-500">
-                    NATIONAL CENTER FOR ECONOMIC INNOVATION // LEBANON
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950 mt-1">
-                    EXECUTIVE BRIEFING: AI REGULATORY & GEOPOLITICAL RISK PROFILE
-                  </h2>
-                </div>
-                <div className="text-right text-[10px] font-mono text-slate-500">
-                  <div>ISSUE REF: NCEI-RISK-2026</div>
-                  <div>DATE: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                  <div>SECURITY: LEVEL 2 AUDIT</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Assessment Meta Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs font-mono">
-              <div>
-                <div className="text-slate-500 text-[10px] uppercase">Profiled Scenario</div>
-                <div className="font-bold text-slate-900 mt-0.5 truncate">{SCENARIO_PRESETS.find(p => p.id === selectedPresetId)?.name || 'Custom'}</div>
-              </div>
-              <div>
-                <div className="text-slate-500 text-[10px] uppercase">Composite Risk</div>
-                <div className="font-bold text-rose-600 mt-0.5">{calculatedRisk.compositeScore} / 100 ({calculatedRisk.riskTier.label.split(' ')[0]})</div>
-              </div>
-              <div>
-                <div className="text-slate-500 text-[10px] uppercase">Nominal Runway</div>
-                <div className="font-bold text-slate-900 mt-0.5">{runwayMonths} Months</div>
-              </div>
-              <div>
-                <div className="text-slate-500 text-[10px] uppercase">Effective Runway</div>
-                <div className="font-bold text-cyan-700 mt-0.5">{calculatedRisk.effectiveRunway} Months ({calculatedRisk.burnMultiplier}x Burn)</div>
-              </div>
-            </div>
-
-            {/* Key Findings Section */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
-                1. Executive Diagnostic & Threat Exposure
-              </h4>
-              <p className="text-xs text-slate-700 leading-relaxed text-justify">
-                Under the simulated parameters (Foreign Capital Flight: {capitalDislocation}%, Grid Resilience: {gridResilience.toUpperCase()}, Compliance Strictness: {complianceStrictness.toUpperCase()}), the enterprise exhibits an effective monthly burn compression factor of {calculatedRisk.burnMultiplier}x. Without structural capital isolation, domestic supply friction will consume liquidity {Math.round((parseFloat(calculatedRisk.burnMultiplier) - 1) * 100)}% faster than standard operating budgets predict.
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="max-w-3xl space-y-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                12 Essential AI Courses, Certifications & Tool Frameworks
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl">
+                Master the practical curriculum empowering startup founders to compress R&D, automate agentic operations, 
+                and slash acquisition costs. Use the persistent sidebar to toggle between course syllabi and empirical ROI case studies.
               </p>
             </div>
 
-            {/* 4-Pillar Recommended Action Plan */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
-                2. Mandated 4-Pillar Mitigation Directives
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    <span>Pillar A: Treasury Insulation</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    {entityStructure === 'single-onshore'
-                      ? 'CRITICAL: Re-domicile holding company to DIFC or Delaware within 60 days. Route institutional investor checks exclusively offshore.'
-                      : 'Maintain Delaware/DIFC HoldCo with quarterly milestone disbursements to Beirut OpCo to eliminate bank haircut exposure.'}
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                    <span>Pillar B: Infrastructure Failover</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    Implement Starlink business uplink and dual-diesel / micro-solar grid storage to guarantee 99.9% uptime for core model inference nodes.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span>Pillar C: Tooling & Governance</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    Adopt <strong>{calculatedRisk.recommendedCategory}</strong> tooling to automate compliance audits and air-gapped data sanitization.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
-                  <div className="font-bold text-slate-900 flex items-center space-x-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                    <span>Pillar D: Regulatory Alignment</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-normal">
-                    {calculatedRisk.recommendedAction}
-                  </p>
-                </div>
+            {/* Quick Metrics Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 min-w-[120px]">
+                <div className="text-xl sm:text-2xl font-black text-cyan-400 font-mono">12</div>
+                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Certifications</div>
               </div>
-            </div>
-
-            {/* Verification Sign-Off Footer */}
-            <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-500 gap-2">
-              <div>VERIFICATION HASH: SHA256//961AI-RISK-EVAL-{Date.now().toString(16).toUpperCase()}</div>
-              <div>NCEI REGULATORY INTELLIGENCE UNIT • BEIRUT, LEBANON</div>
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 min-w-[120px]">
+                <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">-$120K</div>
+                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">R&D Saved</div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 min-w-[120px]">
+                <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">-35%</div>
+                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">CAC Dropped</div>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 min-w-[120px]">
+                <div className="text-xl sm:text-2xl font-black text-purple-400 font-mono">45m→2m</div>
+                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Workflow Triage</div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* Mobile Sidebar Toggle Strip (Sticky on Mobile) */}
+      <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shadow-xs">
+        <button
+          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold shadow-xs hover:bg-slate-800 transition-colors"
+        >
+          <Menu className="w-4 h-4" />
+          <span>{mobileSidebarOpen ? 'Hide Course Menu' : 'Course Directory (12)'}</span>
+        </button>
+
+        <div className="text-xs font-mono text-slate-600 truncate max-w-[200px]">
+          {currentCourse ? (
+            <span className="font-bold text-slate-900">
+              #{String(currentCourse.number).padStart(2, '0')}: {currentCourse.title.slice(0, 22)}...
+            </span>
+          ) : (
+            <span>All Curriculums Overview</span>
+          )}
+        </div>
+      </div>
+
+      {/* Main Container with Persistent Left Sidebar and Right Content */}
+      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
+        
+        {/* ========================================================================= */}
+        {/* PERSISTENT SIDEBAR NAVIGATION (Desktop Sticky + Mobile Drawer) */}
+        {/* ========================================================================= */}
+        <aside
+          id="courses-persistent-sidebar"
+          className={`
+            lg:w-80 lg:shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xs flex flex-col 
+            lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] overflow-hidden transition-all duration-200 z-20
+            ${mobileSidebarOpen ? 'block fixed inset-x-4 top-28 max-h-[75vh] z-50 shadow-2xl' : 'hidden lg:flex'}
+          `}
+        >
+          {/* Sidebar Top Header */}
+          <div className="p-4 border-b border-slate-100 bg-slate-50/80 shrink-0 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-md bg-slate-950 text-cyan-400 flex items-center justify-center font-mono text-xs font-bold">
+                  12
+                </div>
+                <div>
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                    Course Directory
+                  </h2>
+                  <span className="text-[10px] font-mono text-slate-500">
+                    Entrepreneur Stacks
+                  </span>
+                </div>
+              </div>
+
+              {/* Close button for mobile drawer */}
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="lg:hidden p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Search inside Sidebar */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                value={sidebarFilter}
+                onChange={(e) => setSidebarFilter(e.target.value)}
+                placeholder="Filter courses & tools..."
+                className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-cyan-500 placeholder:text-slate-400 text-slate-800"
+              />
+              {sidebarFilter && (
+                <button
+                  onClick={() => setSidebarFilter('')}
+                  className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Top Shortcut Button: View All 12 Overview */}
+            <button
+              id="sidebar-view-all-overview"
+              onClick={() => handleSelectTab('overview')}
+              className={`w-full py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                activeTab === 'overview' && !selectedCourseId
+                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/40 shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Layers className="w-3.5 h-3.5 text-cyan-500" />
+                <span>All Curriculums Hub</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                12 Courses
+              </span>
+            </button>
+          </div>
+
+          {/* Scrollable Course Items List */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-100">
+            {sidebarCourses.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-400">
+                No courses match "{sidebarFilter}"
+              </div>
+            ) : (
+              sidebarCourses.map((course) => {
+                const isSelected = selectedCourseId === course.id && activeTab === 'detail';
+                return (
+                  <button
+                    key={course.id}
+                    id={`sidebar-course-${course.id}`}
+                    onClick={() => handleSelectCourse(course.id)}
+                    className={`w-full text-left p-2.5 pt-3 rounded-xl transition-all flex items-start space-x-2.5 group relative ${
+                      isSelected
+                        ? 'bg-slate-950 text-white shadow-xs'
+                        : 'hover:bg-slate-100/90 text-slate-700'
+                    }`}
+                  >
+                    {/* Course Number Badge */}
+                    <div className={`w-6 h-6 rounded-md font-mono text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 ${
+                      isSelected
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                    }`}>
+                      {String(course.number).padStart(2, '0')}
+                    </div>
+
+                    <div className="flex-1 min-w-0 pr-1">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className={`text-[10px] font-mono font-semibold truncate ${
+                          isSelected ? 'text-cyan-300' : 'text-slate-500'
+                        }`}>
+                          {course.provider.split('(')[0].trim()}
+                        </span>
+                        <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0 ${
+                          isSelected 
+                            ? 'bg-slate-800 text-emerald-400 border border-slate-700' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {course.level === 'Foundational' ? 'Basic' : course.level === 'Intermediate' ? 'Mid' : 'Exec'}
+                        </span>
+                      </div>
+
+                      <h4 className={`text-xs font-bold leading-tight line-clamp-2 ${
+                        isSelected ? 'text-white' : 'text-slate-900 group-hover:text-cyan-700'
+                      }`}>
+                        {course.title}
+                      </h4>
+
+                      {/* Micro Impact Pill */}
+                      <div className="mt-1.5 flex items-center justify-between">
+                        <span className={`text-[10px] font-mono truncate max-w-[170px] ${
+                          isSelected ? 'text-emerald-300' : 'text-emerald-700 font-medium'
+                        }`}>
+                          ROI: {course.caseStudy.impactMetric}
+                        </span>
+                        {isSelected && (
+                          <ChevronRight className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Sidebar Footer Shortcuts */}
+          <div className="p-3 border-t border-slate-100 bg-slate-50/90 shrink-0 flex items-center justify-between text-xs">
+            <button
+              onClick={() => handleSelectTab('advisor')}
+              className={`inline-flex items-center space-x-1 font-semibold text-[11px] transition-colors ${
+                activeTab === 'advisor' ? 'text-amber-600 font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Founder Advisor</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectTab('matrix')}
+              className={`inline-flex items-center space-x-1 font-semibold text-[11px] transition-colors ${
+                activeTab === 'matrix' ? 'text-indigo-600 font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Matrix</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectTab('case-studies')}
+              className={`inline-flex items-center space-x-1 font-semibold text-[11px] transition-colors ${
+                activeTab === 'case-studies' ? 'text-emerald-600 font-bold' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Rocket className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Vault</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ========================================================================= */}
+        {/* RIGHT MAIN CONTENT AREA */}
+        {/* ========================================================================= */}
+        <main className="flex-1 min-w-0">
+
+          {/* Top Mode Navigation Tabs (When on Overview or switches) */}
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-2 shadow-xs mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                id="tab-btn-overview"
+                onClick={() => handleSelectTab('overview')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                  activeTab === 'overview' && !selectedCourseId
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-cyan-500" />
+                <span>12 Frameworks Grid</span>
+              </button>
+
+              <button
+                id="tab-btn-case-studies"
+                onClick={() => handleSelectTab('case-studies')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                  activeTab === 'case-studies'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Rocket className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Case Studies Vault</span>
+              </button>
+
+              <button
+                id="tab-btn-matrix"
+                onClick={() => handleSelectTab('matrix')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                  activeTab === 'matrix'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Comparison Matrix</span>
+              </button>
+
+              <button
+                id="tab-btn-advisor"
+                onClick={() => handleSelectTab('advisor')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${
+                  activeTab === 'advisor'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Founder Path Advisor</span>
+              </button>
+
+              {currentCourse && activeTab === 'detail' && (
+                <div className="px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-50 text-cyan-900 border border-cyan-200 flex items-center space-x-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-cyan-600" />
+                  <span>Viewing Course #{String(currentCourse.number).padStart(2, '0')}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Search Input for Grid / Vault */}
+            {activeTab !== 'detail' && (
+              <div className="relative w-full md:w-64 shrink-0">
+                <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tools, topics..."
+                  className="w-full pl-8 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-1 focus:ring-cyan-500 focus:bg-white text-slate-900 transition-all placeholder:text-slate-400"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ======================================================================= */}
+          {/* VIEW: COURSE DETAIL PAGE (Triggered from Persistent Sidebar or Grid) */}
+          {/* ======================================================================= */}
+          {activeTab === 'detail' && currentCourse && (
+            <AiCourseDetailView
+              course={currentCourse}
+              prevCourse={prevCourse}
+              nextCourse={nextCourse}
+              onBack={() => handleSelectTab('overview')}
+              onSelectCourse={handleSelectCourse}
+              onOpenMatcher={onOpenMatcher}
+            />
+          )}
+
+          {/* ======================================================================= */}
+          {/* VIEW: 12 FRAMEWORKS GRID */}
+          {/* ======================================================================= */}
+          {activeTab === 'overview' && !selectedCourseId && (
+            <div className="space-y-6">
+              {/* Domain & Stage Filtering Toolbar */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-mono uppercase text-slate-400 mr-1 flex items-center">
+                    <Filter className="w-3 h-3 mr-1" /> Domain:
+                  </span>
+                  {COURSE_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                        selectedCategory === cat
+                          ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center space-x-1 text-xs">
+                  <span className="text-[11px] font-mono text-slate-400 mr-1">Stage:</span>
+                  <select
+                    value={selectedStage}
+                    onChange={(e) => setSelectedStage(e.target.value)}
+                    className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-1 focus:ring-cyan-500"
+                  >
+                    {STARTUP_STAGES.map((st) => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 12 Frameworks Grid Cards */}
+              {filteredCourses.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8">
+                  <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-slate-900">No courses match your filter criteria</h3>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    Try clearing your search query or switching domain filter back to "All Domains".
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('All Domains');
+                      setSelectedStage('All Stages');
+                    }}
+                    className="mt-4 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
+                  >
+                    Reset All Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredCourses.map((course) => (
+                    <div
+                      key={course.id}
+                      id={`course-card-${course.id}`}
+                      className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-cyan-400 transition-all flex flex-col justify-between overflow-hidden group"
+                    >
+                      {/* Top Header Card */}
+                      <div className="p-5 space-y-3.5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="w-7 h-7 rounded-lg bg-slate-950 text-cyan-400 font-mono font-bold text-xs flex items-center justify-center border border-cyan-500/30">
+                              {String(course.number).padStart(2, '0')}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-700">
+                              {course.category}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                            {course.level}
+                          </span>
+                        </div>
+
+                        {/* Course Title & Provider */}
+                        <div>
+                          <h3 
+                            onClick={() => handleSelectCourse(course.id)}
+                            className="text-base font-bold text-slate-900 group-hover:text-cyan-700 transition-colors line-clamp-2 leading-snug cursor-pointer"
+                          >
+                            {course.title}
+                          </h3>
+                          <div className="flex items-center space-x-1.5 mt-1 text-xs text-slate-600 font-medium">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="line-clamp-1">{course.provider}</span>
+                          </div>
+                        </div>
+
+                        {/* Target Tools Chips */}
+                        <div className="flex flex-wrap gap-1">
+                          {course.targetTools.slice(0, 3).map((tool, idx) => (
+                            <span 
+                              key={idx}
+                              className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-cyan-50 text-cyan-800 border border-cyan-200/60"
+                            >
+                              {tool}
+                            </span>
+                          ))}
+                        </div>
+
+                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                          {course.synopsis}
+                        </p>
+                      </div>
+
+                      {/* Bottom Mini Case Study Ribbon & Actions */}
+                      <div className="p-4 bg-slate-50 border-t border-slate-200/80 space-y-2.5">
+                        <div 
+                          onClick={() => handleSelectCourse(course.id)}
+                          className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 cursor-pointer transition-all shadow-2xs group/case"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] font-mono font-bold uppercase text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center">
+                              <Rocket className="w-2.5 h-2.5 mr-1 text-emerald-600" />
+                              Case Study
+                            </span>
+                            <span className="text-[10px] font-mono font-bold text-slate-900">
+                              {course.caseStudy.impactMetric}
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 group-hover/case:text-emerald-700 transition-colors line-clamp-1">
+                            {course.caseStudy.title}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <button
+                            onClick={() => handleSelectCourse(course.id)}
+                            className="inline-flex items-center space-x-1 font-bold text-cyan-700 hover:text-cyan-900 transition-colors"
+                          >
+                            <span>Open Course Page</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            onClick={() => handleCopyCitation(course)}
+                            title="Copy course brief"
+                            className="px-2 py-0.5 rounded text-[11px] font-mono bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                          >
+                            {copiedId === course.id ? 'Copied' : 'Brief'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================================================================= */}
+          {/* VIEW: CASE STUDIES VAULT */}
+          {/* ======================================================================= */}
+          {activeTab === 'case-studies' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-slate-900 text-white border border-cyan-900/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30 mb-2">
+                    <Rocket className="w-3 h-3 mr-1" />
+                    EMPIRICAL ROI // 12 STARTUP EXPERIMENTS
+                  </div>
+                  <h2 className="text-xl font-bold tracking-tight">
+                    Startup Case Studies Vault: Quantified Capital Efficiency
+                  </h2>
+                  <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+                    See exact implementation methodologies early ventures used to convert executive AI theory into 
+                    automated agent pipelines, KYC automation, and accelerated fundraising rounds.
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-mono text-slate-400 uppercase">Average Velocity Gain</div>
+                  <div className="text-xl font-black text-emerald-400 font-mono">+42.5%</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {AI_ENTREPRENEUR_COURSES.map((course) => (
+                  <div
+                    key={course.id}
+                    className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-cyan-400 transition-all shadow-xs flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                          Case #{course.number} // {course.caseStudy.industry}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          {course.caseStudy.impactMetric}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">
+                          {course.caseStudy.title}
+                        </h3>
+                        <div className="text-xs text-slate-500 font-medium mt-0.5">
+                          Coupled with: <span className="text-slate-800 font-semibold">{course.title}</span> ({course.provider})
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed">
+                        <span className="font-bold text-slate-900 block mb-1">Executive Summary:</span>
+                        {course.caseStudy.summary}
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-start space-x-2 text-xs text-emerald-950 font-medium">
+                        <Zap className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold">Startup Outcome: </span>
+                          {course.caseStudy.impactHighlight}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1">
+                        {course.caseStudy.toolsUsed.slice(0, 2).map((t, idx) => (
+                          <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-700">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => handleSelectCourse(course.id)}
+                        className="inline-flex items-center space-x-1 text-xs font-bold text-cyan-700 hover:text-cyan-900"
+                      >
+                        <span>View Full Framework</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================================= */}
+          {/* VIEW: COMPARISON MATRIX */}
+          {/* ======================================================================= */}
+          {activeTab === 'matrix' && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="p-5 border-b border-slate-200">
+                <h2 className="text-base font-bold text-slate-900">
+                  12 Essential AI Certifications: Full Matrix Comparison
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Evaluate credentials, weekly commitment, tool stack, and practical startup impact side-by-side.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-[11px] font-mono uppercase text-slate-600 border-b border-slate-200">
+                      <th className="py-3 px-3">#</th>
+                      <th className="py-3 px-4">Curriculum / Title</th>
+                      <th className="py-3 px-3">Authority</th>
+                      <th className="py-3 px-3">Format</th>
+                      <th className="py-3 px-3">Tools Stack</th>
+                      <th className="py-3 px-3">Startup ROI</th>
+                      <th className="py-3 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {AI_ENTREPRENEUR_COURSES.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-3 font-mono font-bold text-slate-400">
+                          {String(c.number).padStart(2, '0')}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-slate-900 max-w-xs">
+                          {c.title}
+                          <div className="text-[10px] text-slate-500 font-mono font-normal mt-0.5">{c.category}</div>
+                        </td>
+                        <td className="py-3 px-3 text-slate-700 font-medium truncate max-w-[140px]">
+                          {c.provider}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-slate-600">
+                          {c.duration}
+                        </td>
+                        <td className="py-3 px-3 max-w-xs">
+                          <div className="flex flex-wrap gap-1">
+                            {c.targetTools.slice(0, 2).map((t, idx) => (
+                              <span key={idx} className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-50 text-cyan-800 border border-cyan-200">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-emerald-600">
+                          {c.caseStudy.impactMetric}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            onClick={() => handleSelectCourse(c.id)}
+                            className="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-bold text-[11px] hover:bg-cyan-700 transition-colors"
+                          >
+                            Detail
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================================= */}
+          {/* VIEW: FOUNDER PATH ADVISOR */}
+          {/* ======================================================================= */}
+          {activeTab === 'advisor' && (
+            <div className="space-y-6">
+              <div className="p-6 sm:p-8 rounded-3xl bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 text-white border border-cyan-500/30 shadow-xl space-y-6">
+                <div>
+                  <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30 mb-2">
+                    <Sparkles className="w-3.5 h-3.5 mr-1" />
+                    FOUNDER AI CURRICULUM RECOMMENDER
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                    Find Your Critical AI Framework in 3 Questions
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+                    Select your current stage, primary operational friction point, and team background to receive a tailored sequence.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider block">
+                      1. Startup Stage
+                    </label>
+                    <div className="space-y-1.5">
+                      {(['Idea / MVP', 'Seed Stage', 'Growth / Scale-up', 'Enterprise B2B'] as const).map((stage) => (
+                        <button
+                          key={stage}
+                          onClick={() => setAdvisorStage(stage)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            advisorStage === stage
+                              ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs'
+                              : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {stage}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider block">
+                      2. Primary Bottleneck
+                    </label>
+                    <div className="space-y-1.5">
+                      {[
+                        { id: 'mvp_speed', label: 'Building MVP Fast & Cheap' },
+                        { id: 'sales_leads', label: 'Closing Leads & Support' },
+                        { id: 'fundraising', label: 'Pitch Decks & Venture Capital' },
+                        { id: 'operations', label: 'Manual Ops & Admin Tasks' },
+                        { id: 'compliance', label: 'Data Privacy & Enterprise RFPs' },
+                        { id: 'finance', label: 'Runway & Valuation Modeling' },
+                      ].map((b) => (
+                        <button
+                          key={b.id}
+                          onClick={() => setAdvisorBottleneck(b.id as any)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            advisorBottleneck === b.id
+                              ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs'
+                              : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono font-bold text-cyan-300 uppercase tracking-wider block">
+                      3. Technical Profile
+                    </label>
+                    <div className="space-y-1.5">
+                      {[
+                        { id: 'non-technical', label: 'Non-Technical (Solo / Biz)' },
+                        { id: 'semi-technical', label: 'Semi-Technical (Product / Ops)' },
+                        { id: 'technical', label: 'Technical (Engineer / Tech Lead)' },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setAdvisorTechLevel(t.id as any)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            advisorTechLevel === t.id
+                              ? 'bg-cyan-500 text-slate-950 font-bold shadow-xs'
+                              : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommended Course Cards */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 mr-1.5" />
+                    Recommended AI Pathways for Your Profile:
+                  </h3>
+                  <span className="text-xs font-mono text-slate-500">
+                    {recommendedCourses.length} Recommended Curriculums
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {recommendedCourses.map((c, i) => (
+                    <div 
+                      key={c.id} 
+                      className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-cyan-400 transition-all shadow-xs flex flex-col justify-between space-y-4"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            Step 0{i + 1} Priority
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-500">
+                            {c.duration}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                          {c.title}
+                        </h4>
+                        <div className="text-xs text-slate-500 mt-1">{c.provider}</div>
+                        <p className="text-xs text-slate-600 mt-2 line-clamp-3">
+                          {c.synopsis}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100">
+                        <div className="text-[10px] font-mono text-emerald-700 font-bold mb-2">
+                          ROI Metric: {c.caseStudy.impactMetric}
+                        </div>
+                        <button
+                          onClick={() => handleSelectCourse(c.id)}
+                          className="w-full py-1.5 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-cyan-700 transition-colors"
+                        >
+                          Explore Course Detail
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </main>
+      </div>
     </div>
   );
 };

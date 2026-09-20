@@ -1,338 +1,615 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { useState } from 'react';
+import { UserProfile, MemberDirectoryItem } from '../types';
+import { 
+  X, 
+  LogIn, 
+  UserPlus, 
+  ShieldCheck, 
+  Sparkles, 
+  Lock, 
+  Mail, 
+  User, 
+  Building, 
+  MapPin, 
+  Phone, 
+  CheckCircle2,
+  Cpu,
+  Key,
+  ArrowRight
+} from 'lucide-react';
 
-export interface ToolingCategory {
-  category: string;
-  leadingTools: string;
-  coreFunctionality: string;
-  primaryUseCase: string;
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentUser: UserProfile | null;
+  onSignIn: (user: UserProfile) => void;
+  onSignOut: () => void;
+  onRegisterMemberListing?: (member: MemberDirectoryItem) => void;
+  initialMode?: 'signin' | 'signup';
 }
 
-export interface CostDepreciationItem {
-  costCategory: string;
-  adjustedAmount: string;
-  baselineAmount: string;
-  change: string;
-  changePercent: number;
-  driver: string;
-}
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  currentUser,
+  onSignIn,
+  onSignOut,
+  onRegisterMemberListing,
+  initialMode = 'signin'
+}) => {
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(initialMode);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-export interface StartupCaseStudy {
-  id: string;
-  name: string;
-  founders: string;
-  foundedYear: string;
-  headline: string;
-  corporateStructure: {
-    title: string;
-    description: string;
-  }[];
-  gccExpansionStrategy: {
-    title: string;
-    description: string;
-  }[];
-  financialInfrastructure: {
-    title: string;
-    description: string;
-  }[];
-  flowchart: {
-    step: string;
-    label: string;
-    subtext: string;
-  }[];
-}
+  // Sign Up fields
+  const [fullName, setFullName] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [role, setRole] = useState<UserProfile['role']>('scholar');
+  const [roleTitle, setRoleTitle] = useState('AI Researcher');
+  const [sector, setSector] = useState<MemberDirectoryItem['sector']>('Enterprise AI');
+  const [location, setLocation] = useState('Beirut, Lebanon');
+  const [phone, setPhone] = useState('+961 70 000 000');
+  const [skills, setSkills] = useState('Python, RAG, Multi-Agent Systems');
+  const [bio, setBio] = useState('');
+  const [addToYellowPages, setAddToYellowPages] = useState(true);
 
-export interface PolicyPaper {
-  id: string;
-  title: string;
-  subtitle: string;
-  publisher: string;
-  registryId: string;
-  date: string;
-  issue: string;
-  readTime: string;
-  abstract: string;
-  badge: string;
-  tags: string[];
-  keyMetrics: { label: string; value: string; subtext?: string }[];
-}
+  if (!isOpen) return null;
 
-export const AI_COMPLIANCE_TOOLING: ToolingCategory[] = [
-  {
-    category: 'Enterprise AI Governance Platforms',
-    leadingTools: 'Credo AI, IBM watsonx.governance, Holistic AI',
-    coreFunctionality: 'End-to-end model inventory, risk mapping against EU AI Act/NIST, automated documentation, bias tracking.',
-    primaryUseCase: 'Enterprise procurement, board oversight, risk classification.'
-  },
-  {
-    category: 'Runtime Control & Agent Gateways',
-    leadingTools: 'Speakeasy, Runlayer, Obot Enterprise MCP Gateway',
-    coreFunctionality: 'Inline traffic monitoring, dynamic policy enforcement, session isolation, and Model Context Protocol (MCP) tool-access controls.',
-    primaryUseCase: 'Preventing data exfiltration, controlling autonomous agents, stopping shadow AI.'
-  },
-  {
-    category: 'AI-Powered GRC Automation',
-    leadingTools: 'Centraleyes, Vanta, 4CRisk.ai',
-    coreFunctionality: 'Continuous compliance monitoring, automated evidence collection, control mapping, ISO 42001 readiness.',
-    primaryUseCase: 'Scaling audit readiness without adding legal/GRC headcount.'
-  },
-  {
-    category: 'Regulatory Intelligence & Tracking',
-    leadingTools: 'Saidot, Trail, Compliance.ai',
-    coreFunctionality: 'Horizon scanning, deterministic risk classification, mapping codebases to evolving international laws.',
-    primaryUseCase: 'Keeping continuous delivery pipelines compliant with shifting legal texts.'
-  }
-];
+  const handleDemoSignIn = (presetRole: 'admin' | 'scholar' | 'founder' | 'freelancer') => {
+    setErrorMsg('');
+    if (presetRole === 'admin') {
+      const adminUser: UserProfile = {
+        id: 'usr_admin_maan',
+        email: 'maan@961ai.network',
+        name: 'Maan El-Khatib',
+        role: 'admin',
+        roleTitle: 'Chief AI Architect & Ecosystem Director',
+        organization: 'NCEI Lebanon / 961AI',
+        location: 'Beirut, Lebanon',
+        phone: '+961 70 939 779',
+        badge: 'Admin & Lead Architect',
+        tier: 'Admin',
+        allocatedComputeCredits: 100000,
+        verified: true,
+        isAdmin: true
+      };
+      onSignIn(adminUser);
+      onClose();
+    } else if (presetRole === 'scholar') {
+      const scholarUser: UserProfile = {
+        id: 'usr_scholar_nour',
+        email: 'nour.hajj@aubmc.edu.lb',
+        name: 'Dr. Nour Al-Hajj',
+        role: 'scholar',
+        roleTitle: 'Head of Clinical AI Research',
+        organization: 'AUBMC',
+        location: 'Hamra, Beirut, Lebanon',
+        phone: '+961 1 350 000',
+        badge: 'NCEI Verified Scholar',
+        tier: 'Scholar',
+        allocatedComputeCredits: 25000,
+        verified: true
+      };
+      onSignIn(scholarUser);
+      onClose();
+    } else if (presetRole === 'founder') {
+      const founderUser: UserProfile = {
+        id: 'usr_founder_ziad',
+        email: 'ziad@logisticsiq.me',
+        name: 'Ziad Mouawad',
+        role: 'guru',
+        roleTitle: 'Founder & CEO',
+        organization: 'LogisticsIQ Levant',
+        location: 'Dbayeh, Mount Lebanon',
+        phone: '+961 4 542 800',
+        badge: 'Founding Member',
+        tier: 'Penthouse',
+        allocatedComputeCredits: 50000,
+        verified: true
+      };
+      onSignIn(founderUser);
+      onClose();
+    } else {
+      const freelancerUser: UserProfile = {
+        id: 'usr_free_hadi',
+        email: 'hadi.kanso@security-audit.me',
+        name: 'Hadi Kanso',
+        role: 'freelancer',
+        roleTitle: 'Senior Smart Contract Auditor',
+        organization: 'Independent Consultant',
+        location: 'Saida, South Lebanon',
+        phone: '+961 7 724 339',
+        badge: 'Red Team Auditor',
+        tier: 'Public',
+        allocatedComputeCredits: 10000,
+        verified: true
+      };
+      onSignIn(freelancerUser);
+      onClose();
+    }
+  };
 
-export const RUNWAY_DEPRECIATION_DATA: CostDepreciationItem[] = [
-  {
-    costCategory: 'Logistics & War Risk Freight',
-    baselineAmount: '$200,000',
-    adjustedAmount: '$300,000',
-    change: '+50.0%',
-    changePercent: 50.0,
-    driver: 'Red Sea supply bottlenecks, war-risk marine insurance, flight rerouting surcharges.'
-  },
-  {
-    costCategory: 'Energy & Power Tariffs',
-    baselineAmount: '$120,000',
-    adjustedAmount: '$160,000',
-    change: '+33.3%',
-    changePercent: 33.3,
-    driver: 'Grid blackouts, heavy reliance on diesel fuel generators, solar battery maintenance.'
-  },
-  {
-    costCategory: 'Raw Materials & Hardware',
-    baselineAmount: '$250,000',
-    adjustedAmount: '$325,000',
-    change: '+30.0%',
-    changePercent: 30.0,
-    driver: 'Customs delays, border import clearance surcharges, electronic component rationing.'
-  },
-  {
-    costCategory: 'Cloud & Cybersecurity',
-    baselineAmount: '$80,000',
-    adjustedAmount: '$95,000',
-    change: '+18.8%',
-    changePercent: 18.8,
-    driver: 'State-sponsored DDoS defense, multi-region failover, sovereign cloud data replicas.'
-  },
-  {
-    costCategory: 'Engineering Payroll',
-    baselineAmount: '$350,000',
-    adjustedAmount: '$350,000',
-    change: '0.0%',
-    changePercent: 0.0,
-    driver: 'Maintained via fresh USD pegging, Employer of Record (EoR) contracts, offshore talent arbitrage.'
-  }
-];
+  const handleStandardSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg('Please enter both your email and password.');
+      return;
+    }
 
-export const POLICY_PAPERS_CATALOG: PolicyPaper[] = [
-  {
-    id: 'ai-compliance-middle-east',
-    title: "Navigating the Algorithmic Frontier: The Imperative for AI Compliance in the Middle East and Lebanon's Ecosystem",
-    subtitle: 'Strategic Analysis of Global AI Mandates (EU AI Act, NIST RMF, ISO 42001, Law 81/2018) & The "Trust Arbitrage" Moat for Lebanese Founders',
-    publisher: 'NCEI Lebanon & z961AI Regulatory Intelligence Unit',
-    registryId: 'NCEI-REG-2026-POL-01',
-    date: 'September 2026',
-    issue: 'Strategic Dossier // Vol. IV',
-    readTime: '12 min read',
-    badge: 'AI REGULATORY GOVERNANCE',
-    tags: ['EU AI Act', 'Law 81/2018', 'NIST AI RMF', 'ISO/IEC 42001', 'Trust Arbitrage', 'Model Context Protocol (MCP)'],
-    abstract: 'The explosion of enterprise Artificial Intelligence (AI)—spanning Large Language Models (LLMs), agentic workflows, and predictive analytics—has altered the corporate risk landscape. Operating without systematic oversight introduces grave threats: algorithmic bias, severe data privacy leaks, shadow AI deployment, and existential regulatory non-compliance. This paper presents how Lebanese startups can transform compliance from an administrative burden into a competitive "Trust Arbitrage" moat to rapidly win GCC and Western enterprise contracts.',
-    keyMetrics: [
-      { label: 'Core Legal Mandate', value: 'Law 81/2018', subtext: 'Electronic Transactions & Data Privacy' },
-      { label: 'Target Market Standards', value: 'EU AI Act & ISO 42001', subtext: 'Prerequisite for GCC / Global Sales' },
-      { label: 'Strategic Play', value: 'Trust Arbitrage', subtext: 'Compliance-by-Design as a Sales Weapon' },
-      { label: 'Audit Velocity', value: '4x Faster', subtext: 'Accelerated Enterprise Vendor Procurement' }
-    ]
-  },
-  {
-    id: 'lebanon-ecosystem-investment-risk',
-    title: 'Lebanon Ecosystem INVESTMENT RISK HIGHLIGHTS',
-    subtitle: 'Impacts from the Ongoing Middle East Conflict, on MENA Startups: Lebanon Ecosystem Case Study (2026)',
-    publisher: 'NceiLebanon reg2220 Beirut Lebanon - z961AI Network Intelligence Service',
-    registryId: 'NCEI-REG-2220-RISK-05',
-    date: 'September 18th, 2026',
-    issue: 'Issue 5/2026',
-    readTime: '16 min read',
-    badge: 'VENTURE INTELLIGENCE SERVICE',
-    tags: ['Venture Capital', 'Macroeconomic Risk', 'Runway Depreciation', 'Beirut StartupBlink #341', 'Offshore Playbook', 'Anghami', 'Toters'],
-    abstract: 'A standard $1.0M annual baseline budget experiences a 23.0% post-escalation cost expansion, reducing overall startup runway by approximately 2.8 months. Despite regional conflict and banking insolvency, Beirut climbed 36 places to 341st globally in the 2026 StartupBlink Index (+46.3% YoY). This paper details the structural operating playbooks of Lebanese founders, complete offshore dollarization stacks, diaspora angel syndicates, and detailed comparative case studies of Anghami and Toters.',
-    keyMetrics: [
-      { label: 'Baseline Budget Drag', value: '+23.0%', subtext: 'Post-escalation operational cost surge' },
-      { label: 'Runway Reduction', value: '-2.8 mo', subtext: 'Average contraction on $1.0M budget' },
-      { label: 'Beirut Global Rank', value: '#341', subtext: 'Climbed +36 places in 2026 (+46.3% YoY)' },
-      { label: 'Active Tech Sector', value: '$486.7M', subtext: 'Across ~125 resilient operating firms' }
-    ]
-  }
-];
+    const isAdminLogin = email.toLowerCase().includes('admin') || email.toLowerCase().includes('maan');
+    const user: UserProfile = {
+      id: 'usr_' + Date.now(),
+      email: email.trim(),
+      name: email.split('@')[0].replace('.', ' ').toUpperCase(),
+      role: isAdminLogin ? 'admin' : 'scholar',
+      roleTitle: isAdminLogin ? 'Platform Administrator' : 'Ecosystem Member',
+      organization: '961AI Network Peer',
+      location: 'Beirut, Lebanon',
+      badge: isAdminLogin ? 'Admin' : 'Verified Member',
+      tier: isAdminLogin ? 'Admin' : 'Scholar',
+      allocatedComputeCredits: isAdminLogin ? 100000 : 15000,
+      verified: true,
+      isAdmin: isAdminLogin
+    };
 
-export const SWOT_DATA = {
-  strengths: [
-    { title: 'Hyper-Resilient, Multilingual Talent', desc: 'Highly skilled software engineering and product talent fluent in Arabic, English, and French, accustomed to operating under extreme uncertainty.' },
-    { title: 'Cost Arbitrage', desc: 'Developing products in Lebanon using local remote teams provides a massive engineering cost advantage compared to Riyadh, Dubai, or Western hubs.' },
-    { title: 'Global Diaspora Backing', desc: 'Over 90% of venture capital flowing into Lebanese-founded startups originates from the global diaspora, generating over $7 billion annually in remittances and informal angel checks.' }
-  ],
-  weaknesses: [
-    { title: 'Infrastructure Deficits', desc: 'Startups must allocate significant operational budgets (~15-25%) strictly for redundant internet, generator fuel, and solar infrastructure.' },
-    { title: 'Bankrupt Domestic Banking System', desc: 'Local bank lending is nonexistent; central bank funding programs (like historical Circular 331) are dead.' },
-    { title: 'Accelerated Brain Drain', desc: 'Over 300,000 skilled workers have emigrated since 2019, making mid-to-senior talent retention a constant battle.' }
-  ],
-  opportunities: [
-    { title: 'FinTech & Remittance Surge', desc: 'Only 23% of adults hold formal bank accounts; BDL Basic Circular No. 1 (2026) formalized e-payment service providers and Web3 rails.' },
-    { title: 'GCC Nearshoring Tech Hub', desc: 'Position Lebanon as the primary back-office, design, and software R&D engine for capital-rich Saudi and UAE tech scaleups.' },
-    { title: 'Crisis-Tested IP Export', desc: 'Exporting specialized software, logistics operating systems, and remote labor platforms built under harsh conditions.' }
-  ],
-  threats: [
-    { title: 'Regional Conflict Escalation', desc: 'Kinetic airstrikes risking physical telecom landing stations, power grids, and airport logistics.' },
-    { title: 'International Isolation', desc: 'Total paralysis of sovereign political reforms blocking international aid (IMF) and institutional foreign capital.' },
-    { title: 'De-risking by Foreign Partners', desc: 'Global enterprise clients canceling B2B software contracts due to country risk and business continuity concerns.' }
-  ]
+    onSignIn(user);
+    onClose();
+  };
+
+  const handleSignUpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !email.trim()) {
+      setErrorMsg('Please provide your full name and email address.');
+      return;
+    }
+
+    const newId = 'mem_' + Date.now();
+    const newUser: UserProfile = {
+      id: newId,
+      email: email.trim(),
+      name: fullName.trim(),
+      role: role,
+      roleTitle: roleTitle.trim() || 'Ecosystem Member',
+      organization: organization.trim() || 'Independent',
+      location: location.trim(),
+      phone: phone.trim(),
+      badge: 'NCEI Verified',
+      tier: role === 'enterprise' ? 'Penthouse' : role === 'scholar' ? 'Scholar' : 'Public',
+      allocatedComputeCredits: 10000,
+      verified: true
+    };
+
+    // If opted into Yellow Pages, add to directory
+    if (addToYellowPages && onRegisterMemberListing) {
+      const initials = fullName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase();
+
+      const memberListing: MemberDirectoryItem = {
+        id: newId,
+        name: fullName.trim(),
+        title: roleTitle.trim() || 'Specialist',
+        organization: organization.trim() || '961AI Network Peer',
+        initials: initials || 'MB',
+        role: role === 'scholar' ? 'AI Researcher' : role === 'freelancer' ? 'Freelance Consultant' : role === 'guru' ? 'Founder' : 'Software Architect',
+        sector: sector,
+        location: location.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        skills: skills.split(',').map(s => s.trim()).filter(Boolean),
+        bio: bio.trim() || `Active member specializing in ${sector} within the 961AI Lebanese innovation ecosystem.`,
+        badge: 'NCEI Verified',
+        tier: role === 'enterprise' ? 'Penthouse / VIP' : role === 'scholar' ? 'Scholar' : 'Public',
+        hourlyRate: '$100/hr',
+        status: 'Available',
+        projectsCount: 1,
+        rating: 5.0,
+        dateJoined: 'September 2026',
+        featured: false,
+        approved: true
+      };
+
+      onRegisterMemberListing(memberListing);
+    }
+
+    onSignIn(newUser);
+    setSuccessMsg('Account created successfully and profile activated!');
+    setTimeout(() => {
+      onClose();
+    }, 1000);
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header Ribbon */}
+        <div className="bg-slate-950 text-white p-6 pb-5 border-b border-slate-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/50 flex items-center justify-center">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-extrabold tracking-tight">
+                  NCEI Lebanon Identity Gateway
+                </h2>
+                <p className="text-[11px] font-mono text-cyan-400">
+                  961AI Network Member & Yellow Pages Access
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Tab buttons */}
+          <div className="flex items-center space-x-2 mt-5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => { setActiveTab('signin'); setErrorMsg(''); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                activeTab === 'signin'
+                  ? 'bg-cyan-500 text-slate-950 shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In to Node</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab('signup'); setErrorMsg(''); }}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
+                activeTab === 'signup'
+                  ? 'bg-cyan-500 text-slate-950 shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Sign Up & Join Yellow Pages</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Form Content */}
+        <div className="p-6 overflow-y-auto space-y-5">
+          {errorMsg && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
+              {errorMsg}
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {/* TAB 1: SIGN IN */}
+          {activeTab === 'signin' && (
+            <div className="space-y-5">
+              {/* 1-Click Demo Profiles for Seamless Testing */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
+                  Quick Access Demo Accounts (1-Click Authentication):
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDemoSignIn('admin')}
+                    className="p-2.5 rounded-xl border border-cyan-200 bg-cyan-50/70 hover:bg-cyan-100/80 text-left transition-all group"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Maan El-Khatib</span>
+                      <Key className="w-3 h-3 text-cyan-600" />
+                    </div>
+                    <div className="text-[10px] text-cyan-800 font-mono">Admin / Lead Architect</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDemoSignIn('scholar')}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Dr. Nour Al-Hajj</span>
+                      <Cpu className="w-3 h-3 text-slate-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">Healthcare AI Scholar</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDemoSignIn('founder')}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Ziad Mouawad</span>
+                      <Sparkles className="w-3 h-3 text-slate-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">Logistics Founder</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDemoSignIn('freelancer')}
+                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>Hadi Kanso</span>
+                      <ShieldCheck className="w-3 h-3 text-slate-400" />
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">Freelance Auditor</div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative flex py-1 items-center">
+                <div className="grow border-t border-slate-200"></div>
+                <span className="shrink mx-4 text-[10px] font-mono text-slate-400 uppercase">Or Sign In with Credentials</span>
+                <div className="grow border-t border-slate-200"></div>
+              </div>
+
+              {/* Standard Email/Password Form */}
+              <form onSubmit={handleStandardSignIn} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Email Address or Handle:
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="e.g. founder@961ai.network"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Password:
+                    </label>
+                    <span className="text-[10px] text-cyan-700 cursor-pointer hover:underline">
+                      Forgot Access Key?
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
+                >
+                  <span>Authorize & Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 2: SIGN UP */}
+          {activeTab === 'signup' && (
+            <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Full Name: *
+                  </label>
+                  <div className="relative">
+                    <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Walid Mansour"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Email Address: *
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      placeholder="walid@venture.lb"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Organization / Startup:
+                  </label>
+                  <div className="relative">
+                    <Building className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Cedar Labs / Freelance"
+                      value={organization}
+                      onChange={(e) => setOrganization(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Role / Professional Title:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Senior RAG Engineer"
+                    value={roleTitle}
+                    onChange={(e) => setRoleTitle(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Ecosystem Archetype:
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as any)}
+                    className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-hidden"
+                  >
+                    <option value="scholar">Scholar / Academic</option>
+                    <option value="freelancer">Freelance Builder</option>
+                    <option value="guru">Founder / Guru</option>
+                    <option value="enterprise">Enterprise Executive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Primary Sector:
+                  </label>
+                  <select
+                    value={sector}
+                    onChange={(e) => setSector(e.target.value as any)}
+                    className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-hidden"
+                  >
+                    <option value="Enterprise AI">Enterprise AI</option>
+                    <option value="FinTech">FinTech</option>
+                    <option value="HealthTech">HealthTech</option>
+                    <option value="GovTech">GovTech</option>
+                    <option value="Logistics">Logistics</option>
+                    <option value="LegalTech">LegalTech</option>
+                    <option value="EdTech">EdTech</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Lebanon / MENA City:
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Beirut, Lebanon"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full pl-7 pr-2 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Direct Phone / WhatsApp:
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="+961 70 123 456"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Key Skills (comma separated):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. LangChain, Python, Next.js"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Professional Bio / Value Proposition:
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Describe your technical capabilities, past deployments, or what you bring to the NCEI ecosystem..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
+                />
+              </div>
+
+              {/* Yellow Pages Opt-in Checkbox */}
+              <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 flex items-start space-x-2.5">
+                <input
+                  type="checkbox"
+                  id="yellow-pages-optin"
+                  checked={addToYellowPages}
+                  onChange={(e) => setAddToYellowPages(e.target.checked)}
+                  className="mt-0.5 rounded text-cyan-600 focus:ring-cyan-500"
+                />
+                <label htmlFor="yellow-pages-optin" className="text-xs text-amber-950 font-medium cursor-pointer">
+                  <span className="font-bold block">List me in the NCEI Members Yellow Pages</span>
+                  <span>Allow regional founders, government bodies, and investors to discover and contact you directly.</span>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Complete Registration & Activate Node</span>
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
-
-export const VC_DISLOCATION_PHASES = [
-  {
-    phase: '1. FREEZE',
-    period: 'Q1-Q2 2026',
-    description: 'Deal flow drops 41%; LPs pause allocations; international investors withdraw to home markets.'
-  },
-  {
-    phase: '2. VALUATION RESET',
-    period: 'Q2-Q3 2026',
-    description: 'International VCs mark down NAVs; distressed deal windows emerge for secondary buyers (9-12 month window).'
-  },
-  {
-    phase: '3. RESTRUCTURING',
-    period: 'Q3-Q4 2026',
-    description: 'Flight to Gulf hubs; mandatory corporate re-domiciling to KSA (Riyadh) and UAE (ADGM/DIFC) forced on founders.'
-  },
-  {
-    phase: '4. DIVERGENCE',
-    period: '2027+',
-    description: 'GCC markets recover rapidly; Levant & North Africa rely on localized micro-funds, angel syndicates, and fresh-USD cash flow.'
-  }
-];
-
-export const STARTUP_CASE_STUDIES: StartupCaseStudy[] = [
-  {
-    id: 'anghami',
-    name: 'Anghami',
-    founders: 'Eddy Maroun & Elie Habib',
-    foundedYear: '2012 (Beirut)',
-    headline: 'The Corporate Re-Domiciling & SPAC Capital Model',
-    corporateStructure: [
-      {
-        title: 'Headquarters Migration to ADGM (2021)',
-        description: 'Shifted ultimate legal parent entity and global headquarters from Lebanon to the Abu Dhabi Global Market (ADGM) in the UAE. Allowed the company to operate under English Common Law, issue multi-class equity, and protect IP under international standards.'
-      },
-      {
-        title: 'SPAC Merger & NASDAQ Listing (2022)',
-        description: 'Completed merger with Vistas Media Acquisition Company (VMAC), becoming the first Arab technology company to list on NASDAQ (NASDAQ: ANGH).'
-      },
-      {
-        title: 'Public-to-Private / Strategic Consolidation',
-        description: 'OSN Group (backed by Kuwait’s KIPCO) acquired a controlling majority stake in Anghami, combining OSN+ streaming assets with Anghami audio platform to tap regional strategic capital.'
-      }
-    ],
-    gccExpansionStrategy: [
-      {
-        title: 'Incentive Alignment with ADIO',
-        description: 'Leveraged the Abu Dhabi Investment Office (ADIO) Innovation Programme, securing financial subsidies, office subsidies, and payroll incentives to establish core tech & data operations in Hub71.'
-      },
-      {
-        title: 'Saudi Localization',
-        description: 'Targeted Saudi Arabia as largest consumer market: established dedicated offices in Riyadh and direct carrier billing (DCB) partnerships with STC, Mobily, and MBC Group.'
-      }
-    ],
-    financialInfrastructure: [
-      {
-        title: 'Decoupled R&D in Beirut',
-        description: 'Retained substantial engineering, music curation, and administrative teams in Beirut to benefit from low-cost R&D talent, paying salaries in "Fresh USD" through offshore accounts in Dubai and Europe.'
-      },
-      {
-        title: 'Currency Hedging',
-        description: 'Subscription revenues collected directly in hard-currency GCC pegs (SAR, AED, QAR) via direct telecom integration, shielding the core P&L from Lebanese Pound hyperinflation.'
-      }
-    ],
-    flowchart: [
-      { step: '01', label: 'BEIRUT, LEBANON', subtext: 'Operational R&D Hub & Talent Engine' },
-      { step: '02', label: 'ABU DHABI (ADGM, UAE)', subtext: 'Corporate Pivot & Global HQ via ADIO Hub71' },
-      { step: '03', label: 'NASDAQ: ANGH', subtext: 'SPAC Public Capital Access' },
-      { step: '04', label: 'OSN GROUP / MBC', subtext: 'Strategic Saudi/GCC Hub & Buyout' }
-    ]
-  },
-  {
-    id: 'toters',
-    name: 'Toters',
-    founders: 'Tamim Khalfa & Nabil Zakka',
-    foundedYear: '2017 (Beirut)',
-    headline: 'Hyper-Local Operations & Dual-Entity Expansion',
-    corporateStructure: [
-      {
-        title: 'Offshore Holding Structure',
-        description: 'Ring-fenced venture investments via offshore holding company registered in Cayman Islands / ADGM. All equity rounds from regional funds (MEVP, Berytech, Cedar Mundi) processed into offshore banking accounts.'
-      },
-      {
-        title: 'Foreign Subsidiary Licensing (MISA)',
-        description: 'Operating local delivery entities across Saudi Arabia and Iraq: secured foreign investment licenses (MISA in Saudi Arabia) to operate direct logistics, dark stores, and merchant settlement services.'
-      }
-    ],
-    gccExpansionStrategy: [
-      {
-        title: 'High-Margin Niche Segments in KSA',
-        description: 'Avoided front-on price wars with heavily capitalized incumbents (Jahez, Hungerstation, Keeta). Focused on premium merchant partnerships, dark-store fulfillment (Toters Fresh), and retail media.'
-      },
-      {
-        title: 'Expansion into Iraq (Baghdad & Erbil)',
-        description: 'Scaled into Iraq’s cash-heavy economy using operational playbooks perfected under complex Lebanese conditions, achieving high margins with low competition.'
-      }
-    ],
-    financialInfrastructure: [
-      {
-        title: 'Local R&D Cost Arbitrage',
-        description: 'Retained primary engineering, product management, and customer support in Beirut. Earned revenues in SAR and IQD while keeping tech costs low, achieving exceptional capital efficiency.'
-      },
-      {
-        title: 'Cash-Flow Isolation',
-        description: 'Domestic Lebanese revenues maintained strictly to cover local operational expenses, while GCC and Iraqi revenues were recycled directly into regional expansion without touching Lebanese banks.'
-      }
-    ],
-    flowchart: [
-      { step: '01', label: 'CAYMAN / ADGM HOLDING', subtext: 'Venture Capital & Equity Ownership (MEVP, Cedar Mundi)' },
-      { step: '02', label: 'BEIRUT R&D ENGINE', subtext: 'Operational Hub & Local Fresh-USD Payroll' },
-      { step: '03', label: 'GCC / SAUDI ARABIA', subtext: 'MISA Licensed Units & Premium Dark Stores' },
-      { step: '04', label: 'IRAQ EXPANSION', subtext: 'Baghdad & Erbil High-Margin Delivery Operations' }
-    ]
-  }
-];
-
-export const COMPARATIVE_ANALYSIS = [
-  {
-    dimension: 'Expansion Driver',
-    anghami: 'Content scaling, media partnerships, and public capital markets.',
-    toters: 'Unit-economics arbitrage, logistics management, and geographic scale.'
-  },
-  {
-    dimension: 'Holding Location',
-    anghami: 'ADGM (Abu Dhabi, UAE).',
-    toters: 'Cayman Islands / ADGM Holding.'
-  },
-  {
-    dimension: 'GCC Anchor Market',
-    anghami: 'UAE (Abu Dhabi) & Saudi Arabia.',
-    toters: 'Saudi Arabia & Iraq.'
-  },
-  {
-    dimension: 'Lebanon Role',
-    anghami: 'Talent back-office, music curation, engineering hub.',
-    toters: 'Engineering, product development, back-office operations.'
-  },
-  {
-    dimension: 'Capital Mechanism',
-    anghami: 'Venture capital → NASDAQ SPAC → Strategic Buyout (OSN).',
-    toters: 'Venture capital rounds (MEVP, Cedar Mundi) → Regional growth rounds.'
-  }
-];
