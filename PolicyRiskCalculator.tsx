@@ -1,338 +1,730 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { useState, useRef, useEffect } from 'react';
+import { PageId, UserProfile } from '../types';
+import { ECOSYSTEM_METADATA } from '../data/ecosystemData';
+import { 
+  Cpu, 
+  Menu, 
+  X, 
+  Sparkles, 
+  Radio, 
+  Terminal, 
+  ShieldCheck, 
+  FolderKanban, 
+  FileText, 
+  Rocket, 
+  ChevronRight,
+  ChevronDown,
+  Search,
+  Users,
+  Key,
+  LogIn,
+  LogOut,
+  Lock,
+  UserCheck,
+  UserPlus,
+  ArrowLeft,
+  Layers,
+  GraduationCap
+} from 'lucide-react';
 
-export interface ToolingCategory {
-  category: string;
-  leadingTools: string;
-  coreFunctionality: string;
-  primaryUseCase: string;
+interface NavbarProps {
+  currentPage: PageId;
+  currentUser: UserProfile | null;
+  onNavigate: (page: PageId) => void;
+  onOpenMatcher: () => void;
+  onOpenGetAccess: () => void;
+  onOpenAuth: (mode?: 'signin' | 'signup') => void;
+  onSignOut: () => void;
 }
 
-export interface CostDepreciationItem {
-  costCategory: string;
-  adjustedAmount: string;
-  baselineAmount: string;
-  change: string;
-  changePercent: number;
-  driver: string;
-}
+export const Navbar: React.FC<NavbarProps> = ({
+  currentPage,
+  currentUser,
+  onNavigate,
+  onOpenMatcher,
+  onOpenGetAccess,
+  onOpenAuth,
+  onSignOut
+}) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [sectionsDropdownOpen, setSectionsDropdownOpen] = useState(false);
+  const [mobileSectionsOpen, setMobileSectionsOpen] = useState(true);
 
-export interface StartupCaseStudy {
-  id: string;
-  name: string;
-  founders: string;
-  foundedYear: string;
-  headline: string;
-  corporateStructure: {
-    title: string;
-    description: string;
-  }[];
-  gccExpansionStrategy: {
-    title: string;
-    description: string;
-  }[];
-  financialInfrastructure: {
-    title: string;
-    description: string;
-  }[];
-  flowchart: {
-    step: string;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click or ESC key
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSectionsDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSectionsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Primary top-level links
+  const topNavLinks: { id: PageId; label: string; icon: React.ReactNode; badge?: string; highlight?: boolean }[] = [
+    { id: 'home', label: 'Home', icon: <Cpu className="w-4 h-4" /> },
+    { id: 'ai-courses', label: 'AI Courses', icon: <GraduationCap className="w-4 h-4 text-emerald-600" />, badge: '12 CERTS', highlight: true },
+    { id: 'yellow-pages', label: 'Yellow Pages', icon: <Users className="w-4 h-4 text-amber-500" />, badge: 'MEMBERS', highlight: true },
+    { id: 'policy-papers', label: 'Policy & Research', icon: <FileText className="w-4 h-4 text-cyan-600" />, badge: 'PAPERS', highlight: true },
+  ];
+
+  // Submenu items under "Our Sections"
+  const ourSectionsItems: {
+    id?: PageId;
     label: string;
-    subtext: string;
-  }[];
-}
+    icon: React.ReactNode;
+    badge?: string;
+    badgeColor?: string;
+    action?: 'navigate' | 'matcher' | 'home';
+    description?: string;
+  }[] = [
+    { 
+      id: 'ai-courses', 
+      label: '12 Essential AI Courses', 
+      icon: <GraduationCap className="w-4 h-4 text-emerald-500" />, 
+      badge: 'ACADEMY',
+      badgeColor: 'bg-emerald-500 text-slate-950 font-bold',
+      action: 'navigate',
+      description: 'Executive certifications & startup case studies'
+    },
+    { 
+      id: 'neural-matcher', 
+      label: 'Neural Matcher', 
+      icon: <Sparkles className="w-4 h-4 text-cyan-500" />, 
+      badge: 'AI ENGINE',
+      badgeColor: 'bg-cyan-500 text-slate-950 font-bold',
+      action: 'navigate',
+      description: 'Bilateral matchmaking and vector similarity'
+    },
+    { 
+      id: 'competencies', 
+      label: 'Competencies', 
+      icon: <ShieldCheck className="w-4 h-4 text-indigo-500" />, 
+      action: 'navigate',
+      description: 'Verified engineering credentials & frameworks'
+    },
+    { 
+      id: 'architecture', 
+      label: 'Deployments', 
+      icon: <FolderKanban className="w-4 h-4 text-sky-500" />, 
+      action: 'navigate',
+      description: 'Production topology and technical blueprints'
+    },
+    { 
+      id: 'livenexus', 
+      label: 'Live Nexus', 
+      icon: <Radio className="w-4 h-4 text-rose-500 animate-pulse" />, 
+      badge: 'LIVE',
+      badgeColor: 'bg-rose-500 text-white font-bold',
+      action: 'navigate',
+      description: 'Real-time telemetry and 466 ecosystem nodes'
+    },
+    { 
+      id: 'guilds-dev', 
+      label: 'Guilds & Dev', 
+      icon: <Terminal className="w-4 h-4 text-emerald-500" />, 
+      action: 'navigate',
+      description: 'Builder working groups and code repositories'
+    },
+    { 
+      id: 'leadership', 
+      label: 'Values', 
+      icon: <Cpu className="w-4 h-4 text-amber-500" />, 
+      action: 'navigate',
+      description: 'Ethical governance and institutional mandate'
+    },
+    { 
+      id: 'national-cv', 
+      label: 'National CV', 
+      icon: <FileText className="w-4 h-4 text-blue-500" />, 
+      action: 'navigate',
+      description: 'Lebanon innovation track record and benchmarks'
+    },
+    { 
+      id: 'startups', 
+      label: 'Startups', 
+      icon: <Rocket className="w-4 h-4 text-purple-500" />, 
+      action: 'navigate',
+      description: 'Venture directory and commercial scaling index'
+    },
+    { 
+      label: 'Matcher', 
+      icon: <Sparkles className="w-4 h-4 text-cyan-600" />, 
+      badge: 'LAUNCH',
+      badgeColor: 'bg-slate-900 text-cyan-300 font-bold',
+      action: 'matcher',
+      description: 'Instant matchmaking assistant popup'
+    },
+    { 
+      id: 'home',
+      label: 'Back to Ecosystem Overview', 
+      icon: <ArrowLeft className="w-4 h-4 text-slate-500" />, 
+      action: 'home',
+      description: 'Return to ecosystem root dashboard'
+    },
+  ];
 
-export interface PolicyPaper {
-  id: string;
-  title: string;
-  subtitle: string;
-  publisher: string;
-  registryId: string;
-  date: string;
-  issue: string;
-  readTime: string;
-  abstract: string;
-  badge: string;
-  tags: string[];
-  keyMetrics: { label: string; value: string; subtext?: string }[];
-}
+  const isOurSectionsActive = [
+    'ai-courses',
+    'neural-matcher',
+    'competencies',
+    'architecture',
+    'livenexus',
+    'guilds-dev',
+    'leadership',
+    'national-cv',
+    'startups'
+  ].includes(currentPage);
 
-export const AI_COMPLIANCE_TOOLING: ToolingCategory[] = [
-  {
-    category: 'Enterprise AI Governance Platforms',
-    leadingTools: 'Credo AI, IBM watsonx.governance, Holistic AI',
-    coreFunctionality: 'End-to-end model inventory, risk mapping against EU AI Act/NIST, automated documentation, bias tracking.',
-    primaryUseCase: 'Enterprise procurement, board oversight, risk classification.'
-  },
-  {
-    category: 'Runtime Control & Agent Gateways',
-    leadingTools: 'Speakeasy, Runlayer, Obot Enterprise MCP Gateway',
-    coreFunctionality: 'Inline traffic monitoring, dynamic policy enforcement, session isolation, and Model Context Protocol (MCP) tool-access controls.',
-    primaryUseCase: 'Preventing data exfiltration, controlling autonomous agents, stopping shadow AI.'
-  },
-  {
-    category: 'AI-Powered GRC Automation',
-    leadingTools: 'Centraleyes, Vanta, 4CRisk.ai',
-    coreFunctionality: 'Continuous compliance monitoring, automated evidence collection, control mapping, ISO 42001 readiness.',
-    primaryUseCase: 'Scaling audit readiness without adding legal/GRC headcount.'
-  },
-  {
-    category: 'Regulatory Intelligence & Tracking',
-    leadingTools: 'Saidot, Trail, Compliance.ai',
-    coreFunctionality: 'Horizon scanning, deterministic risk classification, mapping codebases to evolving international laws.',
-    primaryUseCase: 'Keeping continuous delivery pipelines compliant with shifting legal texts.'
-  }
-];
+  const handleNavClick = (page: PageId) => {
+    onNavigate(page);
+    setMobileMenuOpen(false);
+    setSectionsDropdownOpen(false);
+  };
 
-export const RUNWAY_DEPRECIATION_DATA: CostDepreciationItem[] = [
-  {
-    costCategory: 'Logistics & War Risk Freight',
-    baselineAmount: '$200,000',
-    adjustedAmount: '$300,000',
-    change: '+50.0%',
-    changePercent: 50.0,
-    driver: 'Red Sea supply bottlenecks, war-risk marine insurance, flight rerouting surcharges.'
-  },
-  {
-    costCategory: 'Energy & Power Tariffs',
-    baselineAmount: '$120,000',
-    adjustedAmount: '$160,000',
-    change: '+33.3%',
-    changePercent: 33.3,
-    driver: 'Grid blackouts, heavy reliance on diesel fuel generators, solar battery maintenance.'
-  },
-  {
-    costCategory: 'Raw Materials & Hardware',
-    baselineAmount: '$250,000',
-    adjustedAmount: '$325,000',
-    change: '+30.0%',
-    changePercent: 30.0,
-    driver: 'Customs delays, border import clearance surcharges, electronic component rationing.'
-  },
-  {
-    costCategory: 'Cloud & Cybersecurity',
-    baselineAmount: '$80,000',
-    adjustedAmount: '$95,000',
-    change: '+18.8%',
-    changePercent: 18.8,
-    driver: 'State-sponsored DDoS defense, multi-region failover, sovereign cloud data replicas.'
-  },
-  {
-    costCategory: 'Engineering Payroll',
-    baselineAmount: '$350,000',
-    adjustedAmount: '$350,000',
-    change: '0.0%',
-    changePercent: 0.0,
-    driver: 'Maintained via fresh USD pegging, Employer of Record (EoR) contracts, offshore talent arbitrage.'
-  }
-];
+  return (
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+      {/* Top Telemetry & Byline Bar */}
+      <div className="bg-slate-900 text-slate-200 text-xs px-4 py-1.5 border-b border-cyan-900/40">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 text-[11px] tracking-wide">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping mr-1"></span>
+              961AI OPERATIONAL
+            </span>
+            <span className="text-slate-300 font-medium truncate">
+              {ECOSYSTEM_METADATA.byline}
+            </span>
+          </div>
 
-export const POLICY_PAPERS_CATALOG: PolicyPaper[] = [
-  {
-    id: 'ai-compliance-middle-east',
-    title: "Navigating the Algorithmic Frontier: The Imperative for AI Compliance in the Middle East and Lebanon's Ecosystem",
-    subtitle: 'Strategic Analysis of Global AI Mandates (EU AI Act, NIST RMF, ISO 42001, Law 81/2018) & The "Trust Arbitrage" Moat for Lebanese Founders',
-    publisher: 'NCEI Lebanon & z961AI Regulatory Intelligence Unit',
-    registryId: 'NCEI-REG-2026-POL-01',
-    date: 'September 2026',
-    issue: 'Strategic Dossier // Vol. IV',
-    readTime: '12 min read',
-    badge: 'AI REGULATORY GOVERNANCE',
-    tags: ['EU AI Act', 'Law 81/2018', 'NIST AI RMF', 'ISO/IEC 42001', 'Trust Arbitrage', 'Model Context Protocol (MCP)'],
-    abstract: 'The explosion of enterprise Artificial Intelligence (AI)—spanning Large Language Models (LLMs), agentic workflows, and predictive analytics—has altered the corporate risk landscape. Operating without systematic oversight introduces grave threats: algorithmic bias, severe data privacy leaks, shadow AI deployment, and existential regulatory non-compliance. This paper presents how Lebanese startups can transform compliance from an administrative burden into a competitive "Trust Arbitrage" moat to rapidly win GCC and Western enterprise contracts.',
-    keyMetrics: [
-      { label: 'Core Legal Mandate', value: 'Law 81/2018', subtext: 'Electronic Transactions & Data Privacy' },
-      { label: 'Target Market Standards', value: 'EU AI Act & ISO 42001', subtext: 'Prerequisite for GCC / Global Sales' },
-      { label: 'Strategic Play', value: 'Trust Arbitrage', subtext: 'Compliance-by-Design as a Sales Weapon' },
-      { label: 'Audit Velocity', value: '4x Faster', subtext: 'Accelerated Enterprise Vendor Procurement' }
-    ]
-  },
-  {
-    id: 'lebanon-ecosystem-investment-risk',
-    title: 'Lebanon Ecosystem INVESTMENT RISK HIGHLIGHTS',
-    subtitle: 'Impacts from the Ongoing Middle East Conflict, on MENA Startups: Lebanon Ecosystem Case Study (2026)',
-    publisher: 'NceiLebanon reg2220 Beirut Lebanon - z961AI Network Intelligence Service',
-    registryId: 'NCEI-REG-2220-RISK-05',
-    date: 'September 18th, 2026',
-    issue: 'Issue 5/2026',
-    readTime: '16 min read',
-    badge: 'VENTURE INTELLIGENCE SERVICE',
-    tags: ['Venture Capital', 'Macroeconomic Risk', 'Runway Depreciation', 'Beirut StartupBlink #341', 'Offshore Playbook', 'Anghami', 'Toters'],
-    abstract: 'A standard $1.0M annual baseline budget experiences a 23.0% post-escalation cost expansion, reducing overall startup runway by approximately 2.8 months. Despite regional conflict and banking insolvency, Beirut climbed 36 places to 341st globally in the 2026 StartupBlink Index (+46.3% YoY). This paper details the structural operating playbooks of Lebanese founders, complete offshore dollarization stacks, diaspora angel syndicates, and detailed comparative case studies of Anghami and Toters.',
-    keyMetrics: [
-      { label: 'Baseline Budget Drag', value: '+23.0%', subtext: 'Post-escalation operational cost surge' },
-      { label: 'Runway Reduction', value: '-2.8 mo', subtext: 'Average contraction on $1.0M budget' },
-      { label: 'Beirut Global Rank', value: '#341', subtext: 'Climbed +36 places in 2026 (+46.3% YoY)' },
-      { label: 'Active Tech Sector', value: '$486.7M', subtext: 'Across ~125 resilient operating firms' }
-    ]
-  }
-];
+          <div className="flex items-center space-x-4 text-[11px] font-mono text-slate-400">
+            <span className="hidden sm:inline-flex items-center text-cyan-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+              Live Nexus: 466 Active Nodes
+            </span>
+            <span className="text-slate-500">|</span>
+            <span className="text-slate-300">MENA Innovation Grid</span>
+          </div>
+        </div>
+      </div>
 
-export const SWOT_DATA = {
-  strengths: [
-    { title: 'Hyper-Resilient, Multilingual Talent', desc: 'Highly skilled software engineering and product talent fluent in Arabic, English, and French, accustomed to operating under extreme uncertainty.' },
-    { title: 'Cost Arbitrage', desc: 'Developing products in Lebanon using local remote teams provides a massive engineering cost advantage compared to Riyadh, Dubai, or Western hubs.' },
-    { title: 'Global Diaspora Backing', desc: 'Over 90% of venture capital flowing into Lebanese-founded startups originates from the global diaspora, generating over $7 billion annually in remittances and informal angel checks.' }
-  ],
-  weaknesses: [
-    { title: 'Infrastructure Deficits', desc: 'Startups must allocate significant operational budgets (~15-25%) strictly for redundant internet, generator fuel, and solar infrastructure.' },
-    { title: 'Bankrupt Domestic Banking System', desc: 'Local bank lending is nonexistent; central bank funding programs (like historical Circular 331) are dead.' },
-    { title: 'Accelerated Brain Drain', desc: 'Over 300,000 skilled workers have emigrated since 2019, making mid-to-senior talent retention a constant battle.' }
-  ],
-  opportunities: [
-    { title: 'FinTech & Remittance Surge', desc: 'Only 23% of adults hold formal bank accounts; BDL Basic Circular No. 1 (2026) formalized e-payment service providers and Web3 rails.' },
-    { title: 'GCC Nearshoring Tech Hub', desc: 'Position Lebanon as the primary back-office, design, and software R&D engine for capital-rich Saudi and UAE tech scaleups.' },
-    { title: 'Crisis-Tested IP Export', desc: 'Exporting specialized software, logistics operating systems, and remote labor platforms built under harsh conditions.' }
-  ],
-  threats: [
-    { title: 'Regional Conflict Escalation', desc: 'Kinetic airstrikes risking physical telecom landing stations, power grids, and airport logistics.' },
-    { title: 'International Isolation', desc: 'Total paralysis of sovereign political reforms blocking international aid (IMF) and institutional foreign capital.' },
-    { title: 'De-risking by Foreign Partners', desc: 'Global enterprise clients canceling B2B software contracts due to country risk and business continuity concerns.' }
-  ]
+      {/* Main Navigation Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo Branding */}
+          <div 
+            onClick={() => handleNavClick('home')}
+            className="flex items-center space-x-3 cursor-pointer group select-none"
+            id="nav-logo"
+          >
+            {/* High tech cybernetic crest */}
+            <div className="relative w-10 h-10 rounded-lg bg-slate-950 border border-cyan-500/50 flex items-center justify-center shadow-xs group-hover:border-cyan-400 transition-all">
+              <div className="absolute inset-0 bg-cyan-500/10 rounded-lg"></div>
+              <Cpu className="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" />
+              <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white"></div>
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-extrabold text-base tracking-tight text-slate-900">
+                  NCEI <span className="text-cyan-600">LEBANON</span>
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-cyan-50 text-cyan-700 font-semibold border border-cyan-200">
+                  961AI
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium tracking-tight">
+                National Council for Entrepreneurship & Innovation
+              </p>
+            </div>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden lg:flex items-center space-x-1">
+            {topNavLinks.map((link) => {
+              const isActive = currentPage === link.id;
+              return (
+                <button
+                  key={link.id}
+                  id={`nav-link-${link.id}`}
+                  onClick={() => handleNavClick(link.id)}
+                  className={`relative px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-colors flex items-center space-x-1.5 ${
+                    isActive
+                      ? 'text-cyan-700 bg-cyan-50/80 border border-cyan-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                  }`}
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className={`ml-1 px-1 py-0.2 text-[9px] font-mono font-bold rounded ${
+                      link.highlight ? 'bg-amber-400 text-slate-950' : 'bg-cyan-500 text-white'
+                    }`}>
+                      {link.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* Our Sections Dropdown Menu */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                id="nav-dropdown-our-sections"
+                onClick={() => setSectionsDropdownOpen(!sectionsDropdownOpen)}
+                aria-expanded={sectionsDropdownOpen}
+                aria-haspopup="true"
+                className={`relative px-3 py-1.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center space-x-1.5 border ${
+                  isOurSectionsActive || sectionsDropdownOpen
+                    ? 'text-cyan-800 bg-cyan-50/90 border-cyan-300 shadow-xs'
+                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 border-transparent'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-cyan-600" />
+                <span>Our Sections</span>
+                {isOurSectionsActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 ring-2 ring-cyan-200"></span>
+                )}
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${sectionsDropdownOpen ? 'rotate-180 text-cyan-600' : 'text-slate-400'}`} />
+              </button>
+
+              {sectionsDropdownOpen && (
+                <div 
+                  id="dropdown-our-sections-panel"
+                  className="absolute left-0 mt-2 w-80 rounded-2xl bg-white/98 backdrop-blur-md border border-slate-200/90 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100"
+                >
+                  <div className="px-3.5 py-1.5 flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                      Our Sections
+                    </span>
+                    <span className="text-[9px] font-mono text-cyan-700 font-semibold bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                      961AI DIRECTORY
+                    </span>
+                  </div>
+
+                  {/* Main Submenus */}
+                  <div className="py-1 px-1.5 space-y-0.5 max-h-[60vh] overflow-y-auto">
+                    {ourSectionsItems.filter((item) => item.action !== 'matcher' && item.action !== 'home').map((item) => {
+                      const isActive = currentPage === item.id;
+                      return (
+                        <button
+                          key={item.label}
+                          id={`dropdown-item-${item.id || item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                          onClick={() => {
+                            if (item.id) handleNavClick(item.id);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors ${
+                            isActive
+                              ? 'bg-cyan-50 text-cyan-900 font-bold border border-cyan-200/80'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <span className={`p-1.5 rounded-lg shrink-0 ${isActive ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-600'}`}>
+                              {item.icon}
+                            </span>
+                            <div className="truncate">
+                              <div className="text-xs font-semibold tracking-tight text-slate-900 truncate">
+                                {item.label}
+                              </div>
+                              {item.description && (
+                                <div className="text-[10px] text-slate-500 font-normal truncate">
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {item.badge && (
+                            <span className={`ml-2 px-1.5 py-0.5 text-[9px] font-mono rounded shrink-0 ${item.badgeColor || 'bg-cyan-500 text-white'}`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Bottom Actions: Matcher & Back to Ecosystem Overview */}
+                  <div className="pt-1.5 pb-1 px-1.5 bg-slate-50/70 space-y-0.5">
+                    {ourSectionsItems.filter((item) => item.action === 'matcher' || item.action === 'home').map((item) => (
+                      <button
+                        key={item.label}
+                        id={`dropdown-action-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                        onClick={() => {
+                          if (item.action === 'matcher') {
+                            onOpenMatcher();
+                            setSectionsDropdownOpen(false);
+                          } else if (item.action === 'home') {
+                            handleNavClick('home');
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors ${
+                          item.action === 'matcher'
+                            ? 'bg-cyan-50/90 hover:bg-cyan-100/80 text-cyan-950 border border-cyan-200/80 font-bold'
+                            : 'hover:bg-slate-100 text-slate-700 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span className="p-1.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                            {item.icon}
+                          </span>
+                          <div>
+                            <div className="text-xs font-bold tracking-tight text-slate-900">
+                              {item.label}
+                            </div>
+                            {item.description && (
+                              <div className="text-[10px] text-slate-500 font-normal">
+                                {item.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {item.badge && (
+                          <span className={`px-1.5 py-0.5 text-[9px] font-mono rounded shrink-0 ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Right Action CTAs */}
+          <div className="hidden lg:flex items-center space-x-2.5">
+            {/* Quick Search */}
+            <div className="relative">
+              {searchOpen ? (
+                <div className="flex items-center bg-slate-100 rounded-lg px-2.5 py-1 border border-slate-300">
+                  <Search className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+                  <input
+                    type="text"
+                    placeholder="Search systems, RAG, CV..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden w-40"
+                    autoFocus
+                    onBlur={() => !searchQuery && setSearchOpen(false)}
+                  />
+                  <button 
+                    onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                    className="text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+                  title="Search Ecosystem"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Neural Matcher Primary Button */}
+            <button
+              id="cta-neural-matcher-nav"
+              onClick={onOpenMatcher}
+              className={`relative inline-flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-xs ${
+                currentPage === 'neural-matcher'
+                  ? 'bg-cyan-500 text-slate-950 border border-cyan-400 ring-2 ring-cyan-400/40 shadow-xs'
+                  : 'text-slate-900 bg-cyan-100/70 border border-cyan-300 hover:bg-cyan-200/80 hover:border-cyan-400'
+              }`}
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${currentPage === 'neural-matcher' ? 'text-slate-950' : 'text-cyan-600'}`} />
+              <span className="hidden 2xl:inline">Neural Matcher</span>
+              <span className="2xl:hidden">Matcher</span>
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              </span>
+            </button>
+
+            {/* User Auth or Sign In / Sign Up CTAs */}
+            {currentUser ? (
+              <div className="flex items-center space-x-2 pl-1 border-l border-slate-200">
+                <div 
+                  onClick={() => onNavigate('yellow-pages')}
+                  className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 cursor-pointer transition-colors border border-slate-200"
+                  title="View Profile in Yellow Pages"
+                >
+                  <div className="w-6 h-6 rounded-full bg-slate-950 text-cyan-400 font-mono font-bold text-[10px] flex items-center justify-center">
+                    {currentUser.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <div className="text-left hidden xl:block">
+                    <span className="text-xs font-bold text-slate-900 block leading-tight truncate max-w-[100px]">
+                      {currentUser.name}
+                    </span>
+                    <span className="text-[9px] font-mono text-cyan-700 block uppercase">
+                      {currentUser.badge}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={onSignOut}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  title="Sign Out of Session"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => onOpenAuth('signin')}
+                  className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center space-x-1 ${
+                    currentPage === 'register'
+                      ? 'bg-slate-200 text-slate-950 font-bold'
+                      : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                  }`}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+                <button
+                  onClick={() => onOpenAuth('signup')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors shadow-xs ${
+                    currentPage === 'register'
+                      ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-400/50'
+                      : 'text-slate-950 bg-amber-400 hover:bg-amber-300'
+                  }`}
+                >
+                  <span>Sign Up</span>
+                </button>
+              </div>
+            )}
+
+            {/* Admin Protected Route /Maan70939779 Quick Entry */}
+            <button
+              id="cta-admin-nav"
+              onClick={() => onNavigate('admin-maan')}
+              className={`p-2 rounded-lg text-xs font-semibold transition-all border flex items-center space-x-1 ${
+                currentPage === 'admin-maan'
+                  ? 'bg-slate-950 text-cyan-400 border-cyan-500 shadow-xs'
+                  : 'bg-slate-50 text-slate-600 hover:text-slate-950 hover:bg-slate-100 border-slate-200'
+              }`}
+              title="Admin Command Console /Maan70939779"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-700" />
+              <span className="text-[10px] font-mono hidden 2xl:inline">/Maan</span>
+            </button>
+          </div>
+
+          {/* Mobile Menu Hamburger */}
+          <div className="flex lg:hidden items-center space-x-2">
+            <button
+              onClick={() => onOpenAuth('signin')}
+              className="p-2 rounded-md text-slate-700 bg-slate-100 text-xs font-bold"
+            >
+              <LogIn className="w-4 h-4" />
+            </button>
+            <button
+              id="mobile-matcher-btn"
+              onClick={onOpenMatcher}
+              className="p-2 rounded-md text-cyan-600 bg-cyan-50 border border-cyan-200"
+              title="Neural Matcher"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+            <button
+              id="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-hidden"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3 shadow-lg animate-in slide-in-from-top-2">
+          {/* User Auth Info in Mobile */}
+          {currentUser ? (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-950 text-cyan-400 font-mono font-bold flex items-center justify-center text-xs">
+                  {currentUser.name.substring(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900">{currentUser.name}</div>
+                  <div className="text-[10px] text-cyan-700 font-mono">{currentUser.badge}</div>
+                </div>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => { onOpenAuth('signin'); setMobileMenuOpen(false); }}
+                className="py-2 px-3 rounded-lg text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 flex items-center justify-center space-x-1"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+              <button
+                onClick={() => { onOpenAuth('signup'); setMobileMenuOpen(false); }}
+                className="py-2 px-3 rounded-lg text-xs font-bold text-slate-950 bg-amber-400 flex items-center justify-center space-x-1"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 py-1">
+            <button
+              onClick={() => { onOpenMatcher(); setMobileMenuOpen(false); }}
+              className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-bold text-cyan-900 bg-cyan-50 border border-cyan-200"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+              <span>Neural Matcher</span>
+            </button>
+            <button
+              onClick={() => { onOpenGetAccess(); setMobileMenuOpen(false); }}
+              className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-bold text-white bg-slate-950 border border-slate-800"
+            >
+              <span>Get Access</span>
+              <ChevronRight className="w-3.5 h-3.5 text-cyan-400" />
+            </button>
+          </div>
+
+          <div className="space-y-1 pt-1">
+            {/* Primary Top Links */}
+            {topNavLinks.map((link) => (
+              <button
+                key={link.id}
+                onClick={() => handleNavClick(link.id)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  currentPage === link.id
+                    ? 'text-cyan-600 bg-cyan-50/70 font-semibold'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  {link.icon}
+                  <span>{link.label}</span>
+                </div>
+                {link.badge && (
+                  <span className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded ${
+                    link.highlight ? 'bg-amber-400 text-slate-950' : 'bg-cyan-500 text-white'
+                  }`}>
+                    {link.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+
+            {/* Expandable "Our Sections" in Mobile */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setMobileSectionsOpen(!mobileSectionsOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold tracking-wide uppercase transition-colors ${
+                  isOurSectionsActive
+                    ? 'bg-cyan-50 text-cyan-900 border border-cyan-200'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Layers className="w-4 h-4 text-cyan-600" />
+                  <span>Our Sections</span>
+                  {isOurSectionsActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[10px] font-mono text-slate-500 normal-case">
+                    {ourSectionsItems.length} items
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${mobileSectionsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {mobileSectionsOpen && (
+                <div className="mt-1.5 pl-2 pr-1 space-y-1 border-l-2 border-cyan-200/80 ml-3">
+                  {ourSectionsItems.map((item) => {
+                    const isSubActive = item.id && currentPage === item.id;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          if (item.action === 'matcher') {
+                            onOpenMatcher();
+                            setMobileMenuOpen(false);
+                          } else if (item.action === 'home') {
+                            handleNavClick('home');
+                          } else if (item.id) {
+                            handleNavClick(item.id);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg transition-colors ${
+                          isSubActive
+                            ? 'text-cyan-800 bg-cyan-50 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 truncate">
+                          {item.icon}
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <span className={`px-1.5 py-0.2 text-[9px] font-mono rounded shrink-0 ${item.badgeColor || 'bg-cyan-500 text-white'}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Admin page link in mobile menu */}
+            <div className="pt-2">
+              <button
+                onClick={() => handleNavClick('admin-maan')}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <Lock className="w-4 h-4 text-slate-600" />
+                  <span>Admin Portal (/Maan70939779)</span>
+                </div>
+                <span className="px-1.5 py-0.5 text-[9px] font-mono bg-slate-900 text-cyan-400 rounded">
+                  SECURE
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
 };
-
-export const VC_DISLOCATION_PHASES = [
-  {
-    phase: '1. FREEZE',
-    period: 'Q1-Q2 2026',
-    description: 'Deal flow drops 41%; LPs pause allocations; international investors withdraw to home markets.'
-  },
-  {
-    phase: '2. VALUATION RESET',
-    period: 'Q2-Q3 2026',
-    description: 'International VCs mark down NAVs; distressed deal windows emerge for secondary buyers (9-12 month window).'
-  },
-  {
-    phase: '3. RESTRUCTURING',
-    period: 'Q3-Q4 2026',
-    description: 'Flight to Gulf hubs; mandatory corporate re-domiciling to KSA (Riyadh) and UAE (ADGM/DIFC) forced on founders.'
-  },
-  {
-    phase: '4. DIVERGENCE',
-    period: '2027+',
-    description: 'GCC markets recover rapidly; Levant & North Africa rely on localized micro-funds, angel syndicates, and fresh-USD cash flow.'
-  }
-];
-
-export const STARTUP_CASE_STUDIES: StartupCaseStudy[] = [
-  {
-    id: 'anghami',
-    name: 'Anghami',
-    founders: 'Eddy Maroun & Elie Habib',
-    foundedYear: '2012 (Beirut)',
-    headline: 'The Corporate Re-Domiciling & SPAC Capital Model',
-    corporateStructure: [
-      {
-        title: 'Headquarters Migration to ADGM (2021)',
-        description: 'Shifted ultimate legal parent entity and global headquarters from Lebanon to the Abu Dhabi Global Market (ADGM) in the UAE. Allowed the company to operate under English Common Law, issue multi-class equity, and protect IP under international standards.'
-      },
-      {
-        title: 'SPAC Merger & NASDAQ Listing (2022)',
-        description: 'Completed merger with Vistas Media Acquisition Company (VMAC), becoming the first Arab technology company to list on NASDAQ (NASDAQ: ANGH).'
-      },
-      {
-        title: 'Public-to-Private / Strategic Consolidation',
-        description: 'OSN Group (backed by Kuwait’s KIPCO) acquired a controlling majority stake in Anghami, combining OSN+ streaming assets with Anghami audio platform to tap regional strategic capital.'
-      }
-    ],
-    gccExpansionStrategy: [
-      {
-        title: 'Incentive Alignment with ADIO',
-        description: 'Leveraged the Abu Dhabi Investment Office (ADIO) Innovation Programme, securing financial subsidies, office subsidies, and payroll incentives to establish core tech & data operations in Hub71.'
-      },
-      {
-        title: 'Saudi Localization',
-        description: 'Targeted Saudi Arabia as largest consumer market: established dedicated offices in Riyadh and direct carrier billing (DCB) partnerships with STC, Mobily, and MBC Group.'
-      }
-    ],
-    financialInfrastructure: [
-      {
-        title: 'Decoupled R&D in Beirut',
-        description: 'Retained substantial engineering, music curation, and administrative teams in Beirut to benefit from low-cost R&D talent, paying salaries in "Fresh USD" through offshore accounts in Dubai and Europe.'
-      },
-      {
-        title: 'Currency Hedging',
-        description: 'Subscription revenues collected directly in hard-currency GCC pegs (SAR, AED, QAR) via direct telecom integration, shielding the core P&L from Lebanese Pound hyperinflation.'
-      }
-    ],
-    flowchart: [
-      { step: '01', label: 'BEIRUT, LEBANON', subtext: 'Operational R&D Hub & Talent Engine' },
-      { step: '02', label: 'ABU DHABI (ADGM, UAE)', subtext: 'Corporate Pivot & Global HQ via ADIO Hub71' },
-      { step: '03', label: 'NASDAQ: ANGH', subtext: 'SPAC Public Capital Access' },
-      { step: '04', label: 'OSN GROUP / MBC', subtext: 'Strategic Saudi/GCC Hub & Buyout' }
-    ]
-  },
-  {
-    id: 'toters',
-    name: 'Toters',
-    founders: 'Tamim Khalfa & Nabil Zakka',
-    foundedYear: '2017 (Beirut)',
-    headline: 'Hyper-Local Operations & Dual-Entity Expansion',
-    corporateStructure: [
-      {
-        title: 'Offshore Holding Structure',
-        description: 'Ring-fenced venture investments via offshore holding company registered in Cayman Islands / ADGM. All equity rounds from regional funds (MEVP, Berytech, Cedar Mundi) processed into offshore banking accounts.'
-      },
-      {
-        title: 'Foreign Subsidiary Licensing (MISA)',
-        description: 'Operating local delivery entities across Saudi Arabia and Iraq: secured foreign investment licenses (MISA in Saudi Arabia) to operate direct logistics, dark stores, and merchant settlement services.'
-      }
-    ],
-    gccExpansionStrategy: [
-      {
-        title: 'High-Margin Niche Segments in KSA',
-        description: 'Avoided front-on price wars with heavily capitalized incumbents (Jahez, Hungerstation, Keeta). Focused on premium merchant partnerships, dark-store fulfillment (Toters Fresh), and retail media.'
-      },
-      {
-        title: 'Expansion into Iraq (Baghdad & Erbil)',
-        description: 'Scaled into Iraq’s cash-heavy economy using operational playbooks perfected under complex Lebanese conditions, achieving high margins with low competition.'
-      }
-    ],
-    financialInfrastructure: [
-      {
-        title: 'Local R&D Cost Arbitrage',
-        description: 'Retained primary engineering, product management, and customer support in Beirut. Earned revenues in SAR and IQD while keeping tech costs low, achieving exceptional capital efficiency.'
-      },
-      {
-        title: 'Cash-Flow Isolation',
-        description: 'Domestic Lebanese revenues maintained strictly to cover local operational expenses, while GCC and Iraqi revenues were recycled directly into regional expansion without touching Lebanese banks.'
-      }
-    ],
-    flowchart: [
-      { step: '01', label: 'CAYMAN / ADGM HOLDING', subtext: 'Venture Capital & Equity Ownership (MEVP, Cedar Mundi)' },
-      { step: '02', label: 'BEIRUT R&D ENGINE', subtext: 'Operational Hub & Local Fresh-USD Payroll' },
-      { step: '03', label: 'GCC / SAUDI ARABIA', subtext: 'MISA Licensed Units & Premium Dark Stores' },
-      { step: '04', label: 'IRAQ EXPANSION', subtext: 'Baghdad & Erbil High-Margin Delivery Operations' }
-    ]
-  }
-];
-
-export const COMPARATIVE_ANALYSIS = [
-  {
-    dimension: 'Expansion Driver',
-    anghami: 'Content scaling, media partnerships, and public capital markets.',
-    toters: 'Unit-economics arbitrage, logistics management, and geographic scale.'
-  },
-  {
-    dimension: 'Holding Location',
-    anghami: 'ADGM (Abu Dhabi, UAE).',
-    toters: 'Cayman Islands / ADGM Holding.'
-  },
-  {
-    dimension: 'GCC Anchor Market',
-    anghami: 'UAE (Abu Dhabi) & Saudi Arabia.',
-    toters: 'Saudi Arabia & Iraq.'
-  },
-  {
-    dimension: 'Lebanon Role',
-    anghami: 'Talent back-office, music curation, engineering hub.',
-    toters: 'Engineering, product development, back-office operations.'
-  },
-  {
-    dimension: 'Capital Mechanism',
-    anghami: 'Venture capital → NASDAQ SPAC → Strategic Buyout (OSN).',
-    toters: 'Venture capital rounds (MEVP, Cedar Mundi) → Regional growth rounds.'
-  }
-];

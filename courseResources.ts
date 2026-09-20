@@ -1,149 +1,249 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+export type PageId = 
+  | 'home'
+  | 'competencies'
+  | 'architecture'
+  | 'livenexus'
+  | 'guilds-dev'
+  | 'leadership'
+  | 'national-cv'
+  | 'startups'
+  | 'neural-matcher'
+  | 'yellow-pages'
+  | 'policy-papers'
+  | 'ai-courses'
+  | 'admin-maan'
+  | 'register';
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-
-export interface VirtualGridConfig {
-  itemCount: number;
-  estimatedItemHeight: number; // e.g. 380px for a directory card
-  columns: number; // responsive column count (1, 2, or 3)
-  overscan?: number; // extra rows to render above and below
-  gap?: number; // row gap in px
+export interface AiCourseModule {
+  moduleNumber: number;
+  title: string;
+  duration: string;
+  topics: string[];
+  handsOnLab: string;
+  founderDeliverable: string;
 }
 
-/**
- * Hook for virtualizing multi-column grids (like Yellow Pages directory cards)
- * Calculates which rows are currently intersecting the viewport and mounts ONLY those DOM elements.
- */
-export function useVirtualGrid({
-  itemCount,
-  estimatedItemHeight,
-  columns = 1,
-  overscan = 2,
-  gap = 24
-}: VirtualGridConfig) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(800);
-
-  const totalRows = Math.ceil(itemCount / columns);
-  const rowHeightWithGap = estimatedItemHeight + gap;
-  const totalHeight = Math.max(0, totalRows * rowHeightWithGap - gap);
-
-  // Monitor container scroll and window resizing
-  useEffect(() => {
-    const handleScroll = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // Calculate offset relative to window viewport
-        const offset = Math.max(0, -rect.top);
-        setScrollTop(offset);
-      } else {
-        setScrollTop(window.scrollY);
-      }
-    };
-
-    const handleResize = () => {
-      setViewportHeight(window.innerHeight);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize, { passive: true });
-    handleScroll();
-    handleResize();
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  // Compute visible row range
-  const { startRow, endRow, startIndex, endIndex, visibleCount } = useMemo(() => {
-    const startRowIdx = Math.max(0, Math.floor(scrollTop / rowHeightWithGap) - overscan);
-    const visibleRowCount = Math.ceil(viewportHeight / rowHeightWithGap) + overscan * 2;
-    const endRowIdx = Math.min(totalRows, startRowIdx + visibleRowCount);
-
-    const sIdx = startRowIdx * columns;
-    const eIdx = Math.min(itemCount, endRowIdx * columns);
-
-    return {
-      startRow: startRowIdx,
-      endRow: endRowIdx,
-      startIndex: sIdx,
-      endIndex: eIdx,
-      visibleCount: Math.max(0, eIdx - sIdx)
-    };
-  }, [scrollTop, rowHeightWithGap, overscan, viewportHeight, totalRows, columns, itemCount]);
-
-  const offsetY = startRow * rowHeightWithGap;
-
-  return {
-    containerRef,
-    totalHeight,
-    offsetY,
-    startIndex,
-    endIndex,
-    visibleCount,
-    totalCount: itemCount,
-    startRow,
-    endRow
-  };
+export interface AiCourseCaseStudy {
+  title: string;
+  industry: string;
+  summary: string;
+  impactMetric: string;
+  impactHighlight: string;
+  methodology: string;
+  toolsUsed: string[];
+  baselineProblem?: string;
+  solutionArchitecture?: string;
+  stepByStepImplementation?: string[];
+  quantifiedResults?: {
+    metric: string;
+    before: string;
+    after: string;
+    impact: string;
+  }[];
+  founderQuote?: string;
+  keyInsight?: string;
 }
 
-export interface VirtualListConfig {
-  itemCount: number;
-  itemHeight: number; // e.g. 56px per telemetry row
-  overscan?: number;
+export interface AiCourseResourcePrompt {
+  title: string;
+  prompt: string;
+  targetTool: string;
+  purpose: string;
 }
 
-/**
- * Hook for virtualizing high-density linear lists (e.g. 466 nodes telemetry table)
- */
-export function useVirtualList({
-  itemCount,
-  itemHeight,
-  overscan = 5
-}: VirtualListConfig) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [containerHeight, setContainerHeight] = useState(480);
+export interface AiCourseResourceTool {
+  name: string;
+  category: string;
+  description: string;
+  pricingTier: string;
+}
 
-  const totalHeight = itemCount * itemHeight;
+export interface AiCourseResourceChecklist {
+  phase: string;
+  tasks: string[];
+}
 
-  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop(e.currentTarget.scrollTop);
-  }, []);
+export interface AiCourseOfficialGuide {
+  title: string;
+  type: string;
+  description: string;
+  linkNote?: string;
+}
 
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      setContainerHeight(scrollContainerRef.current.clientHeight || 480);
-    }
-  }, []);
+export interface AiCourseResources {
+  starterPrompts: AiCourseResourcePrompt[];
+  recommendedTools: AiCourseResourceTool[];
+  actionChecklist: AiCourseResourceChecklist[];
+  officialGuides: AiCourseOfficialGuide[];
+}
 
-  const { startIndex, endIndex, offsetY, visibleCount } = useMemo(() => {
-    const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-    const visible = Math.ceil(containerHeight / itemHeight) + overscan * 2;
-    const end = Math.min(itemCount, start + visible);
+export interface AiCourseItem {
+  id: string;
+  number: number;
+  title: string;
+  provider: string;
+  providerType: 'University' | 'BigTech' | 'Specialized Institute' | 'EdTech Platform';
+  format: string;
+  category: 'Strategy & Leadership' | 'Product & Engineering' | 'Marketing & Revenue' | 'Operations & Workflows' | 'Governance & Compliance' | 'Finance & Valuation';
+  level: 'Foundational' | 'Intermediate' | 'Executive / Advanced';
+  targetTools: string[];
+  skills: string[];
+  synopsis: string;
+  caseStudy: AiCourseCaseStudy;
+  duration: string;
+  keyTakeaways: string[];
+  recommendedForStage: ('Idea / MVP' | 'Seed Stage' | 'Growth / Scale-up' | 'Enterprise B2B')[];
+  accreditationBadge?: string;
+  syllabus?: AiCourseModule[];
+  resources?: AiCourseResources;
+}
 
-    return {
-      startIndex: start,
-      endIndex: end,
-      offsetY: start * itemHeight,
-      visibleCount: Math.max(0, end - start)
-    };
-  }, [scrollTop, itemHeight, overscan, containerHeight, itemCount]);
+export interface MemberDirectoryItem {
+  id: string;
+  name: string;
+  title: string;
+  organization: string;
+  avatarUrl?: string;
+  initials: string;
+  role: 'Founder' | 'AI Researcher' | 'Software Architect' | 'Ecosystem Mentor' | 'Venture Investor' | 'Freelance Consultant';
+  sector: 'FinTech' | 'HealthTech' | 'GovTech' | 'Enterprise AI' | 'Logistics' | 'LegalTech' | 'EdTech';
+  location: string;
+  phone?: string;
+  email: string;
+  website?: string;
+  linkedin?: string;
+  skills: string[];
+  bio: string;
+  badge: 'NCEI Verified' | 'Guild Lead' | 'GovTech Fellow' | 'Angel Syndicate' | 'Founding Member';
+  tier: 'Public' | 'Scholar' | 'Penthouse / VIP';
+  hourlyRate?: string;
+  status: 'Available' | 'In Consultation' | 'Sabbatical';
+  projectsCount: number;
+  rating: number;
+  dateJoined: string;
+  featured?: boolean;
+  approved: boolean;
+}
 
-  return {
-    scrollContainerRef,
-    onScroll,
-    totalHeight,
-    offsetY,
-    startIndex,
-    endIndex,
-    visibleCount,
-    totalCount: itemCount
-  };
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  role: 'scholar' | 'freelancer' | 'guru' | 'enterprise' | 'admin';
+  roleTitle: string;
+  organization?: string;
+  location?: string;
+  phone?: string;
+  avatar?: string;
+  badge: string;
+  tier: 'Public' | 'Scholar' | 'Penthouse' | 'Admin';
+  allocatedComputeCredits: number;
+  verified: boolean;
+  isAdmin?: boolean;
+}
+
+export interface VettingSubmission {
+  id: string;
+  name: string;
+  email: string;
+  organization: string;
+  guildId: string;
+  guildName: string;
+  proposedUseCase: string;
+  tierRequested: string;
+  status: 'Pending Review' | 'Approved' | 'Rejected';
+  dateSubmitted: string;
+  allocatedCompute: string;
+}
+
+export interface Competency {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  tags: string[];
+  deliverables: string[];
+  impactMetric: string;
+}
+
+export interface DeploymentProject {
+  id: string;
+  category: 'tech-ai' | 'biz-dev' | 'marketplaces';
+  categoryLabel: string;
+  subcategory: string;
+  title: string;
+  description: string;
+  technologies: string[];
+  metrics?: string;
+  status: 'Live & Scaled' | 'Enterprise Active' | 'Commercialized' | 'Regional Deployment';
+  badgeColor?: string;
+}
+
+export interface LiveChannel {
+  id: string;
+  name: string;
+  tier: 'public' | 'scholar' | 'penthouse';
+  tierLabel: string;
+  description: string;
+  activeUsers: number;
+  unreadCount?: number;
+  isEncrypted?: boolean;
+}
+
+export interface LiveMessage {
+  id: string;
+  channelId: string;
+  sender: string;
+  role: string;
+  avatar: string;
+  timestamp: string;
+  content: string;
+  badge?: string;
+  isAiBot?: boolean;
+}
+
+export interface Guild {
+  id: string;
+  name: string;
+  sector: 'FinTech' | 'Healthcare' | 'Legal Tech' | 'GovTech';
+  description: string;
+  regulatoryStandard: string;
+  dataCooperativeName: string;
+  sandboxFeatures: string[];
+  membersCount: number;
+  status: string;
+}
+
+export interface StartupItem {
+  id: string;
+  name: string;
+  domain: string;
+  role: string;
+  timeline: string;
+  description: string;
+  focusAreas: string[];
+  metrics: string;
+  url?: string;
+}
+
+export interface NationalMilestone {
+  id: string;
+  title: string;
+  entity: string;
+  date: string;
+  scope: string;
+  description: string;
+  keyOutputs: string[];
+  impactMetric: string;
+}
+
+export interface MatcherProfile {
+  type: 'scholar' | 'freelancer' | 'guru' | 'enterprise';
+  title: string;
+  subtitle: string;
+  recommendedPrograms: string[];
+  suggestedGuilds: string[];
+  suggestedNexusChannel: string;
+  allocatedCompute: string;
+  nextSteps: string[];
 }

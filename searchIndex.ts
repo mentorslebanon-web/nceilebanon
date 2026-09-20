@@ -1,224 +1,299 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { PageId, MemberDirectoryItem } from '../types';
-import { useNeuralWorker, VectorMatchResult } from '../utils/neuralWorker';
+import React, { useState } from 'react';
+import { PageId, UserProfile, MemberDirectoryItem, VettingSubmission } from '../types';
 import { 
-  Sparkles, 
-  GraduationCap, 
-  Briefcase, 
-  Flame, 
-  Building2, 
-  CheckCircle2, 
-  ArrowRight, 
-  Cpu, 
-  Radio, 
-  Database, 
-  Search, 
-  Share2, 
+  UserPlus, 
+  LogIn, 
   ShieldCheck, 
-  Users, 
-  Star, 
+  Sparkles, 
+  CheckCircle2, 
+  Lock, 
+  Mail, 
+  User, 
+  Building, 
   MapPin, 
-  MessageSquare, 
+  Phone, 
+  Cpu, 
+  Key, 
+  ArrowRight, 
+  AlertCircle,
+  Users,
+  Server,
+  FileCheck,
+  Building2,
+  Database,
   ExternalLink,
-  Zap,
-  Terminal,
-  CornerDownRight,
-  Filter,
-  Layers,
-  Activity
+  LogOut
 } from 'lucide-react';
 
-interface NeuralMatcherPageProps {
+interface RegistrationPageProps {
+  currentUser: UserProfile | null;
+  onSignIn: (user: UserProfile) => void;
+  onSignOut: () => void;
+  onRegisterMemberListing: (member: MemberDirectoryItem) => void;
+  onRegisterVettingApp?: (app: VettingSubmission) => void;
   onNavigate: (page: PageId) => void;
-  members: MemberDirectoryItem[];
-  onOpenRegister?: (tab?: 'signup' | 'signin' | 'sandbox') => void;
+  initialTab?: 'signup' | 'signin' | 'sandbox';
 }
 
-export const NeuralMatcherPage: React.FC<NeuralMatcherPageProps> = ({
+export const RegistrationPage: React.FC<RegistrationPageProps> = ({
+  currentUser,
+  onSignIn,
+  onSignOut,
+  onRegisterMemberListing,
+  onRegisterVettingApp,
   onNavigate,
-  members,
-  onOpenRegister
+  initialTab = 'signup'
 }) => {
-  const [selectedRole, setSelectedRole] = useState<'scholar' | 'freelancer' | 'guru' | 'enterprise'>('scholar');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [activeVectorMatch, setActiveVectorMatch] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'signup' | 'signin' | 'sandbox'>(initialTab);
 
-  const roleProfiles = {
-    scholar: {
-      id: 'scholar',
-      title: 'Scholar & AI Researcher',
-      subtitle: 'Pushing empirical frontiers in Arabic NLP, biomedical AI & distributed systems',
-      quote: 'Pushing the boundaries of sovereign science',
-      icon: GraduationCap,
-      color: 'border-cyan-500 bg-cyan-50/40 text-cyan-700',
-      badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-      recommendedHubs: [
-        { name: 'NexusLM & Notebook Workspaces', desc: 'JupyterLab cluster with GPU acceleration', link: 'livenexus' as PageId },
-        { name: 'Al-Hakam Legal Corpus', desc: 'Bilingual Lebanese and MENA statutory dataset', link: 'competencies' as PageId },
-        { name: 'aicademy.online Scholar Network', desc: 'Cross-university research grant consortium', link: 'national-cv' as PageId }
-      ],
-      assignedChannel: '#scholars-lab & #model-architectures',
-      recommendedGuild: 'Data Cooperatives & Federated ML Sandbox',
-      computeAllocation: 'H100 Node Priority Queue & Token Subsidies (Up to 50k Tokens/mo)',
-      protocols: ['HIPAA / MoPH Clinical Grade', 'Differential Privacy & Zero-Knowledge Proofs'],
-      actionUrl: 'livenexus' as PageId,
-      actionLabel: 'Launch Research Sandbox',
-      targetRole: 'AI Researcher'
-    },
-    freelancer: {
-      id: 'freelancer',
-      title: 'Freelancer & Specialist Engineer',
-      subtitle: 'Building automated civic pipelines, n8n workflows & sovereign GovTech systems',
-      quote: 'Solving complex societal & municipal challenges',
-      icon: Briefcase,
-      color: 'border-emerald-500 bg-emerald-50/40 text-emerald-700',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-      recommendedHubs: [
-        { name: 'ALmouwateN Civic Sandboxes', desc: 'Municipal workflow automations & public square APIs', link: 'guilds-dev' as PageId },
-        { name: 'matchprenai.online Platform', desc: 'High-value enterprise contract matchmaking', link: 'startups' as PageId },
-        { name: 'VAMS Deployment Repositories', desc: 'Dockerized microservice templates for GovTech', link: 'architecture' as PageId }
-      ],
-      assignedChannel: '#public-square & Escrow Workflows',
-      recommendedGuild: 'GovTech & Public Administration Taskforce',
-      computeAllocation: 'Unified API Gateway Key + Free Sandbox Testing Quota',
-      protocols: ['OpenGov JSON Schemas', 'Smart-Contract Escrow Milestone Auditing'],
-      actionUrl: 'guilds-dev' as PageId,
-      actionLabel: 'Explore Open Bounties',
-      targetRole: 'Software Architect'
-    },
-    guru: {
-      id: 'guru',
-      title: 'Venture Guru & Founder',
-      subtitle: 'Scaling high-valuation AI SaaS startups, angel syndicates & regional capital',
-      quote: 'Transforming novel models into exponential ventures',
-      icon: Flame,
-      color: 'border-amber-500 bg-amber-50/40 text-amber-700',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
-      recommendedHubs: [
-        { name: '961 Combinator Dealroom', desc: 'Direct syndicate pitching to GCC & diaspora capital', link: 'startups' as PageId },
-        { name: 'Zrolodex Investor Network', desc: 'Curated angel directory and warm intros', link: 'yellow-pages' as PageId },
-        { name: 'RAWCOACH.AI Executive Portal', desc: 'Executive leadership mentoring and board alignment', link: 'leadership' as PageId }
-      ],
-      assignedChannel: '#gurus-penthouse (Encrypted Dealroom)',
-      recommendedGuild: 'FinTech, Web3 & Banking Intelligence Guild',
-      computeAllocation: 'Dedicated Cloud Run & Enterprise Vector Clusters with SLA',
-      protocols: ['Venture SAFE Agreements', 'SOC-2 Compliance Blueprints'],
-      actionUrl: 'startups' as PageId,
-      actionLabel: 'Access Dealroom & Pitching',
-      targetRole: 'Founder'
-    },
-    enterprise: {
-      id: 'enterprise',
-      title: 'Enterprise Partner & Institution',
-      subtitle: 'Deploying compliant enterprise RAG, institutional data lakes & sovereign stacks',
-      quote: 'Deploying zero-leakage enterprise infrastructure',
-      icon: Building2,
-      color: 'border-purple-500 bg-purple-50/40 text-purple-700',
-      badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
-      recommendedHubs: [
-        { name: 'Enterprise Agent Workspace', desc: 'Multi-agent orchestration with audit logging', link: 'architecture' as PageId },
-        { name: 'Company Brain Builder', desc: 'Internal institutional knowledge graphs', link: 'competencies' as PageId },
-        { name: 'CapitalIssuesIQ Terminal', desc: 'Private market regulatory and financial intelligence', link: 'national-cv' as PageId }
-      ],
-      assignedChannel: '#enterprise-war-room (Restricted Access)',
-      recommendedGuild: 'Industry Services Guilds (HIPAA / GDPR / Basel III)',
-      computeAllocation: 'Zero-PII On-Premise Air-Gapped Clusters + Managed VPC',
-      protocols: ['Basel III & BDL Circular 158/165', 'MoPH Certified Health Protocols'],
-      actionUrl: 'competencies' as PageId,
-      actionLabel: 'View Enterprise Stacks',
-      targetRole: 'Ecosystem Mentor'
+  // Sign In fields
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Sign Up fields
+  const [fullName, setFullName] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [organization, setOrganization] = useState('');
+  const [role, setRole] = useState<UserProfile['role']>('scholar');
+  const [roleTitle, setRoleTitle] = useState('AI Researcher & System Architect');
+  const [sector, setSector] = useState<MemberDirectoryItem['sector']>('Enterprise AI');
+  const [location, setLocation] = useState('Beirut, Lebanon');
+  const [phone, setPhone] = useState('+961 70 000 000');
+  const [skills, setSkills] = useState('Python, RAG, PyTorch, Multi-Agent Systems');
+  const [bio, setBio] = useState('Researcher working on sovereign LLMs and institutional machine learning pipelines in Lebanon.');
+  const [addToYellowPages, setAddToYellowPages] = useState(true);
+
+  // Sandbox Vetting fields
+  const [vOrgName, setVOrgName] = useState('');
+  const [vEmail, setVEmail] = useState('');
+  const [vSector, setVSector] = useState<'FinTech' | 'Healthcare' | 'Legal Tech'>('FinTech');
+  const [vTierRequested, setVTierRequested] = useState<'Tier 1' | 'Tier 2' | 'Tier 3'>('Tier 2');
+  const [vUseCase, setVUseCase] = useState('');
+  const [vNdaAccepted, setVNdaAccepted] = useState(false);
+  const [isVettingSubmitted, setIsVettingSubmitted] = useState(false);
+
+  // Handle Demo Personas
+  const handleDemoSignIn = (presetRole: 'admin' | 'scholar' | 'founder' | 'freelancer') => {
+    setErrorMsg('');
+    if (presetRole === 'admin') {
+      const adminUser: UserProfile = {
+        id: 'usr_admin_maan',
+        email: 'maan@961ai.network',
+        name: 'Maan El-Khatib',
+        role: 'admin',
+        roleTitle: 'Chief AI Architect & Ecosystem Director',
+        organization: 'NCEI Lebanon / 961AI',
+        location: 'Beirut, Lebanon',
+        phone: '+961 70 939 779',
+        badge: 'Admin & Lead Architect',
+        tier: 'Admin',
+        allocatedComputeCredits: 100000,
+        verified: true,
+        isAdmin: true
+      };
+      onSignIn(adminUser);
+      setSuccessMsg('Signed in successfully as Administrator Maan El-Khatib.');
+    } else if (presetRole === 'scholar') {
+      const scholarUser: UserProfile = {
+        id: 'usr_scholar_nour',
+        email: 'nour.hajj@aubmc.edu.lb',
+        name: 'Dr. Nour Al-Hajj',
+        role: 'scholar',
+        roleTitle: 'Head of Clinical AI Research',
+        organization: 'AUBMC',
+        location: 'Hamra, Beirut, Lebanon',
+        phone: '+961 1 350 000',
+        badge: 'NCEI Verified Scholar',
+        tier: 'Scholar',
+        allocatedComputeCredits: 25000,
+        verified: true
+      };
+      onSignIn(scholarUser);
+      setSuccessMsg('Signed in successfully as Dr. Nour Al-Hajj.');
+    } else if (presetRole === 'founder') {
+      const founderUser: UserProfile = {
+        id: 'usr_founder_ziad',
+        email: 'ziad@logisticsiq.me',
+        name: 'Ziad Mouawad',
+        role: 'guru',
+        roleTitle: 'Founder & Head of Product',
+        organization: 'LogisticsIQ Levant',
+        location: 'Tripoli, Lebanon',
+        phone: '+961 6 200 000',
+        badge: 'Venture Founder',
+        tier: 'Penthouse',
+        allocatedComputeCredits: 50000,
+        verified: true
+      };
+      onSignIn(founderUser);
+      setSuccessMsg('Signed in successfully as Ziad Mouawad.');
+    } else {
+      const freelancerUser: UserProfile = {
+        id: 'usr_free_hadi',
+        email: 'hadi@solidityaudit.lb',
+        name: 'Hadi Kanso',
+        role: 'freelancer',
+        roleTitle: 'Smart Contract & Escrow Auditor',
+        organization: 'Decentralized Audit Guild',
+        location: 'Saida, Lebanon',
+        phone: '+961 7 720 000',
+        badge: 'GovTech Fellow',
+        tier: 'Public',
+        allocatedComputeCredits: 15000,
+        verified: true
+      };
+      onSignIn(freelancerUser);
+      setSuccessMsg('Signed in successfully as Hadi Kanso.');
     }
   };
 
-  const samplePrompts = [
-    'Deploying clinical AI with AUBMC hospital data and HIPAA privacy',
-    'FinTech founder seeking seed funding & Basel III compliance mentors',
-    'GovTech engineer building automated municipal citizen services in Beirut',
-    'Machine learning scholar needing H100 compute subsidies for Arabic LLMs',
-    'Logistics startup looking for route optimization agent architecture'
-  ];
+  const handleManualSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
 
-  const currentProfile = roleProfiles[selectedRole];
+    if (!email || !password) {
+      setErrorMsg('Please enter both your email and password.');
+      return;
+    }
 
-  // Dedicated WebWorker for offloading high-dimensional Cosine Similarity & Bilateral Skill Matrix
-  const {
-    dispatchMatch,
-    workerResult,
-    telemetry: workerTelemetry
-  } = useNeuralWorker(members);
+    const isAdminLogin = email.toLowerCase().includes('maan') || password === 'Maan70939779';
 
-  // Dispatch calculations to WebWorker whenever role, query, or directory members count change
-  useEffect(() => {
-    if (!members || members.length === 0) return;
-    dispatchMatch(searchQuery || `${currentProfile.title} ${currentProfile.subtitle}`);
-  }, [selectedRole, searchQuery, members?.length, dispatchMatch, currentProfile.title, currentProfile.subtitle]);
+    const newUser: UserProfile = {
+      id: `usr_${Date.now()}`,
+      email: email.trim(),
+      name: email.split('@')[0].replace('.', ' ').toUpperCase(),
+      role: isAdminLogin ? 'admin' : 'scholar',
+      roleTitle: isAdminLogin ? 'Ecosystem Director' : 'Verified Member',
+      organization: 'Lebanese AI Network',
+      location: 'Beirut, Lebanon',
+      badge: isAdminLogin ? 'Admin & Lead Architect' : 'NCEI Verified',
+      tier: isAdminLogin ? 'Admin' : 'Scholar',
+      allocatedComputeCredits: isAdminLogin ? 100000 : 15000,
+      verified: true,
+      isAdmin: isAdminLogin
+    };
 
-  // Handle semantic prompt matching
-  const handleRunSearch = (queryText: string) => {
-    setSearchQuery(queryText);
-    setIsProcessing(true);
-    setActiveVectorMatch(null);
-
-    // Offload 128-dim vector calculation to WebWorker
-    dispatchMatch(queryText);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      const lower = queryText.toLowerCase();
-
-      if (lower.includes('clinic') || lower.includes('health') || lower.includes('aubmc') || lower.includes('scholar') || lower.includes('research')) {
-        setSelectedRole('scholar');
-        setActiveVectorMatch('High Confidence Match: Biomedical & Empirical Research Vector (0.94)');
-      } else if (lower.includes('gov') || lower.includes('citizen') || lower.includes('engineer') || lower.includes('freelanc') || lower.includes('municipal')) {
-        setSelectedRole('freelancer');
-        setActiveVectorMatch('High Confidence Match: Sovereign GovTech & Automation Vector (0.91)');
-      } else if (lower.includes('invest') || lower.includes('found') || lower.includes('fund') || lower.includes('seed') || lower.includes('startup')) {
-        setSelectedRole('guru');
-        setActiveVectorMatch('High Confidence Match: Venture Scaling & Capital Vector (0.96)');
-      } else {
-        setSelectedRole('enterprise');
-        setActiveVectorMatch('High Confidence Match: Institutional & Enterprise Infrastructure Vector (0.89)');
-      }
-    }, 450);
+    onSignIn(newUser);
+    setSuccessMsg(`Welcome back, ${newUser.name}!`);
   };
 
-  // Find matching members in the Yellow Pages registry - fallback if worker initializing
-  const fallbackMatchedMembers = useMemo(() => {
-    if (!members || members.length === 0) return [];
-    
-    return members.filter(m => {
-      if (selectedRole === 'scholar') {
-        return m.role === 'AI Researcher' || m.sector === 'HealthTech' || m.skills.some(s => s.toLowerCase().includes('research') || s.toLowerCase().includes('rag'));
-      }
-      if (selectedRole === 'freelancer') {
-        return m.role === 'Software Architect' || m.role === 'Freelance Consultant' || m.sector === 'GovTech';
-      }
-      if (selectedRole === 'guru') {
-        return m.role === 'Founder' || m.role === 'Venture Investor' || m.sector === 'FinTech';
-      }
-      return m.role === 'Ecosystem Mentor' || m.role === 'Software Architect' || m.sector === 'Enterprise AI';
-    }).slice(0, 4);
-  }, [members, selectedRole]);
+  const handleManualSignUp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
 
-  const displayMatches: VectorMatchResult[] = useMemo(() => {
-    if (workerResult.matches && workerResult.matches.length > 0) {
-      return workerResult.matches.slice(0, 4);
+    if (!fullName.trim() || !signUpEmail.trim()) {
+      setErrorMsg('Full Name and Email are required.');
+      return;
     }
-    return fallbackMatchedMembers.map((m, idx) => ({
-      memberId: m.id,
-      member: m,
-      similarityScore: 0.94 - idx * 0.03,
-      archetypeMatch: selectedRole,
-      confidenceLabel: 'Strong Alignment',
-      matchedVectors: m.skills.slice(0, 2),
-      vectorOps: 256
-    }));
-  }, [workerResult.matches, fallbackMatchedMembers, selectedRole]);
+
+    const initials = fullName
+      .split(' ')
+      .map(part => part[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
+    const roleMapping = {
+      scholar: 'AI Researcher',
+      freelancer: 'Software Architect',
+      guru: 'Founder',
+      enterprise: 'Ecosystem Mentor',
+      admin: 'Software Architect'
+    } as const;
+
+    const directoryRole = roleMapping[role] as MemberDirectoryItem['role'];
+
+    const newProfile: UserProfile = {
+      id: `usr_${Date.now()}`,
+      email: signUpEmail.trim(),
+      name: fullName.trim(),
+      role,
+      roleTitle: roleTitle.trim() || 'AI Professional',
+      organization: organization.trim() || 'Independent',
+      location: location.trim() || 'Beirut, Lebanon',
+      phone: phone.trim(),
+      badge: 'NCEI Verified',
+      tier: role === 'guru' ? 'Penthouse' : role === 'scholar' ? 'Scholar' : 'Public',
+      allocatedComputeCredits: 10000,
+      verified: true,
+      isAdmin: false
+    };
+
+    onSignIn(newProfile);
+
+    if (addToYellowPages) {
+      const newListing: MemberDirectoryItem = {
+        id: `mem_${Date.now()}`,
+        name: fullName.trim(),
+        title: roleTitle.trim() || 'AI Specialist',
+        organization: organization.trim() || 'Independent',
+        initials: initials || 'AI',
+        role: directoryRole,
+        sector,
+        location: location.trim() || 'Beirut, Lebanon',
+        phone: phone.trim() || '+961 70 000 000',
+        email: signUpEmail.trim(),
+        skills: skills.split(',').map(s => s.trim()).filter(Boolean),
+        bio: bio.trim() || 'Independent AI practitioner contributing to sovereign Lebanese intelligence infrastructure.',
+        badge: 'NCEI Verified',
+        tier: role === 'guru' ? 'Penthouse / VIP' : role === 'scholar' ? 'Scholar' : 'Public',
+        hourlyRate: '$75/hr',
+        status: 'Available',
+        projectsCount: 1,
+        rating: 5.0,
+        dateJoined: new Date().toISOString().split('T')[0],
+        featured: false,
+        approved: true
+      };
+
+      onRegisterMemberListing(newListing);
+    }
+
+    setSuccessMsg('Registration completed! Your account has been provisioned with 10,000 sandbox credits and added to Yellow Pages.');
+  };
+
+  const handleVettingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (!vOrgName || !vEmail || !vUseCase) {
+      setErrorMsg('Please fill out all required organization, email, and use-case fields.');
+      return;
+    }
+    if (!vNdaAccepted) {
+      setErrorMsg('You must accept the Sovereign Data Processing NDA terms.');
+      return;
+    }
+
+    const newApp: VettingSubmission = {
+      id: `vet_${Date.now()}`,
+      name: vOrgName,
+      email: vEmail,
+      organization: vOrgName,
+      guildId: vSector.toLowerCase().replace(' ', '-'),
+      guildName: `${vSector} Data Cooperative`,
+      proposedUseCase: vUseCase,
+      tierRequested: `${vTierRequested} Sandbox`,
+      status: 'Pending Review',
+      dateSubmitted: new Date().toISOString().split('T')[0],
+      allocatedCompute: '15,000 Tokens (Pending)'
+    };
+
+    if (onRegisterVettingApp) {
+      onRegisterVettingApp(newApp);
+    }
+
+    setIsVettingSubmitted(true);
+  };
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20">
-      {/* Top Breadcrumb & Status Bar */}
+    <div className="bg-slate-50 min-h-screen pb-24">
+      {/* Top Breadcrumb Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-2 text-xs text-slate-500 font-mono">
@@ -229,421 +304,746 @@ export const NeuralMatcherPage: React.FC<NeuralMatcherPageProps> = ({
               NCEI Network
             </button>
             <span>/</span>
-            <span className="text-slate-900 font-bold">Neural Matcher Engine v4.8</span>
+            <span className="text-slate-900 font-bold">Registration & Access Portal</span>
           </div>
 
-          <div className="flex items-center space-x-3 text-[11px] font-mono">
-            <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-800 border border-cyan-200">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-              <span>Semantic Latency: 18ms</span>
+          <div className="flex items-center space-x-2 text-xs font-mono">
+            <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
+              DIRECTORY OPT-IN
             </span>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <Zap className="w-3 h-3 text-emerald-600" />
-              <span>WebWorker Matrix: {workerTelemetry.executionTimeMs > 0 ? workerTelemetry.executionTimeMs.toFixed(2) : '0.80'}ms off-thread</span>
-            </span>
-            <span className="hidden sm:inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              <Database className="w-3 h-3 text-slate-500" />
-              <span>1,420+ Embeddings</span>
+            <span className="px-2 py-0.5 rounded bg-cyan-100 text-cyan-800 font-bold">
+              10,000 TOKENS PROVISIONED
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
         
-        {/* Hero Section */}
-        <div className="relative rounded-3xl bg-slate-950 text-white p-6 sm:p-10 border border-cyan-900/60 shadow-xl overflow-hidden">
-          {/* Subtle Grid Background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#08334415_1px,transparent_1px),linear-gradient(to_bottom,#08334415_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-40"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-              <span>FULL-PAGE NEURAL ALIGNMENT PIPELINE</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              Sovereign Neural <span className="text-cyan-400">Matcher Engine</span>
-            </h1>
-
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              Dynamically maps your institutional requirements, research theses, or commercial projects to vetted ecosystem guilds, compute cluster allocations, and verified talent in Lebanon and the diaspora.
-            </p>
-
-            {/* Prompt Search Box */}
-            <div className="pt-2">
-              <form 
-                onSubmit={(e) => { e.preventDefault(); if (searchQuery.trim()) handleRunSearch(searchQuery); }}
-                className="relative flex items-center"
-              >
-                <div className="absolute left-4 pointer-events-none text-cyan-400">
-                  <Search className="w-5 h-5" />
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Describe your initiative, dataset requirements, or talent needs in plain language..."
-                  className="w-full pl-12 pr-32 py-3.5 rounded-2xl bg-slate-900/90 text-white text-sm placeholder:text-slate-400 border border-slate-700 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30 transition-all shadow-inner"
-                />
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  className="absolute right-2 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-colors flex items-center space-x-1.5 disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                      <span>Matching...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Run Matcher</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {/* Sample Prompts */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-1">
-                <span className="text-[11px] font-mono text-slate-400 mr-1">Quick Prompts:</span>
-                {samplePrompts.map((prompt, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleRunSearch(prompt)}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-cyan-950/60 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-200 transition-colors truncate max-w-[280px]"
-                  >
-                    "{prompt}"
-                  </button>
-                ))}
+        {/* User Logged In Banner if active */}
+        {currentUser && (
+          <div className="p-5 rounded-2xl bg-white border-2 border-emerald-300 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-12 h-12 rounded-xl bg-slate-950 text-cyan-400 font-mono font-bold flex items-center justify-center text-sm shrink-0">
+                {currentUser.name.substring(0, 2).toUpperCase()}
               </div>
-
-              {activeVectorMatch && (
-                <div className="mt-3 p-2.5 rounded-xl bg-cyan-950/70 border border-cyan-500/40 text-xs text-cyan-200 flex items-center space-x-2 animate-in fade-in">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="font-mono">{activeVectorMatch}</span>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-base font-bold text-slate-950">{currentUser.name}</h3>
+                  <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded bg-emerald-100 text-emerald-800">
+                    ACTIVE IDENTITY
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 4 Archetype Selector Tabs */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                Select Your Ecosystem Archetype
-              </h2>
-              <p className="text-xs text-slate-500">
-                Explore tailored architectural pathways, assigned channels, compute token grants, and guild affiliations.
-              </p>
-            </div>
-            <span className="text-xs font-mono text-slate-400 hidden sm:inline">
-              Pathway: <strong className="text-slate-900">{currentProfile.title}</strong>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {Object.values(roleProfiles).map((p) => {
-              const Icon = p.icon;
-              const isSelected = selectedRole === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedRole(p.id as any)}
-                  className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
-                    isSelected
-                      ? 'bg-white border-cyan-500 shadow-md ring-2 ring-cyan-500/20'
-                      : 'bg-white/70 border-slate-200 hover:border-slate-300 hover:bg-white'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${p.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      {isSelected && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500 text-slate-950">
-                          ACTIVE
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                      {p.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2">
-                      {p.subtitle}
-                    </p>
-                  </div>
-
-                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-cyan-700 font-semibold">
-                    <span>Explore Pathway</span>
-                    <ArrowRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'translate-x-1 text-cyan-600' : ''}`} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Deep Dive Profile Card */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-8">
-          {/* Header of Active Archetype */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-            <div className="space-y-1">
-              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold uppercase border mb-1 bg-slate-100 text-slate-800 border-slate-200">
-                <Terminal className="w-3.5 h-3.5 text-cyan-600" />
-                <span>Verified Ecosystem Track // {currentProfile.id}</span>
+                <p className="text-xs text-slate-500">
+                  {currentUser.roleTitle} • {currentUser.organization || 'Lebanese AI Network'} • {currentUser.allocatedComputeCredits.toLocaleString()} GPU Credits
+                </p>
               </div>
-              <h2 className="text-2xl font-black text-slate-950">
-                {currentProfile.title}
-              </h2>
-              <p className="text-sm text-slate-600 italic">
-                "{currentProfile.quote}"
-              </p>
             </div>
 
             <div className="flex items-center space-x-3 shrink-0">
               <button
-                onClick={() => onNavigate(currentProfile.actionUrl)}
-                className="px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs flex items-center space-x-2"
+                onClick={() => onNavigate('yellow-pages')}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-colors"
               >
-                <span>{currentProfile.actionLabel}</span>
-                <ArrowRight className="w-4 h-4 text-cyan-400" />
+                View in Yellow Pages
               </button>
-              {onOpenRegister && (
-                <button
-                  onClick={() => onOpenRegister('signup')}
-                  className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs border border-amber-500 flex items-center space-x-1.5"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Register This Role</span>
-                </button>
-              )}
+              <button
+                onClick={onSignOut}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center space-x-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
+        )}
 
-          {/* Grid of Architectural Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Recommended Hubs */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Database className="w-4 h-4 text-cyan-600" />
-                <span>Recommended Technical Hubs</span>
-              </div>
-              <div className="space-y-2.5">
-                {currentProfile.recommendedHubs.map((hub, i) => (
-                  <div 
-                    key={i}
-                    onClick={() => onNavigate(hub.link)}
-                    className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-cyan-400 cursor-pointer transition-all"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>{hub.name}</span>
-                      <ArrowRight className="w-3 h-3 text-cyan-600" />
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{hub.desc}</p>
-                  </div>
-                ))}
-              </div>
+        {/* Header Hero */}
+        <div className="rounded-3xl bg-slate-950 text-white p-6 sm:p-10 border border-slate-800 shadow-xl relative overflow-hidden">
+          <div className="relative z-10 max-w-2xl space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-mono font-bold">
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>OFFICIAL NETWORK ENROLLMENT</span>
             </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Sovereign Ecosystem <span className="text-amber-400">Registration Portal</span>
+            </h1>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Join Lebanon's sovereign AI infrastructure. Register your personal profile for the public Members Yellow Pages or apply for institutional Tier 2/3 Sandbox Vetting.
+            </p>
+          </div>
+        </div>
 
-            {/* Compute & Infrastructure */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Cpu className="w-4 h-4 text-cyan-600" />
-                <span>Compute Cluster Allocation</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                <div className="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{currentProfile.computeAllocation}</span>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Automatically provisioned via NCEI Lebanese sovereign node gateways upon identity verification.
+        {/* Tab Selection Bar */}
+        <div className="flex border-b border-slate-200 bg-white p-1.5 rounded-2xl shadow-xs gap-1.5">
+          <button
+            onClick={() => { setActiveTab('signup'); setErrorMsg(''); setSuccessMsg(''); }}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-2 ${
+              activeTab === 'signup'
+                ? 'bg-amber-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>1. New Member & Yellow Pages Registration</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('sandbox'); setErrorMsg(''); setSuccessMsg(''); }}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-2 ${
+              activeTab === 'sandbox'
+                ? 'bg-slate-950 text-cyan-400 shadow-xs'
+                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>2. Institutional Sandbox & Vetting</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('signin'); setErrorMsg(''); setSuccessMsg(''); }}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center space-x-2 ${
+              activeTab === 'signin'
+                ? 'bg-cyan-500 text-slate-950 shadow-xs'
+                : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <LogIn className="w-4 h-4" />
+            <span>3. Sign In / Persona Login</span>
+          </button>
+        </div>
+
+        {/* Alerts */}
+        {errorMsg && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>{successMsg}</span>
+            </div>
+            <button
+              onClick={() => onNavigate('yellow-pages')}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shrink-0"
+            >
+              Open Yellow Pages Directory →
+            </button>
+          </div>
+        )}
+
+        {/* TAB 1: NEW MEMBER REGISTRATION */}
+        {activeTab === 'signup' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+              <div className="mb-6 pb-4 border-b border-slate-100">
+                <h2 className="text-xl font-black text-slate-950">
+                  Register Ecosystem Identity
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Complete this form to create your sovereign 961AI identity, receive compute credits, and optionally list yourself in the public Yellow Pages directory.
                 </p>
               </div>
 
-              <div className="pt-1">
-                <div className="text-[11px] font-mono text-slate-500 uppercase mb-1.5 font-bold">
-                  Compliance & Security Protocols:
-                </div>
-                <div className="space-y-1">
-                  {currentProfile.protocols.map((proto, idx) => (
-                    <div key={idx} className="flex items-center space-x-1.5 text-xs text-slate-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{proto}</span>
+              <form onSubmit={handleManualSignUp} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Full Name *
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Dr. Jad Khoury"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
                     </div>
-                  ))}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Official Work Email *
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        value={signUpEmail}
+                        onChange={(e) => setSignUpEmail(e.target.value)}
+                        placeholder="jad@aub.edu.lb or jad@ai.me"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Password *
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="password"
+                        required
+                        value={signUpPassword}
+                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Phone / WhatsApp (for Direct Inquiries)
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+961 70 123 456"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Organization / Affiliation
+                    </label>
+                    <div className="relative">
+                      <Building className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="text"
+                        value={organization}
+                        onChange={(e) => setOrganization(e.target.value)}
+                        placeholder="e.g. AUB, USJ, Berytech, or Independent"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      City / Location (Lebanon or Diaspora)
+                    </label>
+                    <div className="relative">
+                      <MapPin className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. Beirut, Tripoli, Dubai (Diaspora)"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Ecosystem Role
+                    </label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as any)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="scholar">Scholar & AI Researcher</option>
+                      <option value="freelancer">Freelance Specialist Engineer</option>
+                      <option value="guru">Venture Guru & Founder</option>
+                      <option value="enterprise">Enterprise Partner</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Primary Sector
+                    </label>
+                    <select
+                      value={sector}
+                      onChange={(e) => setSector(e.target.value as any)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="Enterprise AI">Enterprise AI</option>
+                      <option value="HealthTech">HealthTech</option>
+                      <option value="FinTech">FinTech</option>
+                      <option value="GovTech">GovTech</option>
+                      <option value="Logistics">Logistics</option>
+                      <option value="LegalTech">LegalTech</option>
+                      <option value="EdTech">EdTech</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Professional Title
+                    </label>
+                    <input
+                      type="text"
+                      value={roleTitle}
+                      onChange={(e) => setRoleTitle(e.target.value)}
+                      placeholder="e.g. Head of Machine Learning"
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                    Skills & Technical Stack (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={skills}
+                    onChange={(e) => setSkills(e.target.value)}
+                    placeholder="Python, PyTorch, RAG, n8n, Smart Contracts, LLMOps"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                    Short Bio & Focus Area
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Brief overview of your academic focus, startup thesis, or technical specialty..."
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Directory Opt-in Checkbox */}
+                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-300 flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="yellow-pages-optin"
+                    checked={addToYellowPages}
+                    onChange={(e) => setAddToYellowPages(e.target.checked)}
+                    className="w-5 h-5 rounded border-amber-400 text-amber-500 focus:ring-amber-400 mt-0.5"
+                  />
+                  <label htmlFor="yellow-pages-optin" className="text-xs text-slate-800 leading-relaxed cursor-pointer">
+                    <strong className="text-slate-950 font-bold block mb-0.5">
+                      Publish my profile to the public NCEI Yellow Pages for Members
+                    </strong>
+                    Allow verified founders, research scholars, and enterprise partners across Lebanon and the diaspora to discover my profile, view my skills, and initiate direct consultation requests.
+                  </label>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-xs font-mono text-slate-500">
+                    Auto-grant: <strong className="text-slate-900">10,000 Compute Sandbox Credits</strong>
+                  </span>
+                  <button
+                    type="submit"
+                    className="px-8 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-sm font-extrabold transition-all shadow-md flex items-center space-x-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>Complete Registration</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Side Preview Card */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    Live Yellow Pages Preview
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
+                    NCEI VERIFIED
+                  </span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 rounded-xl bg-slate-950 text-amber-400 font-mono font-bold text-sm flex items-center justify-center shrink-0">
+                      {fullName ? fullName.substring(0, 2).toUpperCase() : 'AI'}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-bold text-slate-950 truncate">
+                        {fullName || 'Your Full Name'}
+                      </h4>
+                      <p className="text-xs text-slate-500 truncate">
+                        {roleTitle || 'AI Specialist'}
+                      </p>
+                      <p className="text-[11px] text-cyan-700 font-mono truncate">
+                        {organization || 'Organization'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-600 line-clamp-3 italic">
+                    "{bio || 'Your bio will appear here in the member directory...'}"
+                  </p>
+
+                  <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-1">
+                    {skills.split(',').slice(0, 3).map((s, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded bg-white text-[10px] font-mono text-slate-700 border border-slate-200">
+                        {s.trim() || 'Skill'}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                    <span>{location || 'Beirut, Lebanon'}</span>
+                    <span className="text-emerald-700 font-bold">Available</span>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-500 space-y-2 pt-2">
+                  <div className="flex items-center space-x-2 text-slate-700 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Instant publication to Member Directory</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Free GPU tokens on sovereign cluster nodes</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-slate-700 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Direct phone/WhatsApp and message routing</span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Communication & Guild Affiliation */}
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase font-mono">
-                <Radio className="w-4 h-4 text-cyan-600" />
-                <span>Guild & Network Channel</span>
+        {/* TAB 2: INSTITUTIONAL SANDBOX & VETTING */}
+        {activeTab === 'sandbox' && (
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm max-w-4xl mx-auto space-y-6">
+            <div className="border-b border-slate-100 pb-4">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded text-xs font-mono font-bold uppercase bg-cyan-100 text-cyan-800 border border-cyan-200 mb-2">
+                <Server className="w-3.5 h-3.5" />
+                <span>Tier 2 / Tier 3 Institutional Sandboxes</span>
               </div>
+              <h2 className="text-2xl font-black text-slate-950">
+                Institutional Sandbox & Vetting Application
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                For commercial banks, hospitals, ministries, and enterprise conglomerates deploying private sovereign LLMs and federated data cooperatives.
+              </p>
+            </div>
 
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2">
-                <div className="text-xs font-mono text-slate-500 uppercase">Assigned Channel:</div>
-                <div className="text-xs font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-1 rounded border border-cyan-200 truncate">
-                  {currentProfile.assignedChannel}
+            {isVettingSubmitted ? (
+              <div className="p-8 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-4 animate-in zoom-in-95">
+                <div className="w-16 h-16 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-extrabold text-emerald-950">
+                  Institutional Application Received
+                </h3>
+                <p className="text-sm text-emerald-800 max-w-md mx-auto">
+                  Your application for <strong>{vOrgName}</strong> has been logged in the secure governance ledger and dispatched to Ecosystem Director Maan El-Khatib for audit.
+                </p>
+                <div className="pt-2 flex items-center justify-center space-x-4">
+                  <button
+                    onClick={() => onNavigate('admin-maan')}
+                    className="px-5 py-2.5 rounded-xl bg-slate-950 text-cyan-400 font-mono font-bold text-xs hover:bg-slate-800 transition-colors"
+                  >
+                    View in /Maan70939779 Console
+                  </button>
+                  <button
+                    onClick={() => { setIsVettingSubmitted(false); }}
+                    className="px-4 py-2.5 rounded-xl bg-white border border-emerald-300 text-emerald-900 text-xs font-bold hover:bg-emerald-100"
+                  >
+                    Submit Another Application
+                  </button>
                 </div>
               </div>
+            ) : (
+              <form onSubmit={handleVettingSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Institution / Organization Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vOrgName}
+                      onChange={(e) => setVOrgName(e.target.value)}
+                      placeholder="e.g. Bank Audi, AUBMC, or Ministry of Telecom"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
 
-              <div className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5">
-                <div className="text-xs font-mono text-slate-500 uppercase">Recommended Guild:</div>
-                <div className="text-xs font-bold text-slate-900">
-                  {currentProfile.recommendedGuild}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Official Institutional Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={vEmail}
+                      onChange={(e) => setVEmail(e.target.value)}
+                      placeholder="compliance@institution.lb"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Governing Sector & Regulatory Framework
+                    </label>
+                    <select
+                      value={vSector}
+                      onChange={(e) => setVSector(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="FinTech">FinTech (Basel III & BDL Circulars 158/165)</option>
+                      <option value="Healthcare">Healthcare (HIPAA & MoPH Clinical Standards)</option>
+                      <option value="Legal Tech">Legal Tech (GDPR & Arab League Harmonization)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                      Target Isolation Tier
+                    </label>
+                    <select
+                      value={vTierRequested}
+                      onChange={(e) => setVTierRequested(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="Tier 1">Tier 1: Sovereign API Sandbox (Standard Gateway)</option>
+                      <option value="Tier 2">Tier 2: Zero-PII Containerized Node (Dedicated VPC)</option>
+                      <option value="Tier 3">Tier 3: Air-Gapped High-Security GPU Cluster</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                    Proposed Institutional AI Use-Case *
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={vUseCase}
+                    onChange={(e) => setVUseCase(e.target.value)}
+                    placeholder="Describe your organization's compliance requirements, anticipated dataset volumes, and multi-agent deployment scope..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="p-4 rounded-2xl bg-cyan-50/50 border border-cyan-200 flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="nda-checkbox"
+                    checked={vNdaAccepted}
+                    onChange={(e) => setVNdaAccepted(e.target.checked)}
+                    className="w-5 h-5 rounded border-cyan-400 text-cyan-600 focus:ring-cyan-400 mt-0.5"
+                  />
+                  <label htmlFor="nda-checkbox" className="text-xs text-slate-700 leading-relaxed cursor-pointer">
+                    <strong className="text-slate-900 font-bold block mb-0.5">
+                      Accept Sovereign Zero-Leakage Data Processing NDA
+                    </strong>
+                    I certify that our institution complies with regional data privacy mandates. All data shared through the collaborative sandbox remains under zero-knowledge encryption and local residency in Lebanon.
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs font-mono text-slate-500">
+                    Vetting Period: <strong>24-48 Hours</strong>
+                  </span>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-cyan-400 font-bold text-sm transition-all shadow-md flex items-center space-x-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Dispatch Institutional Application</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: SIGN IN / PERSONA FAST LOGIN */}
+        {activeTab === 'signin' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-5xl mx-auto">
+            {/* Left: Standard Login Form */}
+            <div className="lg:col-span-6 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+              <div className="mb-6 pb-4 border-b border-slate-100">
+                <h2 className="text-xl font-black text-slate-950">
+                  Access Your Identity
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Sign in with your registered email and credential key.
+                </p>
+              </div>
+
+              <form onSubmit={handleManualSignIn} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. yourname@domain.com"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase font-mono mb-1.5">
+                    Security Passcode
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition-all shadow-xs flex items-center justify-center space-x-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In to Network</span>
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 text-center">
                 <button
-                  onClick={() => onNavigate('guilds-dev')}
-                  className="text-[11px] text-cyan-700 font-semibold hover:underline inline-flex items-center space-x-1 pt-1"
+                  type="button"
+                  onClick={() => setActiveTab('signup')}
+                  className="text-xs text-amber-800 font-bold hover:underline"
                 >
-                  <span>View Guild Repository & Taskforce →</span>
+                  Don't have an identity yet? Register as a new member →
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Fast 1-Click Testing Personas */}
+            <div className="lg:col-span-6 bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-8 text-white space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center space-x-2">
+                  <Key className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-sm font-bold text-white uppercase font-mono">
+                    1-Click Verified Personas
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
+                  INSTANT PREVIEW
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Test the platform immediately with pre-configured verified credentials:
+              </p>
+
+              <div className="space-y-2.5 pt-1">
+                {/* Admin Persona */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoSignIn('admin')}
+                  className="w-full p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-cyan-900/60 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="text-xs font-bold text-cyan-300 group-hover:text-cyan-200">
+                      Maan El-Khatib (Admin & Architect)
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      Full access to /Maan70939779 and compute management
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                {/* Scholar Persona */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoSignIn('scholar')}
+                  className="w-full p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 hover:border-cyan-500 text-left transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="text-xs font-bold text-white group-hover:text-cyan-200">
+                      Dr. Nour Al-Hajj (Healthcare Scholar)
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      AUBMC Clinical AI Head • 25,000 Compute Credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                {/* Founder Persona */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoSignIn('founder')}
+                  className="w-full p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 hover:border-amber-400 text-left transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="text-xs font-bold text-amber-400 group-hover:text-amber-300">
+                      Ziad Mouawad (Logistics Founder)
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      LogisticsIQ Levant • 50,000 Compute Credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                {/* Freelancer Persona */}
+                <button
+                  type="button"
+                  onClick={() => handleDemoSignIn('freelancer')}
+                  className="w-full p-3 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 hover:border-emerald-400 text-left transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">
+                      Hadi Kanso (Smart Contract Auditor)
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      GovTech Taskforce • 15,000 Compute Credits
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Matched Yellow Pages Members */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-amber-500" />
-                  <span>Ranked Ecosystem Matches for {currentProfile.title}</span>
-                </h2>
-                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <Zap className="w-3 h-3 text-emerald-600" />
-                  <span>WebWorker: {workerTelemetry.executionTimeMs > 0 ? workerTelemetry.executionTimeMs.toFixed(2) : '0.80'}ms</span>
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Sorted via 128-dimensional vector cosine similarity calculated off-thread in a dedicated WebWorker.
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigate('yellow-pages')}
-              className="text-xs font-bold text-amber-800 hover:text-amber-900 hover:underline flex items-center space-x-1"
-            >
-              <span>View Full Directory ({members.length}) →</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {displayMatches.map((candidate: VectorMatchResult) => {
-              const member = candidate.member;
-              return (
-                <div
-                  key={member.id}
-                  onClick={() => onNavigate('yellow-pages')}
-                  className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-400 cursor-pointer transition-all shadow-xs flex flex-col justify-between space-y-4 group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                        {member.badge}
-                      </span>
-                      {/* Worker Compatibility Score */}
-                      <div className="flex items-center space-x-1 text-[11px] font-mono font-extrabold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <Zap className="w-3 h-3 text-emerald-600" />
-                        <span>{(candidate.similarityScore * 100).toFixed(0)}% Match</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 font-mono font-bold text-xs flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                        {member.initials}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-bold text-slate-950 truncate group-hover:text-amber-700 transition-colors">
-                          {member.name}
-                        </h3>
-                        <p className="text-xs text-slate-500 truncate">{member.title}</p>
-                      </div>
-                    </div>
-
-                    {/* Bilateral Vector Breakdown */}
-                    <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono space-y-1 text-slate-600">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Cosine Score:</span>
-                        <span className="font-bold text-slate-800">{candidate.similarityScore.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400">Vector Ops:</span>
-                        <span className="font-bold text-slate-800">{candidate.vectorOps} FLOPS</span>
-                      </div>
-                      <div className="flex justify-between items-center text-cyan-800 font-semibold pt-0.5 border-t border-slate-200/60">
-                        <span>Alignment:</span>
-                        <span>{candidate.confidenceLabel}</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-600 line-clamp-2">
-                      {member.bio}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {member.skills.slice(0, 2).map((skill: string, sIdx: number) => (
-                        <span key={sIdx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-                    <span className="flex items-center space-x-1 truncate">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="truncate">{member.location}</span>
-                    </span>
-                    <span className="font-bold text-slate-900 shrink-0">{member.hourlyRate}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Bottom Banner to Register or Vetting */}
-        <div className="rounded-3xl bg-linear-to-r from-slate-900 to-slate-950 text-white p-8 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl text-center md:text-left">
-            <h3 className="text-xl sm:text-2xl font-black text-white">
-              Ready to Align With the Sovereign AI Network?
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Register as an independent researcher, GovTech specialist, venture founder, or apply for institutional Tier 2/3 sandbox vetting.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={() => onOpenRegister ? onOpenRegister('signup') : onNavigate('register')}
-              className="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs transition-all shadow-sm flex items-center space-x-2"
-            >
-              <Users className="w-4 h-4" />
-              <span>Register Member Profile</span>
-            </button>
-            <button
-              onClick={() => onOpenRegister ? onOpenRegister('sandbox') : onNavigate('register')}
-              className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs transition-all border border-slate-700 flex items-center space-x-2"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Apply for Sandbox Vetting</span>
-            </button>
-          </div>
-        </div>
+        )}
 
       </div>
     </div>
