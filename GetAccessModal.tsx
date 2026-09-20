@@ -1,615 +1,607 @@
-import React, { useState } from 'react';
-import { UserProfile, MemberDirectoryItem } from '../types';
-import { 
-  X, 
-  LogIn, 
-  UserPlus, 
-  ShieldCheck, 
-  Sparkles, 
-  Lock, 
-  Mail, 
-  User, 
-  Building, 
-  MapPin, 
-  Phone, 
-  CheckCircle2,
-  Cpu,
-  Key,
-  ArrowRight
-} from 'lucide-react';
+import { Competency, DeploymentProject, LiveChannel, LiveMessage, Guild, StartupItem, NationalMilestone } from '../types';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  currentUser: UserProfile | null;
-  onSignIn: (user: UserProfile) => void;
-  onSignOut: () => void;
-  onRegisterMemberListing?: (member: MemberDirectoryItem) => void;
-  initialMode?: 'signin' | 'signup';
-}
-
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  currentUser,
-  onSignIn,
-  onSignOut,
-  onRegisterMemberListing,
-  initialMode = 'signin'
-}) => {
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>(initialMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  // Sign Up fields
-  const [fullName, setFullName] = useState('');
-  const [organization, setOrganization] = useState('');
-  const [role, setRole] = useState<UserProfile['role']>('scholar');
-  const [roleTitle, setRoleTitle] = useState('AI Researcher');
-  const [sector, setSector] = useState<MemberDirectoryItem['sector']>('Enterprise AI');
-  const [location, setLocation] = useState('Beirut, Lebanon');
-  const [phone, setPhone] = useState('+961 70 000 000');
-  const [skills, setSkills] = useState('Python, RAG, Multi-Agent Systems');
-  const [bio, setBio] = useState('');
-  const [addToYellowPages, setAddToYellowPages] = useState(true);
-
-  if (!isOpen) return null;
-
-  const handleDemoSignIn = (presetRole: 'admin' | 'scholar' | 'founder' | 'freelancer') => {
-    setErrorMsg('');
-    if (presetRole === 'admin') {
-      const adminUser: UserProfile = {
-        id: 'usr_admin_maan',
-        email: 'maan@961ai.network',
-        name: 'Maan El-Khatib',
-        role: 'admin',
-        roleTitle: 'Chief AI Architect & Ecosystem Director',
-        organization: 'NCEI Lebanon / 961AI',
-        location: 'Beirut, Lebanon',
-        phone: '+961 70 939 779',
-        badge: 'Admin & Lead Architect',
-        tier: 'Admin',
-        allocatedComputeCredits: 100000,
-        verified: true,
-        isAdmin: true
-      };
-      onSignIn(adminUser);
-      onClose();
-    } else if (presetRole === 'scholar') {
-      const scholarUser: UserProfile = {
-        id: 'usr_scholar_nour',
-        email: 'nour.hajj@aubmc.edu.lb',
-        name: 'Dr. Nour Al-Hajj',
-        role: 'scholar',
-        roleTitle: 'Head of Clinical AI Research',
-        organization: 'AUBMC',
-        location: 'Hamra, Beirut, Lebanon',
-        phone: '+961 1 350 000',
-        badge: 'NCEI Verified Scholar',
-        tier: 'Scholar',
-        allocatedComputeCredits: 25000,
-        verified: true
-      };
-      onSignIn(scholarUser);
-      onClose();
-    } else if (presetRole === 'founder') {
-      const founderUser: UserProfile = {
-        id: 'usr_founder_ziad',
-        email: 'ziad@logisticsiq.me',
-        name: 'Ziad Mouawad',
-        role: 'guru',
-        roleTitle: 'Founder & CEO',
-        organization: 'LogisticsIQ Levant',
-        location: 'Dbayeh, Mount Lebanon',
-        phone: '+961 4 542 800',
-        badge: 'Founding Member',
-        tier: 'Penthouse',
-        allocatedComputeCredits: 50000,
-        verified: true
-      };
-      onSignIn(founderUser);
-      onClose();
-    } else {
-      const freelancerUser: UserProfile = {
-        id: 'usr_free_hadi',
-        email: 'hadi.kanso@security-audit.me',
-        name: 'Hadi Kanso',
-        role: 'freelancer',
-        roleTitle: 'Senior Smart Contract Auditor',
-        organization: 'Independent Consultant',
-        location: 'Saida, South Lebanon',
-        phone: '+961 7 724 339',
-        badge: 'Red Team Auditor',
-        tier: 'Public',
-        allocatedComputeCredits: 10000,
-        verified: true
-      };
-      onSignIn(freelancerUser);
-      onClose();
-    }
-  };
-
-  const handleStandardSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setErrorMsg('Please enter both your email and password.');
-      return;
-    }
-
-    const isAdminLogin = email.toLowerCase().includes('admin') || email.toLowerCase().includes('maan');
-    const user: UserProfile = {
-      id: 'usr_' + Date.now(),
-      email: email.trim(),
-      name: email.split('@')[0].replace('.', ' ').toUpperCase(),
-      role: isAdminLogin ? 'admin' : 'scholar',
-      roleTitle: isAdminLogin ? 'Platform Administrator' : 'Ecosystem Member',
-      organization: '961AI Network Peer',
-      location: 'Beirut, Lebanon',
-      badge: isAdminLogin ? 'Admin' : 'Verified Member',
-      tier: isAdminLogin ? 'Admin' : 'Scholar',
-      allocatedComputeCredits: isAdminLogin ? 100000 : 15000,
-      verified: true,
-      isAdmin: isAdminLogin
-    };
-
-    onSignIn(user);
-    onClose();
-  };
-
-  const handleSignUpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() || !email.trim()) {
-      setErrorMsg('Please provide your full name and email address.');
-      return;
-    }
-
-    const newId = 'mem_' + Date.now();
-    const newUser: UserProfile = {
-      id: newId,
-      email: email.trim(),
-      name: fullName.trim(),
-      role: role,
-      roleTitle: roleTitle.trim() || 'Ecosystem Member',
-      organization: organization.trim() || 'Independent',
-      location: location.trim(),
-      phone: phone.trim(),
-      badge: 'NCEI Verified',
-      tier: role === 'enterprise' ? 'Penthouse' : role === 'scholar' ? 'Scholar' : 'Public',
-      allocatedComputeCredits: 10000,
-      verified: true
-    };
-
-    // If opted into Yellow Pages, add to directory
-    if (addToYellowPages && onRegisterMemberListing) {
-      const initials = fullName
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .substring(0, 2)
-        .toUpperCase();
-
-      const memberListing: MemberDirectoryItem = {
-        id: newId,
-        name: fullName.trim(),
-        title: roleTitle.trim() || 'Specialist',
-        organization: organization.trim() || '961AI Network Peer',
-        initials: initials || 'MB',
-        role: role === 'scholar' ? 'AI Researcher' : role === 'freelancer' ? 'Freelance Consultant' : role === 'guru' ? 'Founder' : 'Software Architect',
-        sector: sector,
-        location: location.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        skills: skills.split(',').map(s => s.trim()).filter(Boolean),
-        bio: bio.trim() || `Active member specializing in ${sector} within the 961AI Lebanese innovation ecosystem.`,
-        badge: 'NCEI Verified',
-        tier: role === 'enterprise' ? 'Penthouse / VIP' : role === 'scholar' ? 'Scholar' : 'Public',
-        hourlyRate: '$100/hr',
-        status: 'Available',
-        projectsCount: 1,
-        rating: 5.0,
-        dateJoined: 'September 2026',
-        featured: false,
-        approved: true
-      };
-
-      onRegisterMemberListing(memberListing);
-    }
-
-    onSignIn(newUser);
-    setSuccessMsg('Account created successfully and profile activated!');
-    setTimeout(() => {
-      onClose();
-    }, 1000);
-  };
-
-  return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div 
-        className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header Ribbon */}
-        <div className="bg-slate-950 text-white p-6 pb-5 border-b border-slate-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-500/50 flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-              </div>
-              <div>
-                <h2 className="text-base sm:text-lg font-extrabold tracking-tight">
-                  NCEI Lebanon Identity Gateway
-                </h2>
-                <p className="text-[11px] font-mono text-cyan-400">
-                  961AI Network Member & Yellow Pages Access
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Tab buttons */}
-          <div className="flex items-center space-x-2 mt-5 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-            <button
-              type="button"
-              onClick={() => { setActiveTab('signin'); setErrorMsg(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
-                activeTab === 'signin'
-                  ? 'bg-cyan-500 text-slate-950 shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In to Node</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setActiveTab('signup'); setErrorMsg(''); }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
-                activeTab === 'signup'
-                  ? 'bg-cyan-500 text-slate-950 shadow-xs'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Sign Up & Join Yellow Pages</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Form Content */}
-        <div className="p-6 overflow-y-auto space-y-5">
-          {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-              {errorMsg}
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {/* TAB 1: SIGN IN */}
-          {activeTab === 'signin' && (
-            <div className="space-y-5">
-              {/* 1-Click Demo Profiles for Seamless Testing */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
-                  Quick Access Demo Accounts (1-Click Authentication):
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('admin')}
-                    className="p-2.5 rounded-xl border border-cyan-200 bg-cyan-50/70 hover:bg-cyan-100/80 text-left transition-all group"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>Maan El-Khatib</span>
-                      <Key className="w-3 h-3 text-cyan-600" />
-                    </div>
-                    <div className="text-[10px] text-cyan-800 font-mono">Admin / Lead Architect</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('scholar')}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>Dr. Nour Al-Hajj</span>
-                      <Cpu className="w-3 h-3 text-slate-400" />
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono">Healthcare AI Scholar</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('founder')}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>Ziad Mouawad</span>
-                      <Sparkles className="w-3 h-3 text-slate-400" />
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono">Logistics Founder</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDemoSignIn('freelancer')}
-                    className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-left transition-all"
-                  >
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
-                      <span>Hadi Kanso</span>
-                      <ShieldCheck className="w-3 h-3 text-slate-400" />
-                    </div>
-                    <div className="text-[10px] text-slate-500 font-mono">Freelance Auditor</div>
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative flex py-1 items-center">
-                <div className="grow border-t border-slate-200"></div>
-                <span className="shrink mx-4 text-[10px] font-mono text-slate-400 uppercase">Or Sign In with Credentials</span>
-                <div className="grow border-t border-slate-200"></div>
-              </div>
-
-              {/* Standard Email/Password Form */}
-              <form onSubmit={handleStandardSignIn} className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address or Handle:
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="e.g. founder@961ai.network"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Password:
-                    </label>
-                    <span className="text-[10px] text-cyan-700 cursor-pointer hover:underline">
-                      Forgot Access Key?
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
-                >
-                  <span>Authorize & Sign In</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* TAB 2: SIGN UP */}
-          {activeTab === 'signup' && (
-            <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Full Name: *
-                  </label>
-                  <div className="relative">
-                    <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="e.g. Walid Mansour"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      required
-                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address: *
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="email"
-                      placeholder="walid@venture.lb"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Organization / Startup:
-                  </label>
-                  <div className="relative">
-                    <Building className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="e.g. Cedar Labs / Freelance"
-                      value={organization}
-                      onChange={(e) => setOrganization(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Role / Professional Title:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Senior RAG Engineer"
-                    value={roleTitle}
-                    onChange={(e) => setRoleTitle(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:border-cyan-500 bg-slate-50/50"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Ecosystem Archetype:
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as any)}
-                    className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-hidden"
-                  >
-                    <option value="scholar">Scholar / Academic</option>
-                    <option value="freelancer">Freelance Builder</option>
-                    <option value="guru">Founder / Guru</option>
-                    <option value="enterprise">Enterprise Executive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Primary Sector:
-                  </label>
-                  <select
-                    value={sector}
-                    onChange={(e) => setSector(e.target.value as any)}
-                    className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-hidden"
-                  >
-                    <option value="Enterprise AI">Enterprise AI</option>
-                    <option value="FinTech">FinTech</option>
-                    <option value="HealthTech">HealthTech</option>
-                    <option value="GovTech">GovTech</option>
-                    <option value="Logistics">Logistics</option>
-                    <option value="LegalTech">LegalTech</option>
-                    <option value="EdTech">EdTech</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Lebanon / MENA City:
-                  </label>
-                  <div className="relative">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Beirut, Lebanon"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="w-full pl-7 pr-2 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Direct Phone / WhatsApp:
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="+961 70 123 456"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Key Skills (comma separated):
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. LangChain, Python, Next.js"
-                    value={skills}
-                    onChange={(e) => setSkills(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Professional Bio / Value Proposition:
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Describe your technical capabilities, past deployments, or what you bring to the NCEI ecosystem..."
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden bg-slate-50/50"
-                />
-              </div>
-
-              {/* Yellow Pages Opt-in Checkbox */}
-              <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 flex items-start space-x-2.5">
-                <input
-                  type="checkbox"
-                  id="yellow-pages-optin"
-                  checked={addToYellowPages}
-                  onChange={(e) => setAddToYellowPages(e.target.checked)}
-                  className="mt-0.5 rounded text-cyan-600 focus:ring-cyan-500"
-                />
-                <label htmlFor="yellow-pages-optin" className="text-xs text-amber-950 font-medium cursor-pointer">
-                  <span className="font-bold block">List me in the NCEI Members Yellow Pages</span>
-                  <span>Allow regional founders, government bodies, and investors to discover and contact you directly.</span>
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Complete Registration & Activate Node</span>
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+export const ECOSYSTEM_METADATA = {
+  orgName: "NCEI Lebanon",
+  orgFullTitle: "National Council for Entrepreneurship & Innovation",
+  networkName: "961AI Network",
+  networkAlt: "z961aiNetwork",
+  byline: "Home Business startups and entrepreneurs catalysts of the innovation ecosystem.",
+  mainStatementOfValue: "With the introduction of the Neural Matcher, we have engineered one of the most sophisticated platforms in the MENA region to invigorate this ecosystem. Whether you are a scholar pushing the boundaries of science, a freelancer solving complex government challenges, or a guru looking to monetize your genius, 961AI Network is the engine for your success.",
+  heroBadge: "NATIONAL INNOVATION INFRASTRUCTURE • MENA REGION",
+  stats: [
+    { label: "Active Startups & Ventures", value: "85+", change: "+34% YoY" },
+    { label: "RAG & Multi-Agent Deployments", value: "24+", change: "Production Tier" },
+    { label: "Vetted Guild Members", value: "1,420+", change: "Across 3 Tiers" },
+    { label: "National Policy & CV Blueprints", value: "6 Major", change: "Gov & World Bank" },
+  ]
 };
+
+export const CORE_COMPETENCIES: Competency[] = [
+  {
+    id: "ai-bizdev",
+    title: "AI Business Development & Venture Scaling",
+    subtitle: "Venture Architecture & Commercial Product Strategy",
+    description: "Aligning early-stage AI products with enterprise market needs, transitioning founders from simple LLM wrappers to high-value, outcome-based AI models and custom agentic workflows.",
+    tags: ["LLM Transition", "Enterprise GTM", "Agentic Workflows", "Monetization"],
+    deliverables: [
+      "Product-Market Fit validation for frontier AI models",
+      "Unit-economics optimization for token consumption and GPU workloads",
+      "Conversion of wrapper MVPs into defensible multi-tier IP architectures",
+      "Enterprise procurement compliance and security readiness"
+    ],
+    impactMetric: "4.8x average ARR expansion post-transition"
+  },
+  {
+    id: "multi-agent-rag",
+    title: "Enterprise AI & Multi-Agent Architecture",
+    subtitle: "Distributed Inference & Autonomous Supervisor Networks",
+    description: "Expert design of Retrieval-Augmented Generation (RAG) pipelines, n8n workflow automations, vector database implementations, and function-calling multi-agent networks.",
+    tags: ["Multi-Agent", "RAG Pipelines", "n8n Workflows", "Vector DBs", "Function Calling"],
+    deliverables: [
+      "Custom LangChain, LlamaIndex, and native agent supervisors",
+      "Low-latency Milvus, Pinecone, and pgvector clustering",
+      "Autonomous tool-calling frameworks with validation gates",
+      "Enterprise fallback topologies and semantic cache layers"
+    ],
+    impactMetric: "99.4% factual precision across enterprise corpora"
+  },
+  {
+    id: "ecosystem-partnerships",
+    title: "Ecosystem Building & Strategic Partnerships",
+    subtitle: "Institutional Alliances & Capital syndication",
+    description: "Direct access to regional entrepreneurship networks, government institutions, cross-border investment channels, and tech incubation programs.",
+    tags: ["GovTech Alliances", "Cross-Border VC", "MENA Dealflow", "Incubators"],
+    deliverables: [
+      "Bilateral bridges to GCC and European sovereign tech funds",
+      "Institutional tech sandbox integration with regulatory bodies",
+      "Syndicated angel dealrooms and co-investment frameworks",
+      "Regional accelerator curricula and demo-day staging"
+    ],
+    impactMetric: "$18M+ leveraged ecosystem co-investment pool"
+  },
+  {
+    id: "gtm-brand-authority",
+    title: "Go-To-Market (GTM) & Brand Authority",
+    subtitle: "High-Converting Growth Infrastructure & Digital Dominance",
+    description: "Architecting digital presence, SEO infrastructure, news CMS deployments, and high-converting growth funnels for emerging tech startups.",
+    tags: ["Search Authority", "Growth Funnels", "Dynamic CMS", "Technical PR"],
+    deliverables: [
+      "High-velocity programatic SEO architectures for deep-tech niches",
+      "Automated news engine and editorial publication hubs",
+      "WhatsApp Business API funnel automation for MENA customer capture",
+      "Thought leadership positioning and international tier-1 coverage"
+    ],
+    impactMetric: "320% organic inbound reach expansion"
+  },
+  {
+    id: "coaching-talent",
+    title: "Coaching & Talent Development",
+    subtitle: "Executive Transformation & Engineering Leadership",
+    description: "Executive coaching, mindset alignment, performance optimization, and mentoring engineering leads into strategic startup CEOs.",
+    tags: ["Founder Mindset", "Engineering to CEO", "Performance Ops", "Talent Upskilling"],
+    deliverables: [
+      "1-on-1 executive performance and capital negotiation mastery",
+      "Engineering-to-CEO psychological alignment & delegation systems",
+      "Publication-as-authority curriculum for founder personal brands",
+      "Talent sourcing pods for AI researchers and ML engineers"
+    ],
+    impactMetric: "120+ senior technical leaders coached"
+  }
+];
+
+export const DEPLOYMENT_PROJECTS: DeploymentProject[] = [
+  // 1. Technical AI Architecture & App Development
+  {
+    id: "ballish-agents",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "Deep Multi-Agent Orchestration & Knowledge Systems",
+    title: "Ballish & Enterprise Agent Workspace",
+    description: "Complex supervisor networks, executable intelligence layers, and unified workspace environments coordinating autonomous multi-agent task resolution.",
+    technologies: ["Supervisor Networks", "Executable Layers", "Agent Workspaces", "Context Bus"],
+    metrics: "Sub-500ms multi-agent coordination loop",
+    status: "Enterprise Active",
+    badgeColor: "cyan"
+  },
+  {
+    id: "company-brain",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "Deep Multi-Agent Orchestration & Knowledge Systems",
+    title: "Company Brain & Brain Builder",
+    description: "Institutional memory synthesis platform extracting unstructured operational data, emails, and documentation into unified queryable organizational cognition.",
+    technologies: ["GraphRAG", "Knowledge Graphs", "Incremental Vectorization", "Semantic Routing"],
+    metrics: "100k+ enterprise records indexed per node",
+    status: "Enterprise Active",
+    badgeColor: "cyan"
+  },
+  {
+    id: "al-hakam-legal",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
+    title: "Al-Hakam Legal Knowledge Base",
+    description: "Specialized Retrieval-Augmented Generation engine and hybrid search model for MENA civil and commercial legal codes with bilingual Arabic/English citations.",
+    technologies: ["Hybrid Sparse/Dense Search", "Arabic Legal NLP", "Citation Grounding", "Cross-Encoder"],
+    metrics: "100% verifiable statutory references",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "nexuslm",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
+    title: "NexusLM & Research Notebook Workspaces",
+    description: "Domain-specific search engine with optical OCR processing tools for legal dossiers, academic manuscripts, and macroeconomic telemetry.",
+    technologies: ["OCR Processing", "Domain Embeddings", "Notebook Workspaces", "Dynamic Re-ranking"],
+    metrics: "50+ pages/sec OCR processing throughput",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "risk-economic-intel",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "AI-Native RAG & Domain-Specific Search Engines",
+    title: "Risk & Economic Intelligence Workspace",
+    description: "Real-time macroeconomic risk indexation with multi-vector scenario generation for Lebanese and MENA banking and commerce stability assessments.",
+    technologies: ["Time-Series Vectors", "Predictive Risk Modeling", "Financial Data Pipelines"],
+    metrics: "Daily macro stress testing indices",
+    status: "Regional Deployment",
+    badgeColor: "cyan"
+  },
+  {
+    id: "saas-deployment-hub",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "Automated Deployment & Workflow Orchestration",
+    title: "SaaS Deployment Hub & Studio Launchpad",
+    description: "Automated low-code SaaS provisioning tools, code generation hubs, and cross-platform publishing suites enabling rapid concept-to-production launches.",
+    technologies: ["Container Automation", "Low-Code Generators", "CI/CD Micro-Orchestrators"],
+    metrics: "48-hour typical MVP deployment cycle",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "social-content-suite",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "Automated Deployment & Workflow Orchestration",
+    title: "Automated Social Content & Digital Identity Suite",
+    description: "Cross-platform publishing engine and workflow orchestrator aligning brand voices across channels with automated compliance verification.",
+    technologies: ["Multi-Channel API", "Content Generation Engine", "Digital Identity Vault"],
+    metrics: "10x throughput in branded assets",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "startup-portal",
+    category: "tech-ai",
+    categoryLabel: "Technical AI Architecture",
+    subcategory: "Developers & Startup Portals",
+    title: "Startup Portal & Telemetry Hub",
+    description: "Frontier-model powered developer workspaces, telemetry dashboards, and research indexing portals for high-velocity venture engineering teams.",
+    technologies: ["Telemetry Dashboards", "Frontier LLM Routing", "Research Indexing API"],
+    metrics: "Unified dev telemetry for 80+ builders",
+    status: "Enterprise Active",
+    badgeColor: "cyan"
+  },
+
+  // 2. Business Development, Commercialization & Venture Ecosystems
+  {
+    id: "capitalissues-iq",
+    category: "biz-dev",
+    categoryLabel: "Business Development & Ventures",
+    subcategory: "Macroeconomic & Financial Intelligence Terminals",
+    title: "CapitalIssuesIQ & MarketPulse",
+    description: "Commercialized real-time financial tracking, market index feeds, and risk analysis platforms deployed for commercial banks and corporate treasuries.",
+    technologies: ["Streaming Market Feeds", "Forex Discrepancy Monitors", "Treasury Risk Analytics"],
+    metrics: "$240M+ simulated transaction analytics",
+    status: "Commercialized",
+    badgeColor: "amber"
+  },
+  {
+    id: "combinator-961",
+    category: "biz-dev",
+    categoryLabel: "Business Development & Ventures",
+    subcategory: "Venture Incubation & Dealroom Platforms",
+    title: "961 Combinator & z961combinator",
+    description: "Ecosystem incubation hubs featuring high-density community dealrooms, curated hacker news clones, and gamified founder pitch accelerators.",
+    technologies: ["Dealroom Engine", "Interactive Pitch Scoring", "Hacker News Clone CMS"],
+    metrics: "350+ startup pitches evaluated",
+    status: "Live & Scaled",
+    badgeColor: "amber"
+  },
+  {
+    id: "zrolodex-dealroom",
+    category: "biz-dev",
+    categoryLabel: "Business Development & Ventures",
+    subcategory: "Venture Incubation & Dealroom Platforms",
+    title: "Zrolodex & MENA Investment Directory",
+    description: "Global startup and investor indexation infrastructure connecting angel syndicates, sovereign capital, and MENA founders with deep algorithmic matchmaking.",
+    technologies: ["CRM Graph Database", "Investor Syndication Pipelines", "Entity Resolution"],
+    metrics: "1,200+ verified regional investor profiles",
+    status: "Live & Scaled",
+    badgeColor: "amber"
+  },
+  {
+    id: "rawcoach-ai",
+    category: "biz-dev",
+    categoryLabel: "Business Development & Ventures",
+    subcategory: "Specialized AI Coaching & Talent Upskilling",
+    title: "RAWCOACH.AI & Resume Builder",
+    description: "Gen Z-inspired executive coaching, leadership growth portals, and automated resume optimization tools engineered for the Arab digital economy.",
+    technologies: ["Voice & Text Coaching Bots", "Automated ATS Resume Parsing", "Skill Gap Mapping"],
+    metrics: "14,000+ optimized profiles & resumes",
+    status: "Commercialized",
+    badgeColor: "amber"
+  },
+  {
+    id: "alwarraq-webfx",
+    category: "biz-dev",
+    categoryLabel: "Business Development & Ventures",
+    subcategory: "Digital Publishing & Media Authority",
+    title: "Alwarraq News & WebFX Agency Toolkit",
+    description: "High-fidelity, dynamic news generation engines and digital agency toolkits powering high-volume authoritative publications across technology and culture.",
+    technologies: ["Dynamic News Pipeline", "Media Generation Workflow", "Digital Agency Engine"],
+    metrics: "1.2M+ monthly pageviews generated",
+    status: "Commercialized",
+    badgeColor: "amber"
+  },
+
+  // 3. Vertical Marketplaces & Consumer Tech Advisories
+  {
+    id: "artisan-ecommerce",
+    category: "marketplaces",
+    categoryLabel: "Vertical Marketplaces",
+    subcategory: "Artisan E-Commerce & Cyberpunk Platforms",
+    title: "Pickle & Pepper Market & Avant-Garde Commerce",
+    description: "End-to-end B2C and B2B artisanal marketplaces with bespoke administrative workflows, dynamic inventory syncing, and automated dropshipping logic.",
+    technologies: ["Custom Headless Checkout", "Cross-Border Settlement", "Dropship Dispatch Logic"],
+    metrics: "50+ artisan vendors integrated",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "gaming-healthcare",
+    category: "marketplaces",
+    categoryLabel: "Vertical Marketplaces",
+    subcategory: "Gaming, Esports & Healthcare Solutions",
+    title: "961Med, FC Pulse & Leban Esports",
+    description: "Virtual direct-pay clinic networks paired with high-performance gaming loyalty hubs featuring AI talent scouting and esports tournament management.",
+    technologies: ["Direct-Pay Telehealth", "AI Esports Scouting", "Gamified Loyalty Smart Ledger"],
+    metrics: "4,500+ active gamers & patient consultations",
+    status: "Live & Scaled",
+    badgeColor: "cyan"
+  },
+  {
+    id: "b2b-lead-intel",
+    category: "marketplaces",
+    categoryLabel: "Vertical Marketplaces",
+    subcategory: "B2B Growth & Lead Intelligence Services",
+    title: "Point to Business Services & Lebanon Airbnb Platform",
+    description: "Structured B2B email lead intelligence databases and curated regional hospitality showcases accelerating commercial acquisition.",
+    technologies: ["B2B Data Scraping & Verification", "Hospitality Booking Showcases", "Email Enrichment"],
+    metrics: "250k+ verified commercial leads",
+    status: "Commercialized",
+    badgeColor: "cyan"
+  }
+];
+
+export const LIVE_CHANNELS: LiveChannel[] = [
+  {
+    id: "public-square",
+    name: "#public-square",
+    tier: "public",
+    tierLabel: "Tier 1: Public Square",
+    description: "Open forum for casual networking, MENA tech news aggregation, ecosystem questions, and public community support.",
+    activeUsers: 342,
+    unreadCount: 4,
+    isEncrypted: false
+  },
+  {
+    id: "scholars-lab",
+    name: "#scholars-lab",
+    tier: "scholar",
+    tierLabel: "Tier 2: The Scholar's Lab",
+    description: "Collaborative research zone: clean dataset exchanges, daily ArXiv ML paper breakdowns, and co-developed open-source prompt libraries.",
+    activeUsers: 88,
+    unreadCount: 2,
+    isEncrypted: false
+  },
+  {
+    id: "gurus-penthouse",
+    name: "#gurus-penthouse",
+    tier: "penthouse",
+    tierLabel: "Tier 3: The Guru's Penthouse",
+    description: "Exclusive encrypted channel where premium members access high-frequency 'Alpha' market signals, 5-figure bounties, and elite consultation suites.",
+    activeUsers: 24,
+    unreadCount: 0,
+    isEncrypted: true
+  },
+  {
+    id: "enterprise-war-room",
+    name: "#enterprise-war-room",
+    tier: "penthouse",
+    tierLabel: "Tier 3: Enterprise War Rooms",
+    description: "High-security strategic chambers for government task force leaders, institutional bank heads, and venture partners executing live Red Teaming and private deals.",
+    activeUsers: 12,
+    unreadCount: 0,
+    isEncrypted: true
+  }
+];
+
+export const INITIAL_MESSAGES: Record<string, LiveMessage[]> = {
+  "public-square": [
+    {
+      id: "m1",
+      channelId: "public-square",
+      sender: "Neural Concierge",
+      role: "System AI Bot",
+      avatar: "NC",
+      timestamp: "10:41 AM",
+      content: "Welcome to NCEILEBANON Live Nexus! I am your Neural Concierge. State your objective (Scholar, Freelancer, Founder, Enterprise) to receive instant channel routing and compute access.",
+      badge: "Native AI",
+      isAiBot: true
+    },
+    {
+      id: "m2",
+      channelId: "public-square",
+      sender: "Tarek Mansour",
+      role: "Hardware Founder",
+      avatar: "TM",
+      timestamp: "10:44 AM",
+      content: "Has anyone benchmarked the local low-latency RAG pipeline for Arabic legal codices compared to standard OpenAI models?",
+      badge: "Founder"
+    },
+    {
+      id: "m3",
+      channelId: "public-square",
+      sender: "@961Brain",
+      role: "Autonomous RAG Bot",
+      avatar: "9B",
+      timestamp: "10:45 AM",
+      content: "@Tarek: Al-Hakam Legal Knowledge Base achieves 99.4% citation accuracy by pairing custom Arabic stemmers with hybrid dense/sparse vector search, outperforming generic LLMs on Lebanese commerce laws by 41%.",
+      badge: "RAG Oracle",
+      isAiBot: true
+    }
+  ],
+  "scholars-lab": [
+    {
+      id: "m4",
+      channelId: "scholars-lab",
+      sender: "Dr. Maya Khoury",
+      role: "NLP Research Fellow",
+      avatar: "MK",
+      timestamp: "09:30 AM",
+      content: "Just uploaded the cleaned Levantine Arabic dialect dataset (142k verified prompt-response pairs). Check the pinned Data Cooperative link.",
+      badge: "Scholar"
+    },
+    {
+      id: "m5",
+      channelId: "scholars-lab",
+      sender: "@961Brain",
+      role: "Autonomous RAG Bot",
+      avatar: "9B",
+      timestamp: "09:32 AM",
+      content: "Dataset ingested into sandbox cache. PII scan complete: 0 leaks detected. Available for federated fine-tuning in Guilds sandbox.",
+      badge: "RAG Oracle",
+      isAiBot: true
+    }
+  ],
+  "gurus-penthouse": [
+    {
+      id: "m6",
+      channelId: "gurus-penthouse",
+      sender: "Ziad Haddad",
+      role: "Ecosystem Partner",
+      avatar: "ZH",
+      timestamp: "08:15 AM",
+      content: "[ALPHA SIGNAL] Regional sovereign wealth fund just opened a $15M fast-track allocation for multi-agent supply chain optimization. Reviewing RFP in private escrow suite.",
+      badge: "Tier 3 Vetted"
+    },
+    {
+      id: "m7",
+      channelId: "gurus-penthouse",
+      sender: "Karim B.",
+      role: "Enterprise Architect",
+      avatar: "KB",
+      timestamp: "08:22 AM",
+      content: "Deploying the Red Teaming audit for the VAMS v3 architecture now. Target throughput: 15,000 QR scans/minute without latency degradation.",
+      badge: "Tier 3 Vetted"
+    }
+  ],
+  "enterprise-war-room": [
+    {
+      id: "m8",
+      channelId: "enterprise-war-room",
+      sender: "Institutional Lead",
+      role: "GovTech Director",
+      avatar: "IL",
+      timestamp: "07:50 AM",
+      content: "Reviewing the National SME Revival Strategy models. The automated inventory forecasting metrics have been approved for Ministry presentation.",
+      badge: "GovTech Special"
+    }
+  ]
+};
+
+export const INDUSTRY_GUILDS: Guild[] = [
+  {
+    id: "fintech-guild",
+    name: "FinTech & Banking Intelligence Guild",
+    sector: "FinTech",
+    description: "Exclusive micro-consortium sharing macroeconomic index feeds, risk engines, and banking automation tools with strict banking compliance.",
+    regulatoryStandard: "Basel III & BDL Circular 158/165 Frameworks",
+    dataCooperativeName: "Levant Financial Data Cooperative",
+    sandboxFeatures: ["Synthetic Transaction Generator", "Anti-Money Laundering Anonymizer", "n8n Banking Webhooks", "Zero-PII Gateway"],
+    membersCount: 420,
+    status: "Active Gated Sandbox"
+  },
+  {
+    id: "healthcare-guild",
+    name: "Digital Health & Clinical AI Guild",
+    sector: "Healthcare",
+    description: "Governed clinical innovation sandbox linking virtual clinic networks, diagnostic assistants, and emergency dispatch systems.",
+    regulatoryStandard: "HIPAA Compliant & MoPH Hospital Standards",
+    dataCooperativeName: "MedData Federated Cooperative",
+    sandboxFeatures: ["Synthetic Patient Records (FHIR)", "DICOM Image Masking Pipeline", "Direct-Pay Telehealth Ledger", "Clinical Protocol Validator"],
+    membersCount: 310,
+    status: "Active Gated Sandbox"
+  },
+  {
+    id: "legaltech-guild",
+    name: "LegalTech & Regulatory Policy Guild",
+    sector: "Legal Tech",
+    description: "High-level consortium connecting law firms, ministries, and enterprise legal departments with verified bilingual statutory databases.",
+    regulatoryStandard: "GDPR, Arab League Legal Harmonization & ISO 27001",
+    dataCooperativeName: "Al-Hakam Jurisprudence Cooperative",
+    sandboxFeatures: ["Bilingual Contract Synthesizer", "Court Judgment Semantic Search", "Redline Risk Classifier", "Statute Cross-Referencer"],
+    membersCount: 285,
+    status: "Active Gated Sandbox"
+  }
+];
+
+export const TECHNICAL_VALUES = {
+  organization: "z961aiNetwork",
+  coreValues: [
+    {
+      title: "AI Integrations & Automation",
+      description: "Spearheading custom AI agent deployment, RAG pipelines, n8n automated workflows, LangChain integrations, and GPT-powered business tools.",
+      icon: "Cpu"
+    },
+    {
+      title: "Social Media & Growth Architecture",
+      description: "Directing end-to-end social media strategy, brand monitoring, paid campaigns, and WhatsApp Business developer deployments.",
+      icon: "Share2"
+    },
+    {
+      title: "Founder & Executive Coaching",
+      description: "Delivering structured 1-on-1 and group coaching focused on startup monetization, founder performance, leadership identity, and publication-as-authority strategies.",
+      icon: "Users"
+    },
+    {
+      title: "Operational Leadership",
+      description: "Architecting enterprise AI capacity models, managing distributed AI engineering pods, and executing advanced technical masterclasses.",
+      icon: "ShieldCheck"
+    }
+  ],
+  alkhawarizmiLead: {
+    role: "AI Development Lead",
+    company: "AlKhawarizmi Solutions",
+    timeline: "Sep 2025 – Present",
+    highlights: [
+      {
+        title: "Enterprise RAG Systems",
+        detail: "Architected dynamic, real-time vector databases and knowledge bases grounding AI capabilities inside company-specific unstructured data."
+      },
+      {
+        title: "Secure AI Sandboxes (ALmouwateN)",
+        detail: "Engineered isolated, containerized AI environments featuring PII masking and controlled execution for civic/government data interactions."
+      },
+      {
+        title: "Autonomous Agent Networks",
+        detail: "Built specialized multi-agent systems including aicademy.online (AI scholar community) and matchprenai.online (freelancer matchmaking platform)."
+      },
+      {
+        title: "Fintech & Banking Automation",
+        detail: "Deployed n8n and LangChain API workflows for data analysis and financial simulations across the regional fintech and banking sectors."
+      }
+    ]
+  }
+};
+
+export const NATIONAL_CV: NationalMilestone[] = [
+  {
+    id: "vams-system",
+    title: "National COVID-19 Emergency Task Force",
+    entity: "Rafic Hariri University Hospital & Ministry of Public Health",
+    date: "2020 – 2022",
+    scope: "National Critical Infrastructure",
+    description: "Built the Vaccination Management Information System (VAMS) for Rafic Hariri University Hospital, incorporating QR patient tracking and PCR data systems.",
+    keyOutputs: [
+      "End-to-end Vaccination Management Information System (VAMS)",
+      "High-throughput QR patient verification at national triage centers",
+      "Automated PCR lab result syndication and digital vaccination certificate issuance",
+      "Zero-downtime server scaling during emergency national surges"
+    ],
+    impactMetric: "Over 1.8M verified QR vaccinations and tests processed"
+  },
+  {
+    id: "digitization-blueprints",
+    title: "Digitization & Policy Blueprints",
+    entity: "Ministry of State for Administrative Development (OMSAR) & World Bank",
+    date: "2022 – 2024",
+    scope: "Public Sector Modernization",
+    description: "Submitted national digitization proposals to the Ministry of State for Administrative Development and the World Bank.",
+    keyOutputs: [
+      "National Digital Identity & One-Stop Civic Service Blueprint",
+      "Open Government Data interoperability standards across Lebanese ministries",
+      "World Bank technical framework for judicial and civil registry digitization",
+      "Cloud sovereignty and public sector cryptographic security recommendations"
+    ],
+    impactMetric: "Formally submitted to OMSAR & World Bank taskforces"
+  },
+  {
+    id: "economic-recovery",
+    title: "National Economic Recovery & SME Revival Strategy",
+    entity: "Lebanese Industrial & Commercial Taskforces",
+    date: "2023 – Present",
+    scope: "Macroeconomic Restructuring",
+    description: "Drafted the Lebanon SME Revival Strategy and post-COVID industrial restructuring models.",
+    keyOutputs: [
+      "Lebanon SME Revival Strategy with export-focused digital acceleration corridors",
+      "Post-COVID industrial restructuring models for local agro-food and manufacturing",
+      "Digital remittance and cross-border payment integration guidelines",
+      "Alternative credit-scoring framework for micro-enterprises leveraging AI telemetry"
+    ],
+    impactMetric: "Adopted in regional SME rehabilitation pilot zones"
+  }
+];
+
+export const STARTUPS_MANAGED: StartupItem[] = [
+  {
+    id: "the-961ai-network",
+    name: "The 961aiNetwork",
+    domain: "961ai.network",
+    role: "Founder",
+    timeline: "Oct 2024 – Present",
+    description: "Established Lebanon's premier AI startup hub and accelerator ecosystem. Directing the AI Academy (offering hands-on instruction in ML, NLP, computer vision, and AI ethics), active founder mentorship programs, and a regional network for AI researchers and entrepreneurs.",
+    focusAreas: ["AI Accelerator", "Founder Mentorship", "AI Academy", "Research Hub"],
+    metrics: "85+ mentored founders • 1,200+ trained in AI Academy",
+    url: "#"
+  },
+  {
+    id: "zrolodex",
+    name: "zrolodex.live",
+    domain: "zrolodex.live",
+    role: "Proprietary Platform",
+    timeline: "2024 – Present",
+    description: "Smart networking and relationship-management platform combining CRM capabilities with digital rolodex tracking for founders and business executives.",
+    focusAreas: ["Smart CRM", "Executive Rolodex", "AI Relationship Intelligence", "Deal Sourcing"],
+    metrics: "2,400+ active executive relationship graphs",
+    url: "https://zrolodex.live"
+  },
+  {
+    id: "zappcademy",
+    name: "zappcademy.xyz",
+    domain: "zappcademy.xyz",
+    role: "Educational Venture",
+    timeline: "2024 – Present",
+    description: "Gamified digital academy delivering micro-courses in AI integration, social media growth, and tech entrepreneurship tailored for the Arab digital economy.",
+    focusAreas: ["Gamified Learning", "Micro-Credentials", "Arab Digital Economy", "No-Code AI"],
+    metrics: "8,500+ completed micro-lessons",
+    url: "https://zappcademy.xyz"
+  },
+  {
+    id: "logistics-iq",
+    name: "LogisticsIQ Supply",
+    domain: "logisticsiq.supply",
+    role: "B2B Enterprise Venture",
+    timeline: "2024 – Present",
+    description: "AI-driven supply chain intelligence platform providing demand forecasting, vendor analytics, and inventory optimization for regional SMEs.",
+    focusAreas: ["Demand Forecasting", "Vendor Analytics", "Inventory Optimization", "SME Logistics"],
+    metrics: "$12M+ managed inventory tracked via predictive models",
+    url: "#"
+  }
+];

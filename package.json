@@ -3,233 +3,923 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AiCourseCaseStudy } from '../types';
+import React, { useState, useEffect } from 'react';
+import { 
+  Building2, 
+  Clock, 
+  Award, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronDown,
+  ChevronsUpDown,
+  Copy, 
+  Check, 
+  Share2, 
+  Sparkles, 
+  Layers, 
+  BookOpen, 
+  Rocket, 
+  Zap, 
+  CheckCircle2, 
+  Compass, 
+  Wrench, 
+  Code2, 
+  FileText, 
+  ExternalLink, 
+  ShieldAlert, 
+  TrendingUp, 
+  DollarSign,
+  ArrowRight,
+  ListChecks,
+  FileCheck,
+  Quote,
+  Terminal,
+  HelpCircle
+} from 'lucide-react';
+import { AiCourseItem, AiCourseModule } from '../types';
 
-export const COURSE_DEEP_CASE_STUDIES: Record<string, Partial<AiCourseCaseStudy>> = {
-  'mit-sloan-ai-business-strategy': {
-    baselineProblem: 'A fast-growing FinTech digital bank was experiencing severe user onboarding drop-off. Over 42% of applicants abandoned the registration flow due to manual 3-day verification delays, while compliance backlogs were forcing the company to hire 8 full-time verification officers at an annual cost of $320,000.',
-    solutionArchitecture: 'Instead of investing $120,000 in custom computer vision models, leadership applied MIT Sloan evaluation frameworks to adopt commercial off-the-shelf OCR and biometric liveness verification APIs connected via event webhooks, backed by an automated human-in-the-loop exception queue.',
-    stepByStepImplementation: [
-      'Week 1: Conducted workflow audit, identifying document parsing and facial match as the 80/20 bottleneck.',
-      'Week 2: Evaluated 4 managed biometric vendors against SOC-2, latency, and false-rejection rate benchmarks.',
-      'Week 3: Implemented webhook event architecture routing high-confidence passes (>94%) directly to database activation.',
-      'Week 4: Built internal supervisor dashboard routing ambiguous edge cases to a single human compliance officer.'
-    ],
-    quantifiedResults: [
-      { metric: 'Onboarding Latency', before: '72 Hours (Manual Review)', after: '45 Seconds (Instant Automated Pass)', impact: '99% faster' },
-      { metric: 'Applicant Drop-off Rate', before: '42% Abandonment', after: '14% Abandonment', impact: '66% reduction' },
-      { metric: 'Annual Compliance Payroll', before: '$320,000 (8 FTEs)', after: '$65,000 (1 FTE Supervisor)', impact: '$255k saved/year' },
-      { metric: 'Upfront R&D Saved', before: '$120,000 budget', after: '$0 custom model training', impact: '$120,000 capital preserved' }
-    ],
-    founderQuote: '"The MIT framework saved us from building an expensive proprietary machine learning science division when a reliable managed API gateway delivered superior accuracy in 1/10th the time."',
-    keyInsight: 'In non-differentiating compliance infrastructure, managed API integration combined with strict exception thresholds will beat custom model development in speed, accuracy, and capital efficiency every time.'
-  },
+interface AiCourseDetailViewProps {
+  course: AiCourseItem;
+  prevCourse: AiCourseItem | null;
+  nextCourse: AiCourseItem | null;
+  onBack: () => void;
+  onSelectCourse: (courseId: string) => void;
+  onOpenMatcher?: () => void;
+}
 
-  'deeplearning-ai-for-everyone': {
-    baselineProblem: 'An e-commerce store with 20,000 SKUs relied on static, hardcoded category banners on checkout pages. Cross-selling was purely manual, conversion rates on recommendations hovered at a dismal 0.8%, and the founder could not justify a $150k data science hire.',
-    solutionArchitecture: 'Following Andrew Ng’s AI For Everyone methodology, the founder mapped checkout event streams into a clean PostgreSQL relational schema and hired a freelance engineer for 2 weeks to deploy an open-source collaborative filtering model on AWS Lambda.',
-    stepByStepImplementation: [
-      'Days 1–3: Mapped raw Shopify order logs into normalized item-to-item co-occurrence tables.',
-      'Days 4–7: Deployed an open-source collaborative filtering script trained on 18 months of historical cart data.',
-      'Days 8–11: Built an automated checkout webhook delivering 3 personalized cross-sell recommendations.',
-      'Days 12–14: Ran an A/B test across 5,000 incoming customer sessions to measure basket size lift.'
-    ],
-    quantifiedResults: [
-      { metric: 'Average Order Value (AOV)', before: '$44.50 per order', after: '$54.30 per order', impact: '+22% higher' },
-      { metric: 'Recommendation CTR', before: '0.8% click-through', after: '5.4% click-through', impact: '6.75x increase' },
-      { metric: 'Engineering Spend', before: '$150k estimated quote', after: '$3,800 contractor build', impact: '97% cost avoidance' },
-      { metric: 'Deployment Timeline', before: '6-month planned project', after: '14 days to production', impact: '10x faster launch' }
-    ],
-    founderQuote: '"Learning how machine learning models actually process tabular inputs demystified the whole discipline. I went from feeling intimidated to giving our contractor an airtight 2-page specification that paid for itself in 72 hours."',
-    keyInsight: 'You do not need a PhD or deep neural networks to extract massive financial value from your business data; simple normalized SQL tables and proven open-source recommenders deliver 80% of the ROI.'
-  },
+export const AiCourseDetailView: React.FC<AiCourseDetailViewProps> = ({
+  course,
+  prevCourse,
+  nextCourse,
+  onBack,
+  onSelectCourse,
+  onOpenMatcher
+}) => {
+  const [activeSection, setActiveSection] = useState<'all' | 'syllabus' | 'case-study' | 'resources' | 'checklist'>('all');
+  const [copiedPromptIndex, setCopiedPromptIndex] = useState<number | null>(null);
+  const [copiedBrief, setCopiedBrief] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({});
 
-  'microsoft-ai-business-professional': {
-    baselineProblem: 'A B2B enterprise software startup was experiencing sluggish 45-day sales cycles. Sales representatives spent 18 hours per week manually writing call summaries, hunting for product specs across SharePoint, and tailoring proposal slides, causing deals to stall and lose momentum.',
-    solutionArchitecture: 'Trained the 6-person sales force on Microsoft 365 Copilot prompt architecture. Implemented Copilot Studio agents connected to internal pricing tables and CRM data, enabling instant post-call proposal generation within 5 minutes of meeting termination.',
-    stepByStepImplementation: [
-      'Week 1: Configured Microsoft Graph security boundaries and deployed Microsoft Copilot licenses to sales reps.',
-      'Week 2: Standardized 4 multi-prompt sequences converting recorded Teams meeting transcripts into executive proposals.',
-      'Week 3: Created an internal Copilot Studio sales-assistant agent answering technical RFPs from verified security docs.',
-      'Week 4: Instrumented deal progression speed and response times inside HubSpot CRM.'
-    ],
-    quantifiedResults: [
-      { metric: 'Average Sales Cycle Length', before: '45 Days', after: '28 Days', impact: '38% latency reduction' },
-      { metric: 'Weekly Admin Time per Rep', before: '18 Hours / week', after: '4 Hours / week', impact: '14 hrs freed for active selling' },
-      { metric: 'Post-Call Proposal Turnaround', before: '48–72 Hours delay', after: '< 15 Minutes', impact: 'Real-time client momentum' },
-      { metric: 'Quarterly Win Rate', before: '21% closed-won', after: '31% closed-won', impact: '+10% absolute gain' }
-    ],
-    founderQuote: '"By automating the administrative drag of RFP responses and proposal synthesis, our reps doubled their active prospect calls while sending out more personalized, error-free proposals than ever before."',
-    keyInsight: 'Deal velocity is the single largest lever in B2B sales; eliminating proposal latency turns meeting enthusiasm into signed agreements before buyer urgency evaporates.'
-  },
+  // Accordion state: by default, Module 1 is expanded for quick scanning
+  const [expandedModules, setExpandedModules] = useState<Record<number, boolean>>({ 1: true });
 
-  'duke-ai-for-product-management': {
-    baselineProblem: 'An EdTech adaptive learning startup was struggling with user retention. Students dropped off when automated math exercises became either too easy or frustratingly difficult. Because the team lacked probabilistic feedback loops, the algorithm could not detect user struggle until session abandonment.',
-    solutionArchitecture: 'Applied Duke AI Product Management principles to establish probabilistic confidence bands and user telemetry loops. Built an adaptive prompt routing layer that dynamically diagnosed student frustration and served contextual hint micro-prompts before escalating difficulty.',
-    stepByStepImplementation: [
-      'Sprint 1: Drafted a probabilistic PRD defining explicit latency, difficulty confidence, and fallback hint triggers.',
-      'Sprint 2: Instrumented telemetry tracking response latency, mouse dwell times, and repeated question edits.',
-      'Sprint 3: Connected an LLM hint generator that provided Socratic clues rather than giving away direct answers.',
-      'Sprint 4: Rolled out feature via an A/B test against 2,000 active students and analyzed completion curves.'
-    ],
-    quantifiedResults: [
-      { metric: 'Student Session Completion', before: '54% completion', after: '88% completion', impact: '+34% improvement' },
-      { metric: 'Weekly Active Engagement', before: '18 minutes / day', after: '31 minutes / day', impact: '+72% time on platform' },
-      { metric: 'Frustration Churn Rate', before: '28% 30-day drop-off', after: '11% 30-day drop-off', impact: '60% churn reduction' },
-      { metric: 'User NPS Rating', before: '+24 NPS', after: '+58 NPS', impact: 'Massive organic advocacy' }
-    ],
-    founderQuote: '"Duke taught us how to design products for probabilistic outcomes. Instead of treating AI as a magical black box, we designed confidence thresholds and fallback UI that made the platform feel empathetic and responsive."',
-    keyInsight: 'When building AI products, how you handle low-confidence edge cases defines the entire user experience; great fallback UX creates user trust where brittle outputs destroy it.'
-  },
+  // Reset expanded state to Module 1 when switching between courses
+  useEffect(() => {
+    setExpandedModules({ 1: true });
+  }, [course.id]);
 
-  'applied-genai-marketing-communication': {
-    baselineProblem: 'A bootstrapped direct-to-consumer beverage startup had only $5,000 remaining in cash reserves for launch marketing. Digital creative agencies quoted $12,000 upfront plus a $3,500 monthly retainer for a standard 10-shot product photoshoot and ad creative suite.',
-    solutionArchitecture: 'The founder used Midjourney v6 with seed-locked parameters to generate 30 high-end studio lifestyle photographs in varied regional settings. Claude 3.5 Sonnet generated 50 tailored ad copy variations, which were deployed directly into Meta Dynamic Creative ad sets.',
-    stepByStepImplementation: [
-      'Day 1: Formulated the brand photography style bible in Midjourney using specific lens, f-stop, and lighting prompts.',
-      'Day 2: Generated 30 photorealistic lifestyle scene variations placing the product in urban, fitness, and office settings.',
-      'Day 3: Prompt-engineered 50 hook variations in Claude targeting 3 distinct buyer personas (professionals, students, athletes).',
-      'Days 4–7: Launched Meta Dynamic Creative campaigns testing 5 images x 5 copies x 2 headlines per ad set.'
-    ],
-    quantifiedResults: [
-      { metric: 'Customer Acquisition Cost (CAC)', before: '$42.00 (industry benchmark)', after: '$27.30 (actual)', impact: '35% cheaper acquisition' },
-      { metric: 'Agency Retainer Spend', before: '$15,500 quoted cost', after: '$0 agency fees ($90 AI tools)', impact: '$15,400 cash preserved' },
-      { metric: 'Creative Production Time', before: '4–6 Weeks agency turnaround', after: '72 Hours from idea to live ads', impact: '10x agility' },
-      { metric: 'First-Month ROAS', before: '1.2x estimated return', after: '3.4x verified ROAS', impact: 'Immediately profitable' }
-    ],
-    founderQuote: '"As a bootstrapped founder with no budget, AI leveled the playing field. In three days, our creative output matched the visual polish of venture-backed competitors spending $50k on agency retainers."',
-    keyInsight: 'The combination of high-fidelity visual generation and automated copy variations enables micro-budget startups to discover winning ad creatives faster than legacy agency cycles.'
-  },
+  const toggleModule = (moduleNumber: number) => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [moduleNumber]: !prev[moduleNumber]
+    }));
+  };
 
-  'mit-xpro-process-automation-agentic': {
-    baselineProblem: 'A freight brokerage startup processed hundreds of incoming bill-of-lading and customs declaration PDFs daily. Dispatchers manually transcribed shipment data into ERP tables, verified route availability across driver spreadsheets, and emailed quote proposals, averaging 45 minutes per order.',
-    solutionArchitecture: 'Architected a 3-tier autonomous agent workflow using CrewAI and Make.com. Agent A extracts OCR shipment data from PDF attachments; Agent B checks capacity in PostgreSQL and calculates pricing; Agent C drafts invoice emails and alerts dispatchers via Slack for single-click approval.',
-    stepByStepImplementation: [
-      'Week 1: Documented order processing SOP and established JSON schemas for bill-of-lading data extraction.',
-      'Week 2: Built Make.com scenario intercepting incoming dispatch emails and passing PDFs to a vision LLM extractor.',
-      'Week 3: Deployed CrewAI agent container calculating route margins and checking live driver GPS availability.',
-      'Week 4: Implemented a Slack interactive button interface where human dispatchers approve quotes with one click.'
-    ],
-    quantifiedResults: [
-      { metric: 'Per-Order Processing Time', before: '45 Minutes manual labor', after: '1.8 Minutes total duration', impact: '96% time compression' },
-      { metric: 'Order Entry Error Rate', before: '6.2% data entry errors', after: '0.3% error rate', impact: '20x accuracy increase' },
-      { metric: 'Daily Orders Processed per FTE', before: '12 orders / day', after: '95 orders / day', impact: '近8x throughput multiplier' },
-      { metric: 'Dispatcher Overtime Cost', before: '$4,800 / month', after: '$0 / month', impact: '100% overtime eliminated' }
-    ],
-    founderQuote: '"Moving from single prompt interactions to multi-agent orchestrated workflows transformed our logistics operation from a chaotic manual bottleneck into an autonomous freight engine."',
-    keyInsight: 'Do not automate everything at once; design your agents to perform 90% of the cognitive heavy lifting while leaving the final 10% confirmation decision to an empowered human dispatcher.'
-  },
+  const handleToggleAllModules = () => {
+    if (!course.syllabus || course.syllabus.length === 0) return;
+    const allExpanded = course.syllabus.every(m => expandedModules[m.moduleNumber]);
+    if (allExpanded) {
+      setExpandedModules({});
+    } else {
+      const all: Record<number, boolean> = {};
+      course.syllabus.forEach(m => {
+        all[m.moduleNumber] = true;
+      });
+      setExpandedModules(all);
+    }
+  };
 
-  'wharton-data-analysis-decision-making': {
-    baselineProblem: 'A B2B SaaS startup with 4,000 accounts had an alarming 90-day churn rate of 28%. The executive team debated conflicting hypotheses: the marketing team blamed poor lead quality, while product blamed missing features. Neither had empirical data proof.',
-    solutionArchitecture: 'Using Wharton quantitative methodologies, the founder uploaded 500,000 raw customer event logs into Julius AI and Code Interpreter. The AI executed survival analysis and feature importance regressions, discovering that users who failed to integrate custom Slack webhooks within 72 hours churned at an 80% higher rate.',
-    stepByStepImplementation: [
-      'Day 1: Consolidated Mixpanel clickstream logs and Stripe billing histories into normalized CSV files.',
-      'Day 2: Ran multi-variable survival curves in Julius AI, isolating the onboarding window as the critical pivot point.',
-      'Day 3: Discovered the "Slack integration" feature was the single highest predictor of 12-month account retention.',
-      'Days 4–14: Redesigned the onboarding wizard to mandate Slack setup on day 1, deploying automated concierge email triggers.'
-    ],
-    quantifiedResults: [
-      { metric: '90-Day Account Churn', before: '28% customer loss', after: '10% customer loss', impact: '18% absolute churn reduction' },
-      { metric: 'Net Revenue Retention (NRR)', before: '88% contraction', after: '114% expansion', impact: '+26% NRR turnaround' },
-      { metric: 'Annual Recurring Revenue (ARR) Saved', before: '$180,000 projected loss', after: '$180k retained + expansion', impact: '$240k total value created' },
-      { metric: 'Time to Identify Root Cause', before: '4 Months executive debate', after: '4 Hours conversational analysis', impact: 'Instant strategic clarity' }
-    ],
-    founderQuote: '"The Wharton framework ended months of internal finger-pointing in an afternoon. Seeing statistical proof of our churn bottleneck allowed us to focus all our engineering horsepower on the single feature that truly mattered."',
-    keyInsight: 'Customer churn is rarely caused by missing features; it is almost always caused by onboarding failure to reach the core inflection moment where product value becomes indispensable.'
-  },
+  const handleCopyPrompt = (promptText: string, index: number) => {
+    navigator.clipboard.writeText(promptText);
+    setCopiedPromptIndex(index);
+    setTimeout(() => setCopiedPromptIndex(null), 2500);
+  };
 
-  'harvard-storytelling-narrative-ai': {
-    baselineProblem: 'A clinical AI HealthTech startup had compelling diagnostic accuracy metrics but was struggling to raise institutional capital. Founders gave dense 45-slide technical presentations laden with medical jargon, leaving venture capitalists confused about commercial defensibility and market sizing.',
-    solutionArchitecture: 'Applied Harvard storytelling strategy frameworks using Claude 3.5 Sonnet and Gamma App. Synthesized 200 pages of clinical trials and Medicare reimbursement filings into a crisp 12-slide Category-King narrative showcasing urgency, defensibility, and immediate monetization.',
-    stepByStepImplementation: [
-      'Week 1: Interrogated the core startup thesis using Claude, stripping academic jargon and reframing around hospital ROI.',
-      'Week 2: Sized bottom-up Total Addressable Market (TAM) with Perplexity Pro, citing Medicare CPT billing codes.',
-      'Week 3: Designed a 12-slide high-contrast visual deck in Gamma App emphasizing unit economics and clinical validation.',
-      'Week 4: Built an AI-simulated partner interrogation bot to rehearse answers to the 50 toughest venture diligence questions.'
-    ],
-    quantifiedResults: [
-      { metric: 'Time to Close Seed Round', before: '6 Months without commitments', after: '6 Weeks to full subscription', impact: 'Closed $1.5M syndicate' },
-      { metric: 'Deck Length & Scan Time', before: '45 slides (25 min presentation)', after: '12 slides (6 min crisp delivery)', impact: '75% cognitive decluttering' },
-      { metric: 'Partner Meeting Conversion', before: '1 in 14 partners interested', after: '1 in 3 partners proceeding to term sheet', impact: '4.6x higher conversion' },
-      { metric: 'Term Sheets Received', before: '0 term sheets', after: '3 competing venture term sheets', impact: 'Founder valuation leverage' }
-    ],
-    founderQuote: '"Investors don\'t fund confusing technologies; they fund clear, inevitable commercial stories. Learning how to translate deep medicine into a compelling investment narrative changed our trajectory overnight."',
-    keyInsight: 'Clarity is the ultimate venture funding weapon; when you can explain complex proprietary technology in simple terms that prove commercial inevitability, capital flows effortlessly.'
-  },
+  const handleCopyCourseBrief = () => {
+    const text = `Course #${course.number}: ${course.title}\nProvider: ${course.provider} (${course.format})\nLevel: ${course.level} | Domain: ${course.category}\n\nSynopsis:\n${course.synopsis}\n\nCase Study: ${course.caseStudy.title} (${course.caseStudy.impactMetric})\n${course.caseStudy.summary}`;
+    navigator.clipboard.writeText(text);
+    setCopiedBrief(true);
+    setTimeout(() => setCopiedBrief(false), 2500);
+  };
 
-  'oxford-iapp-ai-governance-compliance': {
-    baselineProblem: 'An AI-powered automated talent evaluation startup saw its enterprise sales pipeline stall. Fortune 500 corporate prospects loved the product demo but procurement security teams blocked every contract with 90-day compliance reviews regarding algorithmic bias, the EU AI Act, and data privacy.',
-    solutionArchitecture: 'Completed the Oxford AI Governance program to build an audit-ready "Enterprise AI Trust Dossier". Preemptively implemented the NIST AI RMF framework, synthetic anonymization pipelines, and automated EEOC/EU conformity scorecards.',
-    stepByStepImplementation: [
-      'Weeks 1–2: Audited all scoring models against the EU AI Act High-Risk Annex and NIST AI RMF governance matrices.',
-      'Weeks 3–4: Deployed automated PII redaction and synthetic demographic balancing to eliminate statistical disparate impact.',
-      'Weeks 5–6: Packaged security architecture, model cards, and external bias audit reports into an online compliance portal.'
-    ],
-    quantifiedResults: [
-      { metric: 'Enterprise Procurement Cycle', before: '90–120 Days in security legal', after: '14 Days average turnaround', impact: 'Closed deals 2x to 4x faster' },
-      { metric: 'Security Redline Rate', before: '100% of contracts redlined', after: 'Zero redlines on AI ethics', impact: 'Frictionless legal review' },
-      { metric: 'Average Contract Value (ACV)', before: '$35,000 SMB average', after: '$120,000 Enterprise tier', impact: '3.4x higher deal sizes' },
-      { metric: 'Enterprise RFP Win Rate', before: '18% won against competitors', after: '64% won against incumbents', impact: 'Governance as key moat' }
-    ],
-    founderQuote: '"Proactive compliance was our biggest competitive differentiator. While legacy competitors dragged their feet on AI regulation, our audit-ready Oxford-aligned trust dossier made enterprise procurement an absolute breeze."',
-    keyInsight: 'In enterprise B2B sales, compliance is not a bureaucratic overhead cost—it is the ultimate sales accelerant that unlocks multi-million dollar institutional budgets.'
-  },
+  const handleShareCourse = () => {
+    const url = `${window.location.origin}${window.location.pathname}#course-${course.id}`;
+    navigator.clipboard.writeText(url);
+    setShareFeedback(true);
+    setTimeout(() => setShareFeedback(false), 2500);
+  };
 
-  'hubspot-ai-sales-customer-success': {
-    baselineProblem: 'A fast-growing B2B wholesale marketplace served buyers across 14 time zones with only 2 support staff. Inbound buyer inquiries outside of standard operating hours suffered 14-hour response delays, resulting in lost $10,000+ purchase orders to regional competitors.',
-    solutionArchitecture: 'Following HubSpot Academy frameworks, the startup indexed 1,200 product technical spec sheets and shipping policies into a vector-grounded support agent integrated into Zendesk and ChatSpot, backed by automated buyer intent scoring.',
-    stepByStepImplementation: [
-      'Week 1: Standardized 1,200 product PDF catalog specs into clean markdown knowledge base articles.',
-      'Week 2: Configured Zendesk AI agent with semantic vector search and strict boundary guardrails against hallucinated prices.',
-      'Week 3: Created an automated VIP routing rule connecting orders >$5,000 directly to on-call founder phone notifications.',
-      'Week 4: Monitored real-time resolution accuracy across 500 live customer conversations.'
-    ],
-    quantifiedResults: [
-      { metric: 'Tier-1 Ticket Instant Resolution', before: '0% (all required humans)', after: '70% resolved autonomously in <30s', impact: 'Instant 24/7 global support' },
-      { metric: 'Average Response Time', before: '14 Hours overnight delay', after: '22 Seconds global average', impact: '99.9% faster response' },
-      { metric: 'After-Hours Order Conversion', before: '12% conversion', after: '38% conversion', impact: '+26% after-hours revenue' },
-      { metric: 'Support Headcount Needed', before: '6 planned hires ($240k/yr)', after: '0 additional hires needed', impact: '$240,000 payroll avoidance' }
-    ],
-    founderQuote: '"Our 2-person team now supports global enterprise buyers round-the-clock with higher customer satisfaction scores than when we attempted to handle every ticket manually."',
-    keyInsight: 'Grounding customer service AI strictly in verified product documentation eliminates hallucination fears and turns customer support from a cost center into a 24/7 revenue engine.'
-  },
+  const toggleTask = (taskId: string) => {
+    setCompletedTasks(prev => ({
+      ...prev,
+      [taskId]: !prev[taskId]
+    }));
+  };
 
-  'deeplearning-bubble-nocode-ai-app-dev': {
-    baselineProblem: 'A solo non-technical entrepreneur identified a lucrative opportunity in automated property management. However, software development agencies quoted $45,000 to $80,000 and 4 months of development just to deliver an initial web MVP, far exceeding her personal savings.',
-    solutionArchitecture: 'Used v0.dev to generate clean React/Tailwind frontend layouts in minutes and integrated them into Bubble.io with a Supabase relational backend. Connected the OpenAI API to parse and categorize tenant repair tickets, deploying the live SaaS in 48 hours for under $50 in domain and hosting fees.',
-    stepByStepImplementation: [
-      'Day 1 (Morning): Generated the tenant portal, landlord dashboard, and dispatch views using natural language in v0.dev.',
-      'Day 1 (Afternoon): Built the database schema in Bubble with users, properties, maintenance tickets, and contractor contacts.',
-      'Day 2 (Morning): Connected OpenAI API to extract urgency, appliance model, and issue category from tenant photos and text.',
-      'Day 2 (Evening): Integrated Stripe billing and launched on LinkedIn and local real estate investor groups.'
-    ],
-    quantifiedResults: [
-      { metric: 'MVP Development Cost', before: '$60,000 agency estimate', after: '$48 (hosting & domain)', impact: '99.9% capital saved' },
-      { metric: 'Time to Market', before: '16 Weeks planned agency wait', after: '48 Hours from concept to live', impact: '56x faster launch' },
-      { metric: 'First Paying Customers', before: '0 customers', after: '5 Landlords signed in 48 hours', impact: 'Instant revenue validation' },
-      { metric: 'Monthly Software Overhead', before: '$1,500 dedicated servers', after: '$32/mo scalable no-code tier', impact: 'Near-zero ongoing burn' }
-    ],
-    founderQuote: '"I proved my product had real paying customers before spending a single dollar on software engineers. The combination of v0 and Bubble gives solo founders superpower speed."',
-    keyInsight: 'In modern startup creation, speed of customer feedback beats engineering perfection; launch a functional no-code AI MVP in days rather than waiting months for custom software.'
-  },
+  return (
+    <div className="space-y-8 animate-in fade-in-50 duration-200" id={`course-detail-${course.id}`}>
+      {/* Top Breadcrumbs & Course Stepper */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+        <div className="flex items-center space-x-2 text-xs text-slate-600">
+          <button
+            onClick={onBack}
+            className="hover:text-cyan-700 font-semibold flex items-center space-x-1 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>All 12 Curriculums</span>
+          </button>
+          <span className="text-slate-400">/</span>
+          <span className="text-slate-500 font-mono">{course.category}</span>
+          <span className="text-slate-400">/</span>
+          <span className="font-bold text-slate-900">
+            Course #{String(course.number).padStart(2, '0')}
+          </span>
+        </div>
 
-  'cfi-wallstreetprep-genai-financial-modeling': {
-    baselineProblem: 'A hardware IoT startup was ramping production for a major retail launch. The founders were using a static Excel sheet with single-point cost estimates, blind to foreign exchange shifts and raw component price volatility. When shipping rates spiked, the company faced sudden emergency cash insolvency.',
-    solutionArchitecture: 'Applied CFI financial modeling techniques using Excel Copilot and Python Monte Carlo simulation engines. Built an integrated 3-statement financial model simulating 1,000 stochastic price fluctuation runs across raw materials, supplier minimum orders, and shipping timelines.',
-    stepByStepImplementation: [
-      'Week 1: Unified historical trial balances and bill-of-materials into an automated 3-statement model using Excel Copilot.',
-      'Week 2: Configured a Monte Carlo simulation engine modeling 15% swings in component costs and shipping delays.',
-      'Week 3: Identified an invisible cash-flow depletion cliff occurring at month 7 under 68% of simulated market scenarios.',
-      'Week 4: Used simulation findings to renegotiate supplier payment terms from Net 30 to Net 60 and secured a non-dilutive credit facility.'
-    ],
-    quantifiedResults: [
-      { metric: 'Insolvency Risk Detection', before: 'Blind until 2 weeks before cashout', after: 'Identified bottleneck 6 months early', impact: 'Prevented emergency collapse' },
-      { metric: 'Emergency Dilution Avoided', before: '$240k dilutive down-round', after: '$0 equity given away', impact: 'Preserved founder equity' },
-      { metric: 'Working Capital Extension', before: '3.5 Months runway buffer', after: '9.2 Months stabilized runway', impact: '+5.7 months cash extension' },
-      { metric: 'Supplier Payment Terms', before: 'Net 30 with upfront deposits', after: 'Net 60 without prepayments', impact: 'Doubled operational liquidity' }
-    ],
-    founderQuote: '"Financial AI modeling saved our company from catastrophic emergency dilution. The Monte Carlo simulation showed us our cash cliff when our bank balance still looked comfortable, giving us time to negotiate with suppliers from a position of strength."',
-    keyInsight: 'Point-estimate financial forecasts lie because startup realities are volatile; running probabilistic AI simulations reveals the invisible cash traps that kill growing companies.'
-  }
+        {/* Prev / Next Navigation */}
+        <div className="flex items-center space-x-2">
+          {prevCourse && (
+            <button
+              id="course-prev-btn"
+              onClick={() => onSelectCourse(prevCourse.id)}
+              className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors"
+              title={`Previous: #${prevCourse.number} ${prevCourse.title}`}
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>#{String(prevCourse.number).padStart(2, '0')} Prev</span>
+            </button>
+          )}
+          {nextCourse && (
+            <button
+              id="course-next-btn"
+              onClick={() => onSelectCourse(nextCourse.id)}
+              className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-colors"
+              title={`Next: #${nextCourse.number} ${nextCourse.title}`}
+            >
+              <span>Next #{String(nextCourse.number).padStart(2, '0')}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Hero Header Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+          <div className="space-y-4 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-slate-950 text-cyan-400 font-mono font-bold text-sm flex items-center justify-center border border-cyan-500/30 shadow-2xs">
+                {String(course.number).padStart(2, '0')}
+              </span>
+              <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold uppercase bg-slate-100 text-slate-800">
+                {course.category}
+              </span>
+              <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-cyan-50 text-cyan-800 border border-cyan-200">
+                {course.level}
+              </span>
+              {course.accreditationBadge && (
+                <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center space-x-1">
+                  <Award className="w-3 h-3 mr-1 text-amber-600" />
+                  <span>{course.accreditationBadge}</span>
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              {course.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-600">
+              <div className="flex items-center space-x-1.5 font-semibold text-slate-900">
+                <Building2 className="w-4 h-4 text-cyan-600" />
+                <span>{course.provider}</span>
+              </div>
+              <div className="flex items-center space-x-1.5 font-mono text-slate-600">
+                <Clock className="w-4 h-4 text-slate-400" />
+                <span>{course.format}</span>
+              </div>
+              <div className="px-2 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-xs">
+                Duration: {course.duration}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap lg:flex-col items-end gap-2 shrink-0">
+            <button
+              id="btn-copy-brief"
+              onClick={handleCopyCourseBrief}
+              className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            >
+              {copiedBrief ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Brief Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Copy Course Brief</span>
+                </>
+              )}
+            </button>
+
+            <button
+              id="btn-share-course"
+              onClick={handleShareCourse}
+              className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            >
+              <Share2 className="w-3.5 h-3.5 text-slate-500" />
+              <span>{shareFeedback ? 'Deep-Link Copied' : 'Share Course'}</span>
+            </button>
+
+            {onOpenMatcher && (
+              <button
+                id="btn-match-mentors"
+                onClick={onOpenMatcher}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-cyan-600 text-white hover:bg-cyan-700 transition-colors shadow-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Match AI Mentors</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Synopsis & Strategic Purpose */}
+        <div className="pt-4 border-t border-slate-100 space-y-2">
+          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+            Executive Synopsis & Strategic Founder Intent
+          </h2>
+          <p className="text-sm sm:text-base text-slate-800 leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
+            {course.synopsis}
+          </p>
+        </div>
+
+        {/* Quick Tags: Tech Stack & Skills */}
+        <div className="space-y-3 pt-2">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+            Target Frameworks, SDKs & Concrete Competencies
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {course.targetTools.map((tool, idx) => (
+              <span 
+                key={idx}
+                className="px-3 py-1.5 rounded-xl text-xs font-mono font-semibold bg-cyan-50 text-cyan-900 border border-cyan-200 flex items-center space-x-1"
+              >
+                <Code2 className="w-3 h-3 text-cyan-600" />
+                <span>{tool}</span>
+              </span>
+            ))}
+            {course.skills.map((skill, idx) => (
+              <span 
+                key={idx}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Internal In-Page Navigation Bar */}
+      <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center gap-1.5">
+        <button
+          onClick={() => setActiveSection('all')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            activeSection === 'all'
+              ? 'bg-slate-900 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          All Sections
+        </button>
+        <button
+          onClick={() => setActiveSection('syllabus')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+            activeSection === 'syllabus'
+              ? 'bg-cyan-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          <span>Syllabus & Modules ({course.syllabus?.length || 4})</span>
+        </button>
+        <button
+          onClick={() => setActiveSection('case-study')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+            activeSection === 'case-study'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <Rocket className="w-3.5 h-3.5" />
+          <span>Case Study Deep-Dive</span>
+        </button>
+        <button
+          onClick={() => setActiveSection('resources')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+            activeSection === 'resources'
+              ? 'bg-violet-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <Terminal className="w-3.5 h-3.5" />
+          <span>Founder Prompts & Tool Guide</span>
+        </button>
+        <button
+          onClick={() => setActiveSection('checklist')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+            activeSection === 'checklist'
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+          <ListChecks className="w-3.5 h-3.5" />
+          <span>Action Checklist</span>
+        </button>
+      </div>
+
+      {/* ======================================================================= */}
+      {/* SECTION 1: DETAILED SYLLABUS & MODULES (ACCORDION STYLE) */}
+      {/* ======================================================================= */}
+      {(activeSection === 'all' || activeSection === 'syllabus') && (
+        <section id="section-course-syllabus" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 rounded-lg bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                  Curriculum Syllabus & Founder Milestones
+                </h2>
+                <p className="text-xs text-slate-500 font-mono">
+                  {course.syllabus?.length || 0} Instructional Modules • Total Pace: {course.duration}
+                </p>
+              </div>
+            </div>
+
+            {course.syllabus && course.syllabus.length > 0 && (
+              <div className="flex items-center space-x-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  id="btn-toggle-all-modules"
+                  onClick={handleToggleAllModules}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 cursor-pointer shadow-2xs"
+                  title="Toggle all modules expanded or collapsed"
+                >
+                  <ChevronsUpDown className="w-3.5 h-3.5 text-slate-500" />
+                  <span>
+                    {course.syllabus.every(m => expandedModules[m.moduleNumber])
+                      ? 'Collapse All'
+                      : 'Expand All'}
+                  </span>
+                  <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-white text-slate-600 border border-slate-200">
+                    {course.syllabus.filter(m => expandedModules[m.moduleNumber]).length}/{course.syllabus.length} Open
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3.5">
+            {course.syllabus && course.syllabus.length > 0 ? (
+              course.syllabus.map((mod: AiCourseModule) => {
+                const isExpanded = !!expandedModules[mod.moduleNumber];
+                return (
+                  <div 
+                    key={mod.moduleNumber}
+                    id={`syllabus-module-accordion-${course.id}-${mod.moduleNumber}`}
+                    className={`bg-white rounded-2xl border transition-all shadow-2xs overflow-hidden ${
+                      isExpanded 
+                        ? 'border-cyan-300 ring-1 ring-cyan-100 shadow-xs' 
+                        : 'border-slate-200/90 hover:border-slate-300'
+                    }`}
+                  >
+                    {/* Accordion Trigger Header */}
+                    <button
+                      type="button"
+                      id={`accordion-trigger-module-${mod.moduleNumber}`}
+                      onClick={() => toggleModule(mod.moduleNumber)}
+                      aria-expanded={isExpanded}
+                      aria-controls={`accordion-body-module-${mod.moduleNumber}`}
+                      className="w-full text-left p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none transition-colors hover:bg-slate-50/70"
+                    >
+                      <div className="flex items-start sm:items-center space-x-3 min-w-0">
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-mono font-bold shrink-0 transition-colors ${
+                          isExpanded 
+                            ? 'bg-cyan-600 text-white shadow-2xs' 
+                            : 'bg-cyan-50 text-cyan-900 border border-cyan-200'
+                        }`}>
+                          Module {String(mod.moduleNumber).padStart(2, '0')}
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                            {mod.title}
+                          </h3>
+                          {!isExpanded && (
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500 pt-1 font-mono">
+                              <span className="font-semibold text-cyan-800 bg-cyan-50/70 px-1.5 py-0.5 rounded border border-cyan-100">
+                                {mod.topics.length} Core Topics
+                              </span>
+                              <span className="text-slate-300">•</span>
+                              <span className="truncate max-w-[280px] sm:max-w-[420px] text-slate-600">
+                                Lab: {mod.handsOnLab}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2.5 shrink-0 self-end sm:self-auto">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-mono text-slate-600 bg-slate-100 border border-slate-200/60">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span>{mod.duration}</span>
+                        </span>
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                          isExpanded ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-500 hover:text-slate-700'
+                        }`}>
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Accordion Collapsible Body */}
+                    <div
+                      id={`accordion-body-module-${mod.moduleNumber}`}
+                      className={`grid transition-all duration-200 ease-in-out ${
+                        isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-2 border-t border-slate-100 space-y-4">
+                          {/* Core Topics Covered */}
+                          <div className="space-y-2">
+                            <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500">
+                              Core Topics & Frameworks Covered:
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs sm:text-sm text-slate-700">
+                              {mod.topics.map((topic, tIdx) => (
+                                <div key={tIdx} className="flex items-start space-x-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/70">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5 shrink-0" />
+                                  <span className="leading-snug">{topic}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Hands-On Lab and Deliverable Cards */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+                            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-950 space-y-1">
+                              <div className="flex items-center space-x-1.5 font-bold font-mono text-[11px] uppercase tracking-wider text-amber-900">
+                                <Wrench className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Hands-On Lab & Practical Exercise:</span>
+                              </div>
+                              <p className="leading-relaxed pl-5 text-amber-900/90">{mod.handsOnLab}</p>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+                              <div className="flex items-center space-x-1.5 font-bold font-mono text-[11px] uppercase tracking-wider text-emerald-900">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                <span>Founder Deliverable:</span>
+                              </div>
+                              <p className="leading-relaxed pl-5 font-semibold text-emerald-900">{mod.founderDeliverable}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                Syllabus modules for this course are currently being synthesized.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ======================================================================= */}
+      {/* SECTION 2: INTEGRATED DEEP-DIVE CASE STUDY */}
+      {/* ======================================================================= */}
+      {(activeSection === 'all' || activeSection === 'case-study') && (
+        <section id="section-course-case-study" className="space-y-4">
+          <div className="flex items-center space-x-2 pb-2 border-b border-slate-200">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+              <Rocket className="w-4 h-4" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              Real-World Startup Case Study: Deep-Dive Analysis
+            </h2>
+          </div>
+
+          <div className="p-6 sm:p-8 rounded-3xl bg-linear-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-300 space-y-6 shadow-xs">
+            {/* Header Badge & Metric */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold uppercase text-emerald-900 bg-emerald-200/90 px-2.5 py-1 rounded-md border border-emerald-300 inline-flex items-center space-x-1">
+                  <Rocket className="w-3.5 h-3.5 mr-1 text-emerald-700" />
+                  <span>Case Study #{course.number} // {course.caseStudy.industry}</span>
+                </span>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+                  {course.caseStudy.title}
+                </h3>
+              </div>
+
+              <div className="text-right sm:text-right shrink-0">
+                <div className="inline-block px-4 py-2 rounded-2xl bg-white border border-emerald-300 shadow-2xs">
+                  <div className="text-xs font-mono text-slate-500 uppercase">Primary KPI Lift</div>
+                  <div className="text-base sm:text-lg font-black text-emerald-700 font-mono">
+                    {course.caseStudy.impactMetric}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Context Summary */}
+            <p className="text-sm sm:text-base text-slate-700 leading-relaxed bg-white/80 p-5 rounded-2xl border border-emerald-200/70">
+              {course.caseStudy.summary}
+            </p>
+
+            {/* Two-Column Problem vs Architecture Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-5 rounded-2xl bg-white border border-rose-200/80 shadow-2xs space-y-2">
+                <div className="flex items-center space-x-1.5 text-xs font-mono font-bold uppercase text-rose-700">
+                  <ShieldAlert className="w-4 h-4 text-rose-600" />
+                  <span>Pre-AI Operational Bottleneck (Baseline):</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  {course.caseStudy.baselineProblem || course.caseStudy.summary}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 shadow-2xs space-y-2">
+                <div className="flex items-center space-x-1.5 text-xs font-mono font-bold uppercase text-emerald-800">
+                  <Zap className="w-4 h-4 text-emerald-600" />
+                  <span>Engineered AI Architecture:</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  {course.caseStudy.solutionArchitecture || course.caseStudy.methodology}
+                </p>
+              </div>
+            </div>
+
+            {/* Step-by-Step Implementation Timeline */}
+            {course.caseStudy.stepByStepImplementation && course.caseStudy.stepByStepImplementation.length > 0 && (
+              <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-3">
+                <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                  <Layers className="w-4 h-4 text-cyan-600" />
+                  <span>Step-by-Step Implementation Roadmap:</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {course.caseStudy.stepByStepImplementation.map((step, sIdx) => (
+                    <div key={sIdx} className="flex items-start space-x-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200/70 text-xs sm:text-sm text-slate-800">
+                      <span className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-800 font-mono font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                        {sIdx + 1}
+                      </span>
+                      <span className="leading-snug">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quantified Before vs After ROI Table */}
+            {course.caseStudy.quantifiedResults && course.caseStudy.quantifiedResults.length > 0 && (
+              <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <span>Quantified Before vs. After ROI Matrix:</span>
+                  </h4>
+                  <span className="text-[11px] font-mono text-emerald-700 font-bold">
+                    Bottom Line: {course.caseStudy.impactHighlight}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs sm:text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-mono uppercase text-slate-500">
+                        <th className="py-2.5 px-3">Performance Metric</th>
+                        <th className="py-2.5 px-3">Before AI Integration</th>
+                        <th className="py-2.5 px-3">After AI Integration</th>
+                        <th className="py-2.5 px-3 text-right">Net Operational ROI</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {course.caseStudy.quantifiedResults.map((row, rIdx) => (
+                        <tr key={rIdx} className="hover:bg-emerald-50/30 transition-colors">
+                          <td className="py-2.5 px-3 font-semibold text-slate-900">{row.metric}</td>
+                          <td className="py-2.5 px-3 text-rose-700 font-mono">{row.before}</td>
+                          <td className="py-2.5 px-3 text-emerald-700 font-mono font-semibold">{row.after}</td>
+                          <td className="py-2.5 px-3 text-right">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-900">
+                              {row.impact}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Founder Quote & Key Insight */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              {course.caseStudy.founderQuote && (
+                <div className="p-5 rounded-2xl bg-white border border-emerald-200 text-xs sm:text-sm text-slate-700 space-y-2 relative shadow-2xs">
+                  <Quote className="w-6 h-6 text-emerald-200 absolute top-3 right-3" />
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 block">
+                    Founder Perspective:
+                  </span>
+                  <p className="italic leading-relaxed text-slate-800">
+                    {course.caseStudy.founderQuote}
+                  </p>
+                </div>
+              )}
+
+              {course.caseStudy.keyInsight && (
+                <div className="p-5 rounded-2xl bg-cyan-950 text-cyan-100 space-y-2 relative shadow-2xs">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 block">
+                    Strategic Entrepreneur Takeaway:
+                  </span>
+                  <p className="text-xs sm:text-sm leading-relaxed text-cyan-50 font-medium">
+                    {course.caseStudy.keyInsight}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Tools Used Footer */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-emerald-200 text-xs">
+              <span className="font-mono text-slate-600 font-semibold">
+                Tech Stack Deployed in Case Study:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {course.caseStudy.toolsUsed.map((t, idx) => (
+                  <span key={idx} className="px-2.5 py-1 rounded-lg text-xs font-mono bg-white text-emerald-950 border border-emerald-300 font-medium">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ======================================================================= */}
+      {/* SECTION 3: FOUNDER RESOURCES & STARTER PROMPTS */}
+      {/* ======================================================================= */}
+      {(activeSection === 'all' || activeSection === 'resources') && (
+        <section id="section-course-resources" className="space-y-6">
+          <div className="flex items-center space-x-2 pb-2 border-b border-slate-200">
+            <div className="w-7 h-7 rounded-lg bg-violet-100 text-violet-800 flex items-center justify-center font-bold">
+              <Terminal className="w-4 h-4" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              Founder Resource Suite & Starter Prompts
+            </h2>
+          </div>
+
+          {/* Starter Prompts (Ready to Run) */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                <Code2 className="w-4 h-4 text-violet-600" />
+                <span>Ready-to-Deploy Strategic Prompts</span>
+              </h3>
+              <span className="text-xs font-mono text-slate-500">
+                Click prompt card to copy directly into your LLM
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {course.resources?.starterPrompts && course.resources.starterPrompts.length > 0 ? (
+                course.resources.starterPrompts.map((p, pIdx) => (
+                  <div 
+                    key={pIdx}
+                    className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-violet-300 transition-all p-5 sm:p-6 space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-violet-50 text-violet-800 border border-violet-200">
+                          {p.targetTool}
+                        </span>
+                        <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                          {p.title}
+                        </h4>
+                      </div>
+
+                      <button
+                        onClick={() => handleCopyPrompt(p.prompt, pIdx)}
+                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-violet-600 hover:bg-violet-700 text-white transition-colors self-start sm:self-auto"
+                      >
+                        {copiedPromptIndex === pIdx ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Copied to Clipboard!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy Prompt</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      <span className="font-semibold text-slate-700">Purpose: </span>
+                      {p.purpose}
+                    </p>
+
+                    <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800 relative group">
+                      <pre className="whitespace-pre-wrap font-mono">{p.prompt}</pre>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  Custom prompt templates for this curriculum are being curated.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Curated Tool Catalog & Recommended Stack */}
+          {course.resources?.recommendedTools && course.resources.recommendedTools.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                <Wrench className="w-4 h-4 text-cyan-600" />
+                <span>Recommended Tool Stacks & Commercial Pricing Tiers</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {course.resources.recommendedTools.map((tool, tIdx) => (
+                  <div key={tIdx} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-900">{tool.name}</h4>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-50 text-cyan-800 border border-cyan-200">
+                        {tool.category}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {tool.description}
+                    </p>
+                    <div className="text-[11px] font-mono font-medium text-slate-500 pt-1 border-t border-slate-100">
+                      Tier: {tool.pricingTier}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Official Reading & Reference Guides */}
+          {course.resources?.officialGuides && course.resources.officialGuides.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                <FileText className="w-4 h-4 text-amber-600" />
+                <span>Authoritative Standards, Whitepapers & Regulatory Blueprints</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {course.resources.officialGuides.map((guide, gIdx) => (
+                  <div key={gIdx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900">{guide.title}</h4>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white text-slate-700 border border-slate-200">
+                        {guide.type}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {guide.description}
+                    </p>
+                    {guide.linkNote && (
+                      <span className="text-[10px] font-mono text-cyan-700 font-semibold block">
+                        Source: {guide.linkNote}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ======================================================================= */}
+      {/* SECTION 4: 3-PHASE FOUNDER ACTION CHECKLIST */}
+      {/* ======================================================================= */}
+      {(activeSection === 'all' || activeSection === 'checklist') && (
+        <section id="section-course-checklist" className="space-y-4">
+          <div className="flex items-center space-x-2 pb-2 border-b border-slate-200">
+            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+              <ListChecks className="w-4 h-4" />
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              3-Phase Founder Action & Implementation Checklist
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {course.resources?.actionChecklist && course.resources.actionChecklist.length > 0 ? (
+              course.resources.actionChecklist.map((phase, pIdx) => (
+                <div 
+                  key={pIdx}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 shadow-2xs flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-6 h-6 rounded-md bg-amber-100 text-amber-800 font-mono font-bold text-xs flex items-center justify-center">
+                        0{pIdx + 1}
+                      </span>
+                      <h3 className="text-xs font-mono font-bold uppercase text-slate-800 tracking-wider">
+                        {phase.phase}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-2 pt-1">
+                      {phase.tasks.map((task, tIdx) => {
+                        const taskId = `${course.id}-phase-${pIdx}-task-${tIdx}`;
+                        const isDone = !!completedTasks[taskId];
+                        return (
+                          <div 
+                            key={tIdx}
+                            onClick={() => toggleTask(taskId)}
+                            className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start space-x-2.5 ${
+                              isDone 
+                                ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900'
+                                : 'bg-slate-50/70 border-slate-200/80 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isDone}
+                              onChange={() => {}} // handled by parent div
+                              className="mt-0.5 rounded text-cyan-600 focus:ring-cyan-500"
+                            />
+                            <span className={`leading-snug ${isDone ? 'line-through opacity-70' : ''}`}>
+                              {task}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 text-[10px] font-mono text-slate-400 text-right">
+                    Interactive Progress Tracker
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-3 p-6 text-center text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                Action checklist is being prepared for this curriculum.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Bottom Sticky-Ready Navigation Ribbon */}
+      <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-slate-700 hover:text-slate-900"
+        >
+          <Layers className="w-4 h-4 text-cyan-600" />
+          <span>Return to All 12 Curriculums Hub</span>
+        </button>
+
+        <div className="flex items-center space-x-3">
+          {prevCourse && (
+            <button
+              onClick={() => onSelectCourse(prevCourse.id)}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 transition-colors flex items-center space-x-1.5 shadow-2xs"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>#{prevCourse.number} {prevCourse.title.slice(0, 20)}...</span>
+            </button>
+          )}
+          {nextCourse && (
+            <button
+              onClick={() => onSelectCourse(nextCourse.id)}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors flex items-center space-x-1.5 shadow-2xs"
+            >
+              <span>#{nextCourse.number} {nextCourse.title.slice(0, 20)}...</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
